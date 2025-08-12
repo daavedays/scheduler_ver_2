@@ -35,6 +35,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import HistoryIcon from '@mui/icons-material/History';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
@@ -48,6 +49,7 @@ function MainMenuPage() {
 
     { label: 'View History', icon: <HistoryIcon sx={{ fontSize: 48 }} />, to: '/reset-history', desc: 'See changes & resets' },
     { label: 'Statistics', icon: <BarChartIcon sx={{ fontSize: 48 }} />, to: '/statistics', desc: 'View stats & analytics' },
+    { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 48 }} />, to: '/settings', desc: 'Reset data & app settings' },
     { label: 'Help', icon: <HelpOutlineIcon sx={{ fontSize: 48 }} />, to: '/help', desc: 'Get help & info' },
     { label: 'Manage Workers', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/manage-workers', desc: 'Add, update, remove, or edit qualifications for workers.' },
   ];

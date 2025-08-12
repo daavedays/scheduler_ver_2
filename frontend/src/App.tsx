@@ -56,6 +56,7 @@ import MainMenuPage from './pages/MainMenuPage'; // Import from dedicated file
 import ManageWorkersPage from './pages/ManageWorkersPage';
 // Remove commented-out imports for unused pages
 import StatisticsPage from './pages/StatisticsPage';
+import SettingsPage from './pages/SettingsPage';
 
 
 // Import shared fetch wrapper to handle 401 Unauthorized and redirect to login
@@ -1311,6 +1312,7 @@ function AppRoutes() {
         <Route path="/combined" element={<ProtectedRoute><CombinedPage /></ProtectedRoute>} />
         <Route path="/warnings" element={<ProtectedRoute><WarningsPage /></ProtectedRoute>} />
         <Route path="/reset-history" element={<ProtectedRoute><ResetHistoryPage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/manage-workers" element={<ProtectedRoute><ManageWorkersPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} /></ProtectedRoute>} />
         <Route path="/statistics" element={<ProtectedRoute><StatisticsPage /></ProtectedRoute>} />
 

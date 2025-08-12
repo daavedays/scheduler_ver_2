@@ -98,12 +98,17 @@ def update_score_on_y_fairness(worker: EnhancedWorker, all_workers: List[Enhance
 
 
 def recalc_worker_schedule(worker: EnhancedWorker, semester_weeks: List[date]) -> Dict:
-    """Recalculate closing dates for a single worker and update owed weekends if needed."""
+    """Recalculate and expand closing dates for a worker.
+
+    This updates required and optimal closing dates across the full semester
+    window and keeps weekend debt fields synchronized. Intended to be called
+    after any change that can impact closing patterns (X task edit, Y save,
+    or a manual change to closing history).
+    """
     calc = ClosingScheduleCalculator()
     result = calc.calculate_worker_closing_schedule(worker, semester_weeks)
     worker.required_closing_dates = result["required_dates"]
     worker.optimal_closing_dates = result["optimal_dates"]
-    # synchronize owed aliases
     worker.weekends_home_owed = result["final_weekends_home_owed"]
     worker.home_weeks_owed = worker.weekends_home_owed
     return result

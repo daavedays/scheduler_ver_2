@@ -300,12 +300,19 @@ class SchedulingEngineV2:
     ):
         assigned_worker_ids_today = {pair[1] for pair in assignments.get(task_date, [])}
         
-        available_workers = [
-            w for w in workers 
-            if w.id not in assigned_worker_ids_today and 
-               (task_date not in w.x_tasks or w.x_tasks[task_date] == 'Rituk') and
-               task_date not in w.closing_history
+        # Base availability: no same-day double-assignments or recent closing
+        base_available = [
+            w for w in workers
+            if w.id not in assigned_worker_ids_today and task_date not in w.closing_history
         ]
+
+        # Hard constraint: never assign Y if worker has any X task that day (including Guarding Duties)
+        strictly_available = [
+            w for w in base_available
+            if not w.has_x_task_on_date(task_date)
+        ]
+
+        available_workers = strictly_available
         
         for task in self._prioritize_tasks_by_scarcity(tasks_needed):
             # Check if task already assigned today

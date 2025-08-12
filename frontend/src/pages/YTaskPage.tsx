@@ -38,8 +38,8 @@
  *   - Grid cells are color-coded by Y task
  *   - Inline comments explain non-obvious logic and UI structure
  */
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Button, Typography, Fab, Snackbar, Alert as MuiAlert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemButton, ListItemText, CircularProgress, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Typography, Fab, Snackbar, Alert as MuiAlert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemButton, ListItemText, CircularProgress, IconButton, FormControlLabel, Switch } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import SaveIcon from '@mui/icons-material/Save';
@@ -47,13 +47,13 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { formatDateDMY, shortWeekRange } from '../components/utils';
-import { getWorkerColor, Y_TASK_COLORS } from '../components/colors';
+import { formatDateDMY } from '../components/utils';
+import { Y_TASK_COLORS } from '../components/colors';
 import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
 import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
-import DarkModeToggle from '../components/DarkModeToggle';
+// DarkModeToggle is not used on this page
 import Header from '../components/Header';
 
 function YTaskPage() {
@@ -78,11 +78,11 @@ function YTaskPage() {
   const [pickerCell, setPickerCell] = useState<{ y: number, d: number } | null>(null);
   const [availableSoldiers, setAvailableSoldiers] = useState<{id: string, name: string}[]>([]);
   const [pickerLoading, setPickerLoading] = useState(false);
-  const [showBomb, setShowBomb] = useState(false);
+  // const [showBomb, setShowBomb] = useState(false);
   const [availableSchedules, setAvailableSchedules] = useState<any[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  // const [editMode, setEditMode] = useState(false);
+  // const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState<any | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -93,6 +93,7 @@ function YTaskPage() {
   const [insufficientWorkersReport, setInsufficientWorkersReport] = useState<any | null>(null);
   const [showInsufficientReport, setShowInsufficientReport] = useState(false);
   const [generatedCsvData, setGeneratedCsvData] = useState<string | null>(null);
+  const [autoResetBeforeGenerate, setAutoResetBeforeGenerate] = useState(true);
 
   // On mount, check for resolveConflict in localStorage
   useEffect(() => {
@@ -194,6 +195,17 @@ function YTaskPage() {
     if (!startDate || !endDate) return;
     setLoading(true);
     setWarnings([]);
+    // Optional: reset backend worker data and history before generation to ensure a clean slate
+    if (autoResetBeforeGenerate) {
+      try {
+        await fetch('http://localhost:5001/api/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ clear_y: false, reset_workers: true, clear_history: true, clear_x: false })
+        });
+      } catch {}
+    }
     const start = startDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
     const end = endDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
     const res = await fetch('http://localhost:5001/api/y-tasks/generate', {
@@ -318,14 +330,13 @@ function YTaskPage() {
     }
   };
 
-  const handleEditSchedule = (sch: any) => {
-    setSelectedSchedule(sch);
-    setEditMode(true);
-  };
+  // const handleEditSchedule = (sch: any) => {
+  //   setSelectedSchedule(sch);
+  //   setEditMode(true);
+  // };
 
   const handleClear = async () => {
     if (!selectedSchedule) return;
-    setClearDialogOpen(false);
     await fetch('http://localhost:5001/api/y-tasks/clear', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -403,8 +414,7 @@ function YTaskPage() {
   };
 
   const handleHybridGenerate = async () => {
-    setShowBomb(true);
-    setTimeout(() => setShowBomb(false), 1200);
+    // visual effect removed
     setLoading(true);
     setWarnings([]);
     const res = await fetch('http://localhost:5001/api/y-tasks/generate', {
@@ -499,8 +509,6 @@ function YTaskPage() {
   };
 
   const tableWidth = dates && dates.length > 0 ? Math.max(900, 180 + dates.length * 120) : 900;
-  const formattedStartDate = startDate ? formatDateDMY(startDate.toLocaleDateString('en-GB')) : '';
-  const formattedEndDate = endDate ? formatDateDMY(endDate.toLocaleDateString('en-GB')) : '';
 
   return (
     <PageContainer>
@@ -626,19 +634,23 @@ function YTaskPage() {
               </Box>
             </LocalizationProvider>
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <FormControlLabel
+                control={<Switch checked={autoResetBeforeGenerate} onChange={(e) => setAutoResetBeforeGenerate(e.target.checked)} />}
+                label="Reset worker data before generate"
+              />
               <Button variant={mode === 'auto' ? 'contained' : 'outlined'} onClick={() => { setMode('auto'); handleGenerate(); }} disabled={!startDate || !endDate || loading}>Automatic</Button>
               <Button
                 variant={mode === 'hybrid' ? 'contained' : 'outlined'}
                 onClick={() => {
                   setMode('hybrid');
                   if (startDate && endDate) {
-                    const start = startDate;
-                    const end = endDate;
-                    const days = [];
-                    let d = new Date(start);
-                    while (d <= end) {
-                      days.push(d.toLocaleDateString('en-GB').split('/').map(x => x.padStart(2, '0')).join('/'));
-                      d.setDate(d.getDate() + 1);
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    const days: string[] = [];
+                    const pad = (s: string) => s.padStart(2, '0');
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                      const dd = d.toLocaleDateString('en-GB').split('/').map(pad).join('/');
+                      days.push(dd);
                     }
                     setDates(days);
                     setGrid(Array(Y_TASKS.length).fill(0).map(() => Array(days.length).fill('')));
@@ -690,7 +702,7 @@ function YTaskPage() {
               </Fab>
               <Fab
                 color="error"
-                onClick={() => setClearDialogOpen(true)}
+                onClick={handleClear}
                 sx={{ width: 60, height: 60, boxShadow: 6, borderRadius: '50%', fontWeight: 700 }}
                 aria-label="clear"
               >

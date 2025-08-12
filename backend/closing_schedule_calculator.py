@@ -23,7 +23,14 @@ class ClosingScheduleCalculator:
     
     def calculate_worker_closing_schedule(self, worker: 'EnhancedWorker', 
                                         semester_weeks: List[date]) -> Dict:
-        """Calculate closing schedule for a worker using the new algorithm."""
+        """Calculate closing schedule for a worker using the new algorithm.
+
+        This method also expands optimal closing dates across the entire provided
+        semester window based on the worker's closing_interval, and it reacts to
+        any required dates coming from X tasks. If the worker has just closed
+        (the immediate previous week in closing_history), the next optimal target
+        will move forward by one full interval to keep consistency.
+        """
         if not semester_weeks:
             # No semester weeks provided, return empty schedule
             return {
@@ -131,9 +138,33 @@ class ClosingScheduleCalculator:
             print(f"  Required closes: {len(required_dates)}")
             print(f"  Optimal closes: {len(optimal_dates)}")
         
+        # --- Expansion: build full optimal series across semester ---
+        expanded_optimal: List[date] = []
+        if worker.closing_interval and worker.closing_interval > 0 and semester_weeks:
+            # Start from the most recent closing not after semester start
+            last_close = self._get_last_closing_date(worker, semester_weeks[0])
+            # If worker just closed the week before the first semester week, respect cooldown
+            step = max(1, worker.closing_interval)
+            candidate = last_close + timedelta(weeks=step)
+            while candidate <= semester_weeks[-1]:
+                # snap candidate to nearest Friday in semester
+                try:
+                    closest_friday = min(semester_weeks, key=lambda d: abs(d - candidate))
+                except ValueError:
+                    break
+                if closest_friday >= semester_weeks[0] and closest_friday <= semester_weeks[-1]:
+                    if closest_friday not in required_dates and closest_friday not in expanded_optimal:
+                        expanded_optimal.append(closest_friday)
+                candidate = candidate + timedelta(weeks=step)
+        # Merge any already computed optimal dates with expanded series
+        for d in optimal_dates:
+            if d not in expanded_optimal:
+                expanded_optimal.append(d)
+        expanded_optimal.sort()
+
         return {
             'required_dates': required_dates,
-            'optimal_dates': optimal_dates,
+            'optimal_dates': expanded_optimal,
             'final_weekends_home_owed': weekends_home_owed,
             'calculation_log': calculation_log,
             'user_alerts': user_alerts
@@ -334,18 +365,26 @@ class ClosingScheduleCalculator:
         return None
 
     def _get_last_closing_date(self, worker: 'EnhancedWorker', semester_start: date) -> date:
-        """Get the worker's last closing date before semester start."""
+        """Get the most recent closing date that is on or before the semester start.
+
+        If no such date exists, synthesize a prior closing date exactly one
+        interval before the semester start so the first due close will be
+        at or shortly after the start (never negative weeks-since-last-close).
+        """
         if worker.closing_history:
-            return worker.closing_history[-1]
-        else:
-            # If no history, assume they closed some weeks before semester start
-            # based on their interval to create a reasonable starting point
-            return semester_start - timedelta(weeks=worker.closing_interval - 1)
+            prior = [d for d in worker.closing_history if d <= semester_start]
+            if prior:
+                return max(prior)
+        # Fallback: place a synthetic last close one full interval before start
+        interval = max(1, int(worker.closing_interval) if worker.closing_interval is not None else 1)
+        return semester_start - timedelta(weeks=interval)
     
     def _get_weeks_since_last_close(self, last_close_date: date, semester_start: date) -> int:
-        """Calculate weeks between last close and semester start."""
+        """Calculate non-negative weeks between last close and semester start."""
+        if last_close_date > semester_start:
+            return 0
         delta = semester_start - last_close_date
-        return delta.days // 7
+        return max(0, delta.days // 7)
     
     def update_all_worker_schedules(self, workers: List['EnhancedWorker'], 
                                   semester_weeks: List[date]):

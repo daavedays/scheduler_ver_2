@@ -26,10 +26,9 @@
  * Notes:
  *   - Inline comments explain non-obvious logic and UI structure
  */
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -40,7 +39,7 @@ function XTasksDashboardPage() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [period, setPeriod] = useState(1);
   const navigate = useNavigate();
-  const [scheduleExists, setScheduleExists] = useState(false);
+  // const [scheduleExists, setScheduleExists] = useState(false);
   const [exists1, setExists1] = useState(false);
   const [exists2, setExists2] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -52,7 +51,7 @@ function XTasksDashboardPage() {
   const yearOptions = [currentYear, nextYear];
 
   // Check if schedules exist for both periods of the selected year
-  const checkSchedulesExist = async () => {
+  const checkSchedulesExist = useCallback(async () => {
     setLoading(true);
     try {
       const [res1, res2] = await Promise.all([
@@ -76,15 +75,13 @@ function XTasksDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    checkSchedulesExist();
   }, [year]);
 
   useEffect(() => {
-    if (period === 1) setScheduleExists(exists1);
-    else setScheduleExists(exists2);
+    checkSchedulesExist();
+  }, [checkSchedulesExist]);
+
+  useEffect(() => {
     console.log(`[DEBUG] Period ${period} selected. Schedule exists: ${period === 1 ? exists1 : exists2}`);
   }, [period, exists1, exists2]);
 
