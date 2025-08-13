@@ -518,7 +518,7 @@ function YTaskPage() {
         onToggleDarkMode={() => setTableDarkMode(d => !d)}
         showBackButton={true}
         showHomeButton={true}
-        title="Y Tasks"
+        title="שיבוץ עבודות"
       />
       {/* Selector box always dark, not affected by tableDarkMode */}
       <Box sx={{
@@ -540,7 +540,7 @@ function YTaskPage() {
           gap: 2,
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography sx={{ color: '#fff', fontWeight: 700 }}>Select Y Task Schedule</Typography>
+            <Typography sx={{ color: '#fff', fontWeight: 700 }}>שיבוצים אחרונים</Typography>
             <IconButton
               size="small"
               onClick={refreshScheduleList}
@@ -614,7 +614,7 @@ function YTaskPage() {
               alignItems: 'flex-start',
             }}
           >
-            <Typography variant="h5" sx={{ mb: 2, color: tableDarkMode ? '#fff' : '#1976d2' }}>Y Task Assignment</Typography>
+            <Typography variant="h5" sx={{ mb: 2, color: tableDarkMode ? '#fff' : '#1976d2' }}>שיבוץ עבודות</Typography>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <DatePicker
@@ -636,9 +636,9 @@ function YTaskPage() {
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
               <FormControlLabel
                 control={<Switch checked={autoResetBeforeGenerate} onChange={(e) => setAutoResetBeforeGenerate(e.target.checked)} />}
-                label="Reset worker data before generate"
+                label="איפוס נתוני עובדים לפני שיבוץ"
               />
-              <Button variant={mode === 'auto' ? 'contained' : 'outlined'} onClick={() => { setMode('auto'); handleGenerate(); }} disabled={!startDate || !endDate || loading}>Automatic</Button>
+              <Button variant={mode === 'auto' ? 'contained' : 'outlined'} onClick={() => { setMode('auto'); handleGenerate(); }} disabled={!startDate || !endDate || loading}>אוטומציה</Button>
               <Button
                 variant={mode === 'hybrid' ? 'contained' : 'outlined'}
                 onClick={() => {
@@ -659,7 +659,7 @@ function YTaskPage() {
                 }}
                 disabled={!startDate || !endDate || loading}
               >
-                Set Preferences
+                אילוצים
               </Button>
               <Button 
                 variant="outlined" 
@@ -667,7 +667,7 @@ function YTaskPage() {
                 onClick={handleGetInsufficientWorkersReport}
                 disabled={!startDate || !endDate}
               >
-                Worker Report
+                דו"ח עובדים
               </Button>
               <Button variant={mode === 'manual' ? 'contained' : 'outlined'} sx={{ display: 'none' }}>Manual</Button>
               <Button variant={mode === 'hybrid' ? 'contained' : 'outlined'} disabled sx={{ display: 'none' }}>Hybrid</Button>
@@ -902,7 +902,7 @@ function YTaskPage() {
       </Box>
       <Snackbar open={saveSuccess} autoHideDuration={3000} onClose={() => setSaveSuccess(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <MuiAlert onClose={() => setSaveSuccess(false)} severity="success" sx={{ width: '100%' }}>
-          Y tasks saved successfully!
+          שיבוץ עודכן בהצלחה!
         </MuiAlert>
       </Snackbar>
       <Snackbar open={!!saveError} autoHideDuration={4000} onClose={() => setSaveError(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>

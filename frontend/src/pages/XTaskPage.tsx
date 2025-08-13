@@ -560,7 +560,7 @@ function XTaskPage() {
           onToggleDarkMode={() => setTableDarkMode(d => !d)}
           showBackButton={true}
           showHomeButton={true}
-          title="X Tasks"
+          title="עדכון תורנות"
         />
         
         {/* Main Content Container */}
@@ -592,7 +592,7 @@ function XTaskPage() {
                   color: TEXT_COLORS.text_primary, 
                   fontWeight: 600 
                 }}>
-                  Loading X Task Schedule...
+                  טוען נתונים...
                 </Typography>
               </Box>
             </Box>
@@ -621,7 +621,7 @@ function XTaskPage() {
                   fontWeight: 600,
                   mb: 2
                 }}>
-                  Error Loading Schedule
+                  שגיאה בטעינת נתונים
                 </Typography>
                 <Typography sx={{ color: TEXT_COLORS.text_secondary }}>
                   {error}
@@ -653,7 +653,7 @@ function XTaskPage() {
                   fontWeight: 700, 
                   mb: 3 
                 }}>
-                  X Task Schedule - {yearParam} Period {periodParam}
+                  עדכון תורנות - {yearParam} סמסטר {periodParam}
                 </Typography>
                 <Box sx={{ 
                   display: 'flex', 
@@ -677,7 +677,7 @@ function XTaskPage() {
                       }
                     }}
                   >
-                    Switch to Period {periodParam === 1 ? 2 : 1}
+                    מעבר לתקופה {periodParam === 1 ? 2 : 1}
                   </Button>
                   <Button
                     variant="outlined"
@@ -695,7 +695,7 @@ function XTaskPage() {
                       }
                     }}
                   >
-                    Next Year
+                    שנה הבאה
                   </Button>
                 </Box>
               </Box>
@@ -756,7 +756,7 @@ function XTaskPage() {
                   }
                 }}
                 aria-label="resolve-conflict"
-                title="Resolve Conflict"
+                title="פתרון קונפליקט"
               >
                 <WarningAmberIcon sx={{ fontSize: 28, color: '#fff' }} />
               </Fab>
@@ -949,15 +949,15 @@ function XTaskPage() {
                   fontWeight: 700,
                   mb: 3
                 }}>
-                  No X Task Schedule Found
+                  אין תורניות מוצגות
                 </Typography>
                 <Typography variant="body1" sx={{ 
                   color: TEXT_COLORS.text_secondary,
                   mb: 4,
                   lineHeight: 1.6
                 }}>
-                  No X task schedule was found for {yearParam} Period {periodParam}. 
-                  Please create a new schedule or check if the data exists.
+                  אין תורניות מוצגות לתקופה {yearParam} תקופה {periodParam}. 
+                  אנא צור תורניות חדשות או בדוק אם הנתונים קיימים.
                 </Typography>
               </Box>
             </Box>
@@ -988,7 +988,7 @@ function XTaskPage() {
             fontSize: '1.25rem',
             borderRadius: '0.1px 0.1px 0 0'
           }}>
-          Assign X Task for {modal.soldier} - Week {modal.weekLabel}
+          שיבוץ תורנית ל{modal.soldier} - תקופה {modal.weekLabel}
         </DialogTitle>
         <DialogContent sx={{ 
           background: 'transparent',
@@ -1014,8 +1014,8 @@ function XTaskPage() {
                 >
                   <ListItemText 
                     primary={task} 
-                    primaryTypographyProps={{
-                      fontWeight: modalTask === task ? 700 : 500
+                    slotProps={{
+                      primary: { sx: { fontWeight: modalTask === task ? 700 : 500 } }
                     }}
                   />
                 </ListItemButton>
@@ -1038,9 +1038,9 @@ function XTaskPage() {
                 }}
               >
                 <ListItemText 
-                  primary="Other (Custom Task)" 
-                  primaryTypographyProps={{
-                    fontWeight: modalTask === 'Other' ? 700 : 500
+                  primary="אחר (תורנית מותאמת)" 
+                  slotProps={{
+                    primary: { sx: { fontWeight: modalTask === 'Other' ? 700 : 500 } }
                   }}
                 />
               </ListItemButton>
@@ -1050,7 +1050,7 @@ function XTaskPage() {
           {modalTask === 'Other' && (
             <Box sx={{ mt: 4, p: 3, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 3 }}>
               <TextField
-                label="Custom Task Name"
+                label="שם תורנית מותאמת"
                 value={modalOther.name}
                 onChange={e => {
                   if (e.target.value.length <= MAX_CUSTOM_TASK_LEN) setModalOther(o => ({...o, name: e.target.value}));
@@ -1084,7 +1084,7 @@ function XTaskPage() {
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <DatePicker
-                    label="Start Date"
+                    label="תאריך התחלה"
                     value={modalOther.range[0]}
                     onChange={(date: Date | null) => setModalOther(o => ({...o, range: [date, o.range[1]]}))}
                     format="dd/MM/yyyy"
@@ -1107,7 +1107,7 @@ function XTaskPage() {
                     }}
                   />
                   <DatePicker
-                    label="End Date"
+                    label="תאריך סיום"
                     value={modalOther.range[1]}
                     onChange={(date: Date | null) => setModalOther(o => ({...o, range: [o.range[0], date]}))}
                     format="dd/MM/yyyy"
@@ -1151,7 +1151,7 @@ function XTaskPage() {
                   }
                 }}
               >
-                Remove Assignment
+                הסר שיבוץ
               </Button>
             </Box>
           )}
@@ -1171,7 +1171,7 @@ function XTaskPage() {
               }
             }}
           >
-            Cancel
+            ביטול
           </Button>
           <Button 
             onClick={handleModalSave} 
@@ -1190,7 +1190,7 @@ function XTaskPage() {
               }
             }}
           >
-            Save
+            שמירה
           </Button>
         </DialogActions>
       </Dialog>
@@ -1212,7 +1212,7 @@ function XTaskPage() {
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
           }}
         >
-          X tasks saved successfully!
+          תורניות עודכנו בהצלחה
         </MuiAlert>
       </Snackbar>
       
@@ -1235,7 +1235,7 @@ function XTaskPage() {
           }}
         >
           <Box sx={{ mb: 2 }}>
-            <strong>X/Y Task Conflict Detected!</strong>
+            <strong>קונפליקט בתורניות מוצגות</strong>
           </Box>
           <Box component="ul" sx={{ m: 0, pl: 2 }}>
             {conflictDetails.map((c, i) => (
@@ -1245,7 +1245,7 @@ function XTaskPage() {
             ))}
           </Box>
           <Box sx={{ mt: 2, fontSize: '0.9rem' }}>
-            Please review the highlighted (blinking) cells and adjust the Y schedule as needed.
+            אנא בדוק את התאים המודגשים (מתנגש בצבע) ועדכן את השיבוץ ככל צורך.
           </Box>
         </MuiAlert>
       </Snackbar>

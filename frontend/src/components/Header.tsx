@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
   showHomeButton = false,
   showMenuButton = false,
   showDarkModeToggle = true,
-  title = "Worker Scheduling Manager",
+  title = "מנהל שיבוץ עבודות",
   onBackClick,
   onHomeClick,
   onMenuClick

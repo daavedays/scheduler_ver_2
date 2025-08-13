@@ -160,10 +160,15 @@ def get_all_dates_from_x(csv_path, year=None):
         headers = next(reader)
         subheaders = next(reader)
         if year is None:
+            # Derive year from filename like x_tasks_2025_1.csv to avoid stale meta
             try:
-                from backend.x_tasks import load_x_task_meta
-                meta = load_x_task_meta()
-                year = meta['year'] if meta else datetime.today().year
+                m = re.search(r'x_tasks_(\d{4})_(\d)\.csv$', os.path.basename(csv_path))
+                if m:
+                    year = int(m.group(1))
+                else:
+                    from backend.x_tasks import load_x_task_meta
+                    meta = load_x_task_meta()
+                    year = meta['year'] if meta else datetime.today().year
             except Exception:
                 year = datetime.today().year
         period_starts = []
@@ -201,10 +206,15 @@ def read_x_tasks(csv_path, year=None):
         headers = next(reader)
         subheaders = next(reader)
         if year is None:
+            # Derive year from filename like x_tasks_YYYY_H.csv to avoid stale meta
             try:
-                from backend.x_tasks import load_x_task_meta
-                meta = load_x_task_meta()
-                year = meta['year'] if meta else datetime.today().year
+                m = re.search(r'x_tasks_(\d{4})_(\d)\.csv$', os.path.basename(csv_path))
+                if m:
+                    year = int(m.group(1))
+                else:
+                    from backend.x_tasks import load_x_task_meta
+                    meta = load_x_task_meta()
+                    year = meta['year'] if meta else datetime.today().year
             except Exception:
                 year = datetime.today().year
         period_starts = []

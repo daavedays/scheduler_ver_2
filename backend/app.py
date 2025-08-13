@@ -140,6 +140,48 @@ def append_worker_history_snapshot(workers):
     except Exception as e:
         print(f"Warning: could not write worker_history.json: {e}")
 
+def hydrate_workers_from_history(workers):
+    """Overlay stable fields from worker_history.json onto in-memory workers.
+
+    Preserves long-term state across semesters without relying on worker_data.json.
+    Currently hydrates: score and full closing_history (for accurate stats/intervals).
+    """
+    try:
+        history_path = os.path.join(DATA_DIR, 'worker_history.json')
+        if not os.path.exists(history_path):
+            return
+        with open(history_path, 'r', encoding='utf-8') as f:
+            history = json.load(f)
+        by_id = {w.id: w for w in workers}
+        for wid, h in (history or {}).items():
+            w = by_id.get(wid)
+            if not w:
+                continue
+            # Score
+            try:
+                if h.get('score') is not None:
+                    w.score = h['score']
+            except Exception:
+                pass
+            # Closing history (ISO dates)
+            try:
+                ch = h.get('closing_history') or []
+                parsed = []
+                for d in ch:
+                    try:
+                        parsed.append(datetime.strptime(d, '%Y-%m-%d').date())
+                    except Exception:
+                        try:
+                            parsed.append(datetime.fromisoformat(str(d)).date())
+                        except Exception:
+                            continue
+                if parsed:
+                    by_id[wid].closing_history = parsed
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"Warning: hydrate from worker_history.json failed: {e}")
+
 # --- Enhanced Scheduling API Endpoints ---
 @app.route('/api/scheduling/comprehensive-test', methods=['POST'])
 def run_comprehensive_test():
@@ -560,116 +602,24 @@ def tally():
 # --- Reset/History API ---
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    """Reset data (non-interactive) from Settings page.
-
-    Body options (all optional):
-      - clear_y (bool, default True): delete all y_tasks_*.csv and clear index
-      - reset_workers (bool, default True): clear Y data, closings, scores
-      - clear_history (bool, default True): truncate worker_history.json
-      - clear_x (bool, default False): also clear X tasks from workers and delete custom_x_tasks.json
-    """
     if not is_logged_in():
         return require_login()
 
     try:
+        from .services.reset_service import perform_reset
+    except Exception:
+        from services.reset_service import perform_reset
+
+    try:
         opts = request.get_json() or {}
-        clear_y = bool(opts.get('clear_y', True))
-        reset_workers = bool(opts.get('reset_workers', True))
-        clear_history = bool(opts.get('clear_history', True))
-        clear_x = bool(opts.get('clear_x', False))
-
-        # 1) Clear Y schedules and index
-        removed_y_files = 0
-        if clear_y:
-            import glob
-            for path in glob.glob(os.path.join(DATA_DIR, 'y_tasks_*.csv')):
-                try:
-                    os.remove(path)
-                    removed_y_files += 1
-                except Exception:
-                    pass
-            # reset index
-            index_path = os.path.join(DATA_DIR, 'y_tasks_index.json')
-            with open(index_path, 'w', encoding='utf-8') as f:
-                json.dump({}, f)
-
-        # 2) Reset worker data
-        updated_workers = 0
-        if reset_workers:
-            workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
-            for w in workers:
-                # Optionally clear X tasks as well
-                if clear_x:
-                    w.x_tasks = {}
-                # Clear Y tasks and counts
-                w.y_tasks = {}
-                w.y_task_counts = {
-                    "Supervisor": 0,
-                    "C&N Driver": 0,
-                    "C&N Escort": 0,
-                    "Southern Driver": 0,
-                    "Southern Escort": 0,
-                }
-                # Clear closings and recompute (empty semester list keeps them empty)
-                w.closing_history = []
-                w.required_closing_dates = []
-                w.optimal_closing_dates = []
-                w.weekends_home_owed = 0
-                w.home_weeks_owed = 0
-                # Reset score to neutral baseline
-                try:
-                    w.score = 0.0
-                except Exception:
-                    pass
-                updated_workers += 1
-            save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
-
-        # 3) Clear worker history store
-        if clear_history:
-            try:
-                with open(os.path.join(DATA_DIR, 'worker_history.json'), 'w', encoding='utf-8') as f:
-                    json.dump({}, f)
-            except Exception:
-                pass
-
-        # 4) Clear custom X tasks file and X CSV files if requested
-        if clear_x:
-            try:
-                custom_x = os.path.join(DATA_DIR, 'custom_x_tasks.json')
-                if os.path.exists(custom_x):
-                    with open(custom_x, 'w', encoding='utf-8') as f:
-                        json.dump({}, f)
-                # Remove all x_tasks_*.csv
-                import glob
-                for path in glob.glob(os.path.join(DATA_DIR, 'x_tasks_*.csv')):
-                    try:
-                        os.remove(path)
-                    except Exception:
-                        pass
-                # Clear x_task_meta.json
-                x_meta = os.path.join(DATA_DIR, 'x_task_meta.json')
-                if os.path.exists(x_meta):
-                    with open(x_meta, 'w', encoding='utf-8') as f:
-                        json.dump({}, f)
-            except Exception:
-                pass
-
-        # Log event
+        result = perform_reset(opts, DATA_DIR)
         log_history({
             'event': 'settings_reset',
-            'clear_y': clear_y,
-            'reset_workers': reset_workers,
-            'clear_history': clear_history,
-            'clear_x': clear_x,
-            'removed_y_files': removed_y_files,
-            'updated_workers': updated_workers,
+            **opts,
+            'removed_y_files': result.get('removed_y_files', 0),
+            'updated_workers': result.get('updated_workers', 0),
         })
-
-        return jsonify({
-            'success': True,
-            'removed_y_files': removed_y_files,
-            'updated_workers': updated_workers,
-        })
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': f'Reset failed: {str(e)}'}), 500
 
@@ -801,16 +751,33 @@ def save_y_tasks():
         safe_end = end.replace('/', '-')
         filename = f"y_tasks_{safe_start}_to_{safe_end}.csv"
 
-    # If csv_data not provided, generate it from grid/dates/y_task_names
-    if not csv_data and dates and y_task_names and grid:
+    # Always generate CSV from grid using IDs (names are UI-only)
+    if dates and y_task_names and grid:
+        # Build ID maps
+        worker_file_path_for_map = os.path.join(DATA_DIR, 'worker_data.json')
+        workers_for_map = load_workers_from_json(worker_file_path_for_map)
+        try:
+            hydrate_workers_from_history(workers_for_map)
+        except Exception:
+            pass
+        id_map = {w.id: w for w in workers_for_map}
+        name_map = {w.name: w for w in workers_for_map}
+
+        def to_id(val: str) -> str:
+            if not val:
+                return ''
+            if val in id_map:
+                return val
+            w = name_map.get(val)
+            return w.id if w else val
+
         import io, csv
         buf = io.StringIO()
         writer = csv.writer(buf)
         writer.writerow(['Y Task'] + dates)
         for i, task in enumerate(y_task_names):
             row_vals = grid[i] if i < len(grid) else [''] * len(dates)
-            # Ensure row length matches dates
-            row_vals = (row_vals + [''] * len(dates))[:len(dates)]
+            row_vals = [to_id(v) for v in ((row_vals + [''] * len(dates))[:len(dates)])]
             writer.writerow([task] + row_vals)
         csv_data = buf.getvalue()
 
@@ -869,10 +836,13 @@ def save_y_tasks():
     except Exception as e:
         print(f"Error updating y_tasks_index.json: {e}")
 
-    # 3) Update worker data using grid
+    # 3) Update worker data using grid (supports IDs with name fallback)
     worker_file_path = os.path.join(DATA_DIR, 'worker_data.json')
     workers = load_workers_from_json(worker_file_path)
-    worker_name_map = {w.name: w for w in workers}
+    # Hydrate long-term state into runtime workers
+    hydrate_workers_from_history(workers)
+    id_map = {w.id: w for w in workers}
+    name_map = {w.name: w for w in workers}
 
     for i, task in enumerate(y_task_names):
         row = grid[i] if i < len(grid) else []
@@ -886,12 +856,15 @@ def save_y_tasks():
                 date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
             except Exception:
                 continue
-            worker = worker_name_map.get(worker_name)
+            # Prefer ID; fallback to name for legacy grids
+            worker_identifier = worker_name
+            worker = id_map.get(worker_identifier) or name_map.get(worker_identifier)
             if not worker:
                 print(f"Warning: Worker '{worker_name}' not found; skipping assignment")
                 continue
             worker.assign_y_task(date_obj, task)
-            if date_obj.weekday() in {3, 4, 5}:
+            # Only closers (closing_interval > 0) should receive closing assignments
+            if worker.closing_interval and worker.closing_interval > 0 and date_obj.weekday() in {3, 4, 5}:
                 friday = date_obj if date_obj.weekday() == 4 else date_obj - timedelta(days=(date_obj.weekday() - 4))
                 worker.assign_closing(friday)
 
@@ -914,6 +887,8 @@ def generate_y_tasks_schedule():
     num_closers = int(data.get('num_closers', 2))
     
     workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
+    # Hydrate from history for consistent engine inputs
+    hydrate_workers_from_history(workers)
     
     d0 = datetime.strptime(start_date_str, '%d/%m/%Y').date()
     d1 = datetime.strptime(end_date_str, '%d/%m/%Y').date()
@@ -1034,6 +1009,8 @@ def available_soldiers_for_y_task():
         
         # Load workers
         workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
+        # Hydrate from history for consistent engine inputs
+        hydrate_workers_from_history(workers)
         
         # Load X task assignments
         year = date_obj.year
@@ -2094,7 +2071,7 @@ def add_worker():
             'closing_interval': worker.closing_interval,
             'officer': worker.officer,
             'seniority': worker.seniority,
-            'score': worker.score,
+            'score': float(worker.score) if worker.score is not None else 0.0,
             'x_tasks': {str(k): v for k, v in worker.x_tasks.items()},
             'y_tasks': {str(k): v for k, v in worker.y_tasks.items()},
             'closing_history': [str(d) for d in worker.closing_history]
@@ -2191,10 +2168,28 @@ def get_statistics():
         
         # Load all available data
         workers = load_workers_from_json(WORKER_JSON_PATH)
+        # Ensure long-term state is present for accurate stats
+        hydrate_workers_from_history(workers)
         
-        # Initialize closing tracking variables
+        # Initialize closing tracking variables and precompute from worker state
         worker_closing_counts = {}
         worker_closing_dates = {}
+        for w in workers:
+            worker_closing_counts[w.id] = 0
+            worker_closing_dates[w.id] = []
+            try:
+                for d in getattr(w, 'closing_history', []) or []:
+                    try:
+                        dobj = d if isinstance(d, date) else datetime.strptime(str(d), '%Y-%m-%d').date()
+                    except Exception:
+                        try:
+                            dobj = datetime.strptime(str(d), '%d/%m/%Y').date()
+                        except Exception:
+                            continue
+                    worker_closing_counts[w.id] += 1
+                    worker_closing_dates[w.id].append(dobj.strftime('%d/%m/%Y'))
+            except Exception:
+                continue
         
         # Get all X task files
         x_task_files = []
@@ -2533,29 +2528,34 @@ def get_statistics():
         
         # Calculate closing interval accuracy for each worker
         for worker in workers:
-            if worker.closing_interval > 0:  # Only workers who participate in closing
+            if worker.closing_interval and worker.closing_interval > 0:  # Only workers who participate in closing
                 total_closings = worker_closing_counts.get(worker.id, 0)
-                
-                # Estimate total weeks served from span of closings (fallback 26)
-                if worker_closing_dates.get(worker.id):
-                    try:
-                        dates_sorted = sorted(
-                            [datetime.strptime(d, '%d/%m/%Y').date() for d in worker_closing_dates[worker.id]]
-                        )
-                        total_weeks = max(1, (dates_sorted[-1] - dates_sorted[0]).days // 7)
-                    except Exception:
-                        total_weeks = 26
-                else:
-                    total_weeks = 26
 
-                # Calculate how well they follow their interval
+                # Robust actual interval: use average gap between consecutive closings when available
+                actual_interval = 0
+                interval_percentage = 0
+                try:
+                    dates_raw = worker_closing_dates.get(worker.id, [])
+                    dates_sorted = sorted([datetime.strptime(d, '%d/%m/%Y').date() for d in dates_raw])
+                    if len(dates_sorted) >= 2:
+                        gaps = [(dates_sorted[i] - dates_sorted[i-1]).days // 7 for i in range(1, len(dates_sorted))]
+                        if gaps:
+                            actual_interval = sum(gaps) / len(gaps)
+                        else:
+                            actual_interval = worker.closing_interval
+                    elif len(dates_sorted) == 1:
+                        # Not enough data yet; treat as on-target to avoid early-semester dip
+                        actual_interval = worker.closing_interval
+                    else:
+                        actual_interval = 0
+                except Exception:
+                    # Fallback to span-based estimate (26 weeks baseline)
+                    actual_interval = worker.closing_interval
+
                 if total_closings > 0 and worker.closing_interval > 0:
-                    actual_interval = total_weeks / max(1, total_closings)
                     interval_accuracy = abs(actual_interval - worker.closing_interval) / worker.closing_interval
                     interval_percentage = max(0, 100 - (interval_accuracy * 100))
                 else:
-                    actual_interval = 0
-                    interval_accuracy = 1
                     interval_percentage = 0
                 
                 closing_workers.append({
@@ -2563,7 +2563,7 @@ def get_statistics():
                     'worker_id': worker.id,
                     'closing_interval': worker.closing_interval,
                     'total_closings': total_closings,
-                    'total_weeks_served': total_weeks,
+                    'total_weeks_served': max(1, (total_closings - 1) * int(actual_interval)) if total_closings > 1 else (26 if total_closings == 0 else worker.closing_interval),
                     'actual_interval': round(actual_interval, 2),
                     'interval_accuracy': round(interval_percentage, 2),
                     'closing_dates': worker_closing_dates.get(worker.id, []),

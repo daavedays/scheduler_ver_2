@@ -298,16 +298,16 @@ function LoginPage() {
               letterSpacing: 2, 
               textShadow: '0 4px 32px #000a',
               fontSize: { xs: '3rem', sm: '4rem', md: '5rem' }
-            }}>Welcome</Typography>
+            }}>ברוכים הבאים</Typography>
           </Box>
         </Box>
       </Box>
       {/* Description Section */}
       <Box sx={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <Box sx={{ width: { xs: '95%', sm: '80%', md: '60%' }, bgcolor: 'rgba(35,39,43,0.65)', borderRadius: 3, boxShadow: 4, p: 4, mb: 3, textAlign: 'center', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
-          <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: '#e0e6ed' }}>Description</Typography>
+          <Typography variant="h2" sx={{ mb: 2, fontWeight: 600, color: '#e0e6ed' }}>תיאור</Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            This is the Worker Scheduling Manager. Easily create, edit, and view X and Y task schedules for your team. Enjoy a modern, responsive interface with beautiful backgrounds and secure login. (This is placeholder text. Replace with your real description!)
+            מנהל שיבוץ עבודות. בקלות תוכלו ליצור, לערוך ולצפות בשיבוצים של תורניות ועבודות בצורה מודרנית ונגישה. ניתן להשתמש בממשק מודרני ונגיש עם רקעים יפים וכניסה מאובטחת.
           </Typography>
         </Box>
       </Box>
@@ -1317,7 +1317,7 @@ function AppRoutes() {
         <Route path="/statistics" element={<ProtectedRoute><StatisticsPage /></ProtectedRoute>} />
 
         {/* Remove commented-out routes for unused pages */}
-        <Route path="/help" element={<ProtectedRoute><Box sx={{ p: 4 }}><Typography variant='h4'>Help (Coming Soon)</Typography></Box></ProtectedRoute>} />
+        <Route path="/help" element={<ProtectedRoute><Box sx={{ p: 4 }}><Typography variant='h4'>דוד, אתה חוזר למילואים </Typography></Box></ProtectedRoute>} />
         {/* No catch-all redirect; let router handle refresh and unknown routes */}
       </Routes>
     </AuthContext.Provider>

@@ -34,6 +34,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Header from '../components/Header';
 import { fetchWithAuth } from '../utils/api';
+import FadingBackground from '../components/FadingBackground';
 
 function XTasksDashboardPage() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -108,10 +109,12 @@ function XTasksDashboardPage() {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #1a2233 0%, #2c3e50 100%)',
+      bgcolor: 'transparent',
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* Blurred/animated background like Y tasks page */}
+      <FadingBackground />
       {/* Background Pattern */}
       <Box sx={{
         position: 'absolute',
@@ -130,7 +133,7 @@ function XTasksDashboardPage() {
           onToggleDarkMode={() => {}}
           showBackButton={true}
           showHomeButton={true}
-          title="Main Tasks Dashboard"
+          title="עדכון תורנות"
         />
         
         {/* Main content */}
@@ -152,7 +155,7 @@ function XTasksDashboardPage() {
             fontSize: { xs: '2.5rem', sm: '3rem', md: '4rem' },
             textAlign: 'center'
           }}>
-            Main Tasks
+            תורניות
           </Typography>
           
           {/* Year and Period Selection */}
@@ -165,7 +168,7 @@ function XTasksDashboardPage() {
             alignItems: 'center'
           }}>
             <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel sx={{ color: '#e0e6ed' }}>Year</InputLabel>
+              <InputLabel sx={{ color: '#e0e6ed' }}>שנה</InputLabel>
               <Select
                 value={year}
                 onChange={(e) => setYear(e.target.value as number)}
@@ -194,7 +197,7 @@ function XTasksDashboardPage() {
             </FormControl>
             
             <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel sx={{ color: '#e0e6ed' }}>Period</InputLabel>
+                <InputLabel sx={{ color: '#e0e6ed' }}>תקופה</InputLabel>
               <Select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value as number)}
@@ -214,8 +217,8 @@ function XTasksDashboardPage() {
                   },
                 }}
               >
-                <MenuItem value={1} sx={{ color: '#1e3a5c' }}>1st Half</MenuItem>
-                <MenuItem value={2} sx={{ color: '#1e3a5c' }}>2nd Half</MenuItem>
+                <MenuItem value={1} sx={{ color: '#1e3a5c' }}>1</MenuItem>
+                <MenuItem value={2} sx={{ color: '#1e3a5c' }}>2</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -254,14 +257,14 @@ function XTasksDashboardPage() {
                 color: canCreate ? '#4caf50' : '#9e9e9e',
                 textShadow: '0 2px 8px rgba(0,0,0,0.3)'
               }}>
-                Create New Schedule
+                יצירת תורנות חדשה
               </Typography>
               <Typography variant="body1" sx={{ 
                 mb: 4, 
                 color: '#e0e6ed',
                 lineHeight: 1.6
               }}>
-                Create a new main task schedule for {year} - {period === 1 ? '1st' : '2nd'} Half
+                יצירת תורנות חדשה {year} - {period === 1 ? '1' : '2'}
               </Typography>
               <Button
                 variant="contained"
@@ -286,7 +289,7 @@ function XTasksDashboardPage() {
                   }
                 }}
               >
-                {loading ? 'Loading...' : 'GO'}
+                {loading ? 'טוען...' : 'יצירה'}
               </Button>
             </Box>
 
@@ -314,14 +317,14 @@ function XTasksDashboardPage() {
                 color: canEdit ? '#ff9800' : '#9e9e9e',
                 textShadow: '0 2px 8px rgba(0,0,0,0.3)'
               }}>
-                Edit Schedule
+                עריכת תורנות
               </Typography>
               <Typography variant="body1" sx={{ 
                 mb: 4, 
                 color: '#e0e6ed',
                 lineHeight: 1.6
               }}>
-                Modify existing main task schedule for {year} - {period === 1 ? '1st' : '2nd'} Half
+                עריכת תורנות קיימת {year} - {period === 1 ? '1' : '2'}
               </Typography>
               <Button
                 variant="contained"
@@ -346,7 +349,7 @@ function XTasksDashboardPage() {
                   }
                 }}
               >
-                {loading ? 'Loading...' : 'GO'}
+                {loading ? 'טוען...' : 'עריכה'}
               </Button>
             </Box>
           </Box>

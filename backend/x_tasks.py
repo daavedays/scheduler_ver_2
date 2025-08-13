@@ -114,8 +114,9 @@ def trigger_closing_schedule_recalc(affected_worker_ids=None, year=None, half=No
 
 
 # --- Weekly Grid Logic ---
-def load_soldiers(json_path='data/worker_data.json', name_conv_path='data/name_conv.json'):
-    return load_workers_from_json(json_path, name_conv_path)
+def load_soldiers(json_path='data/worker_data.json', name_conv_path=None):
+    # Name conversion is deprecated; IDs are used everywhere.
+    return load_workers_from_json(json_path)
 
 
 def get_weeks_for_period(year, half):
@@ -177,17 +178,7 @@ def save_x_tasks_to_csv(assignments, weeks, custom_tasks, year, half, csv_path='
         csv_path (str): Path to save the CSV file.
     """
     # Load id-to-Hebrew name mapping
-    name_conv_path = 'data/name_conv.json'
-    if os.path.exists(name_conv_path):
-        with open(name_conv_path, 'r', encoding='utf-8') as f:
-            name_conv_list = json.load(f)
-        id_to_hebrew = {}
-        for entry in name_conv_list:
-            for k, v in entry.items():
-                id_to_hebrew[k] = v
-
-    else:
-        id_to_hebrew = {}
+    id_to_hebrew = {}
     headers = ['שם'] + [f'{week_num} ({ws.strftime("%d/%m")}-{we.strftime("%d/%m")})' for week_num, ws, we in weeks]
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)

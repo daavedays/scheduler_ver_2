@@ -43,15 +43,15 @@ import Footer from '../components/Footer';
 function MainMenuPage() {
   const navigate = useNavigate();
   const navCards = [
-    { label: 'Main Tasks', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/x-tasks', desc: 'X-tasks: Core scheduling' },
-    { label: 'Secondary Tasks', icon: <ListAltIcon sx={{ fontSize: 48 }} />, to: '/y-tasks', desc: 'Y-tasks: Support scheduling' },
-    { label: 'Combined Schedule', icon: <DashboardIcon sx={{ fontSize: 48 }} />, to: '/combined', desc: 'View all schedules' },
+    { label: 'תורניות', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/x-tasks', desc: 'תורניות: תורניות עיקריות' },
+    { label: 'שיבוץ עבודות', icon: <ListAltIcon sx={{ fontSize: 48 }} />, to: '/y-tasks', desc: 'שיבוץ עבודות: שיבוץ עבודות משנה' },
+    { label: 'צפייה בכל השיבוצים', icon: <DashboardIcon sx={{ fontSize: 48 }} />, to: '/combined', desc: 'צפייה בכל השיבוצים' },
 
-    { label: 'View History', icon: <HistoryIcon sx={{ fontSize: 48 }} />, to: '/reset-history', desc: 'See changes & resets' },
-    { label: 'Statistics', icon: <BarChartIcon sx={{ fontSize: 48 }} />, to: '/statistics', desc: 'View stats & analytics' },
-    { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 48 }} />, to: '/settings', desc: 'Reset data & app settings' },
-    { label: 'Help', icon: <HelpOutlineIcon sx={{ fontSize: 48 }} />, to: '/help', desc: 'Get help & info' },
-    { label: 'Manage Workers', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/manage-workers', desc: 'Add, update, remove, or edit qualifications for workers.' },
+    { label: 'צפייה בהיסטוריה', icon: <HistoryIcon sx={{ fontSize: 48 }} />, to: '/reset-history', desc: 'צפייה בהיסטוריה' },
+    { label: 'סטטיסטיקה', icon: <BarChartIcon sx={{ fontSize: 48 }} />, to: '/statistics', desc: 'סטטיסטיקה' },
+    { label: 'הגדרות', icon: <SettingsIcon sx={{ fontSize: 48 }} />, to: '/settings', desc: 'הגדרות' },
+    { label: 'עזרה', icon: <HelpOutlineIcon sx={{ fontSize: 48 }} />, to: '/help', desc: 'עזרה' },
+    { label: 'ניהול עובדים', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/manage-workers', desc: 'הוסף, עדכן, הסר או ערך עובדים' },
   ];
 
   return (

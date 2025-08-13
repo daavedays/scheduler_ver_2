@@ -212,7 +212,8 @@ class SchedulingEngineV2:
         logs.append(f"Weekend of {thursday.strftime('%d/%m/%Y')} requires {num_slots} closers for tasks: {all_weekend_tasks}")
 
         # 1. Assign required closers (X-Task "Rituk")
-        required_closers = [w for w in workers if friday in w.required_closing_dates]
+        # Only workers with a positive closing interval can be considered closers
+        required_closers = [w for w in workers if w.closing_interval and w.closing_interval > 0 and friday in w.required_closing_dates]
         
         # Create a mutable copy of tasks to assign
         unassigned_tasks = all_weekend_tasks[:]
@@ -240,11 +241,13 @@ class SchedulingEngineV2:
             else:
                 logs.append(f"WARNING: Required closer {worker.name} has no qualifying tasks for this weekend.")
 
-        # 2. Fill remaining closer slots based on optimal dates and score
+        # 2. Fill remaining closer slots with stronger score priority
         if len(assigned_closers) < num_slots:
             candidates = []
             for w in workers:
                 if w.id in [c.id for c in assigned_closers] or w.id in [c.id for c in required_closers]:
+                    continue
+                if not w.closing_interval or w.closing_interval <= 0:
                     continue
                 
                 if friday - timedelta(days=7) in w.closing_history:
@@ -253,8 +256,9 @@ class SchedulingEngineV2:
                     continue
 
                 is_optimal = friday in w.optimal_closing_dates
-                
-                key = (0 if is_optimal else 1, w.score, w.id)
+                total_y = sum(w.y_task_counts.values())
+                # Primary: score
+                key = (w.score, 0 if is_optimal else 1, total_y, w.id)
                 candidates.append((w, key))
 
             candidates.sort(key=lambda x: x[1])
@@ -272,6 +276,11 @@ class SchedulingEngineV2:
                          assignments[day].append((task_to_assign, worker.id))
 
                     worker.assign_closing(friday)
+                    # Nudge score after each closing to reduce immediate future priority
+                    try:
+                        worker.update_score_after_assignment("closing", friday)
+                    except Exception:
+                        pass
                     worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
                     
                     unassigned_tasks.remove(task_to_assign)
@@ -319,7 +328,11 @@ class SchedulingEngineV2:
             if any(t == task for t, _ in assignments.get(task_date, [])):
                 continue
             
-            candidates = [w for w in available_workers if task in w.qualifications]
+            candidates_all = [w for w in available_workers if task in w.qualifications]
+            # Prefer workers without another Y-task this same week
+            week_start = task_date - timedelta(days=task_date.weekday())
+            candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]
+            candidates = candidates_pref if candidates_pref else candidates_all
             
             if not candidates:
                 reason = f"No qualified workers for {task}"
@@ -327,19 +340,29 @@ class SchedulingEngineV2:
                 logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
                 continue
             
-            candidates.sort(key=lambda w: (w.y_task_counts.get(task, 0), w.score, w.id))
+            # Stronger score priority: score first, then per-task count, then total Y, then ID
+            candidates.sort(key=lambda w: (
+                w.score,
+                w.y_task_counts.get(task, 0),
+                sum(w.y_task_counts.values()),
+                w.id
+            ))
             chosen_worker = candidates[0]
             
             assignments[task_date].append((task, chosen_worker.id))
             available_workers.remove(chosen_worker)
             
-            week_start = task_date - timedelta(days=task_date.weekday())
             y_tasks_this_week = 1 + chosen_worker.check_multiple_y_tasks_per_week(week_start)
             
             if y_tasks_this_week > 1:
                 chosen_worker.add_score_bonus(1.0, f"Multiple Y-tasks in week of {week_start.strftime('%d/%m/%Y')}")
                 logs.append(f"Applied score penalty to {chosen_worker.name} for multiple Y-tasks this week.")
             
+            # Nudge score after each Y assignment
+            try:
+                chosen_worker.update_score_after_assignment("y_task", task_date)
+            except Exception:
+                pass
             chosen_worker.y_task_counts[task] = chosen_worker.y_task_counts.get(task, 0) + 1
             logs.append(f"Assigned weekday task {task} to {chosen_worker.name} on {task_date.strftime('%d/%m/%Y')}")
 

@@ -33,7 +33,7 @@ class ScoringConfig:
     EARLY_CLOSE_BONUS: float = 1.0
 
     # Overdue reduction: base multiplier per weeks overdue
-    OVERDUE_REDUCTION_PER_WEEK: float = 0.75
+    OVERDUE_REDUCTION_PER_WEEK: float = 0.80
 
     # Convert remaining weekends_home_owed to score at semester end
     OWE_TO_SCORE_CONVERSION: float = 0.5
