@@ -126,7 +126,8 @@ class SchedulingEngineV2:
         workers: List[EnhancedWorker],
         start_date: date,
         end_date: date,
-        tasks_by_date: Dict[date, List[str]]
+        tasks_by_date: Dict[date, List[str]],
+        num_closers_per_weekend: Optional[int] = None,
     ) -> Dict:
         """
         Main orchestration function for assigning all Y-tasks within a date range.
@@ -172,7 +173,8 @@ class SchedulingEngineV2:
                         weekend_tasks_for_dates,
                         assignments,
                         logs,
-                        all_fridays_in_range
+                        all_fridays_in_range,
+                        num_closers_per_weekend
                     )
                 
                 date_cursor = thursday + timedelta(days=3) # Move to next Sunday
@@ -206,7 +208,7 @@ class SchedulingEngineV2:
 
         assigned_closers: List[EnhancedWorker] = []
         
-        # Dynamically determine the number of closer slots from the number of tasks
+        # Determine closer slots: prefer override; else derive from task count
         all_weekend_tasks = sorted(list(set(t for d_tasks in weekend_tasks.values() for t in d_tasks)))
         num_slots = len(all_weekend_tasks)
         logs.append(f"Weekend of {thursday.strftime('%d/%m/%Y')} requires {num_slots} closers for tasks: {all_weekend_tasks}")
@@ -241,7 +243,7 @@ class SchedulingEngineV2:
             else:
                 logs.append(f"WARNING: Required closer {worker.name} has no qualifying tasks for this weekend.")
 
-        # 2. Fill remaining closer slots with stronger score priority
+        # 2. Fill remaining closer slots with optimal-first policy, then score
         if len(assigned_closers) < num_slots:
             candidates = []
             for w in workers:
@@ -250,15 +252,20 @@ class SchedulingEngineV2:
                 if not w.closing_interval or w.closing_interval <= 0:
                     continue
                 
-                if friday - timedelta(days=7) in w.closing_history:
-                    continue
+                # Enforce cooldown relative to closing_interval (skip too-soon assignments)
+                if w.closing_history:
+                    last_close = max(w.closing_history)
+                    weeks_since = (friday - last_close).days // 7
+                    min_gap = max(0, (w.closing_interval or 0) - 1)
+                    if weeks_since < min_gap:
+                        continue
                 if friday + timedelta(days=7) in w.required_closing_dates:
                     continue
 
                 is_optimal = friday in w.optimal_closing_dates
                 total_y = sum(w.y_task_counts.values())
-                # Primary: score
-                key = (w.score, 0 if is_optimal else 1, total_y, w.id)
+                # Prefer optimal first, then lower score, then lower load
+                key = (0 if is_optimal else 1, w.score, total_y, w.id)
                 candidates.append((w, key))
 
             candidates.sort(key=lambda x: x[1])
@@ -282,8 +289,7 @@ class SchedulingEngineV2:
                     except Exception:
                         pass
                     worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
-                    
-                    unassigned_tasks.remove(task_to_assign)
+                    # Do not deplete task list when using slot-based assignment
                     logs.append(f"Assigned {worker.name} to {task_to_assign} for weekend of {thursday.strftime('%d/%m/%Y')} (Optimal: {friday in worker.optimal_closing_dates})")
 
         # 3. Update workers who had an optimal date but were not picked
@@ -329,10 +335,23 @@ class SchedulingEngineV2:
                 continue
             
             candidates_all = [w for w in available_workers if task in w.qualifications]
-            # Prefer workers without another Y-task this same week
+            # Prefer workers without another Y-task this same week and enforce cooldown to closing interval
             week_start = task_date - timedelta(days=task_date.weekday())
             candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]
             candidates = candidates_pref if candidates_pref else candidates_all
+
+            def cooldown_ok(w: EnhancedWorker) -> bool:
+                if not w.closing_history:
+                    return True
+                # Only enforce if they have a positive closing interval
+                if not w.closing_interval or w.closing_interval <= 0:
+                    return True
+                last_close = max(w.closing_history)
+                weeks_since = (task_date - last_close).days // 7
+                min_gap = max(0, w.closing_interval - 1)
+                return weeks_since >= min_gap
+
+            candidates = [w for w in candidates if cooldown_ok(w)]
             
             if not candidates:
                 reason = f"No qualified workers for {task}"
@@ -340,8 +359,15 @@ class SchedulingEngineV2:
                 logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
                 continue
             
-            # Stronger score priority: score first, then per-task count, then total Y, then ID
+            # Prefer workers closer to their optimal closing date this week, then score, then fairness
+            def weeks_to_nearest_optimal(worker: EnhancedWorker) -> int:
+                if not getattr(worker, 'optimal_closing_dates', None):
+                    return 999
+                diffs = [abs((opt - task_date).days) // 7 for opt in worker.optimal_closing_dates]
+                return min(diffs) if diffs else 999
+
             candidates.sort(key=lambda w: (
+                weeks_to_nearest_optimal(w),
                 w.score,
                 w.y_task_counts.get(task, 0),
                 sum(w.y_task_counts.values()),

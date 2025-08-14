@@ -918,5 +918,17 @@
       "updated_workers": 24
     },
     "timestamp": "2025-08-13T20:56:54.489807"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T12:23:30.231819"
   }
 ]
