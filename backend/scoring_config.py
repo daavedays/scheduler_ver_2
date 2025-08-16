@@ -48,6 +48,10 @@ class ScoringConfig:
     # Annual reset policy
     YEAR_RESET_ENABLED: bool = True
 
+    # Closing calculator global controls
+    CLOSING_RELIEF_ENABLED: bool = True
+    CLOSING_RELIEF_MAX_PER_SEMESTER: int = 1
+
 
 def load_config(overrides_path: Optional[str] = None) -> ScoringConfig:
     cfg = ScoringConfig()

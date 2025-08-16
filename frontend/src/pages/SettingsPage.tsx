@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Switch, FormControlLabel, Button, Alert } from '@mui/material';
+import { Box, Typography, Paper, Switch, FormControlLabel, Button, Alert, Divider } from '@mui/material';
 import PageContainer from '../components/PageContainer';
 import Header from '../components/Header';
 import { fetchWithAuth } from '../utils/api';
@@ -12,6 +12,9 @@ const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsResult, setStatsResult] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   const handleReset = async () => {
     setLoading(true);
@@ -34,6 +37,26 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleResetStatistics = async () => {
+    setStatsLoading(true);
+    setStatsResult(null);
+    setStatsError(null);
+    try {
+      const res = await fetchWithAuth('http://localhost:5001/api/statistics/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Statistics reset failed');
+      setStatsResult('Statistics have been reset successfully');
+    } catch (e: any) {
+      setStatsError(e.message || 'Statistics reset failed');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   return (
     <PageContainer>
       <Header darkMode={true} onToggleDarkMode={() => {}} showBackButton={true} showHomeButton={true} title="Settings" />
@@ -53,6 +76,18 @@ const SettingsPage: React.FC = () => {
         </Button>
         {result && <Alert severity="success" sx={{ mt: 2 }}>{result}</Alert>}
         {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      </Paper>
+
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>Statistics Management</Typography>
+        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+          Reset the statistics database to clear all accumulated statistics data. This will not affect actual schedules or worker data.
+        </Typography>
+        <Button variant="contained" color="warning" onClick={handleResetStatistics} disabled={statsLoading}>
+          {statsLoading ? 'Resetting Statistics...' : 'Reset Statistics'}
+        </Button>
+        {statsResult && <Alert severity="success" sx={{ mt: 2 }}>{statsResult}</Alert>}
+        {statsError && <Alert severity="error" sx={{ mt: 2 }}>{statsError}</Alert>}
       </Paper>
     </PageContainer>
   );

@@ -2,7 +2,7 @@ import os
 import json
 from typing import Dict
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 Y_TASK_KEYS = [
@@ -97,7 +97,7 @@ def perform_reset(opts: Dict, data_dir: str) -> Dict:
             if os.path.exists(hist_path):
                 with open(hist_path, "r", encoding="utf-8") as f:
                     history = json.load(f) or {}
-            now = datetime.utcnow().isoformat()
+            now = datetime.now(timezone.utc).isoformat()
             for wid, rec in list(history.items()):
                 if not isinstance(rec, dict):
                     history[wid] = {}

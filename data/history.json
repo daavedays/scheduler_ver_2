@@ -930,5 +930,869 @@
       "updated_workers": 24
     },
     "timestamp": "2025-08-14T12:23:30.231819"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T13:12:01.858992"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T13:12:12.766434"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T18:24:53.704502"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T18:24:55.178236"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T18:24:56.492452"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-14T18:25:09.063993"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:01:10.288272"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:03:55.763217"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:03:59.073915"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:04:11.260148"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:07:49.403882"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:08:14.748048"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:17:27.950681"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:23:49.133169"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:23:58.543395"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:24:57.728082"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:27:46.014961"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T09:27:58.901671"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:07:32.305920"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:07:42.831744"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:08:34.216033"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:09:06.253963"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:09:54.588502"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T10:12:27.139438"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:06:56.507662"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:07.631234"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:15.903025"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:25.608555"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:32.634606"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:46.724826"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:48.575647"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:49.481722"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:50.097704"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:07:53.431263"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 3,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:08:10.263562"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:08:19.142295"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:10:36.612398"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:22:53.239098"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-15T20:27:26.384462"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T15:29:24.606250+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 2,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:26:18.857157+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:26:59.059927+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:42:34.953713+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:48:36.434665+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:55:39.276341+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T16:56:04.099164+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:20:10.505837+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:20:46.107065+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:26:12.372970+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:27:35.372950+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:43:08.516210+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:43:28.583417+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:49:44.412283+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T17:50:07.838132+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:03:53.991408+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:04:23.843792+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:14:42.194654+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:17:57.338194+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:21:01.156709+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:39:23.461294+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:40:10.986093+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:42:16.451011+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:48:42.058708+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:48:55.415988+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:49:33.115982+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T18:51:13.651122+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 1,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:06:55.332332+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:09:43.004439+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:12:17.288878+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:12:38.641313+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:13:10.771578+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": false,
+      "reset_workers": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 24
+    },
+    "timestamp": "2025-08-16T20:13:33.731733+00:00"
   }
 ]

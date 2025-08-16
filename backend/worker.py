@@ -18,11 +18,7 @@ class EnhancedWorker:
         self.name = name
         self.qualifications = qualifications.copy() if qualifications else []
         self.closing_interval = closing_interval
-        # Higher = more overworked = lower priority. Handle None or invalid input safely
-        try:
-            self.score = float(score) if score is not None else 0.0
-        except (ValueError, TypeError):
-            self.score = 0.0
+        self.score = float(score)  # Higher = more overworked = lower priority
         
         # Pre-computed closing schedule based on X tasks
         self.required_closing_dates = []  # Must close (due to X tasks)
@@ -105,6 +101,10 @@ class EnhancedWorker:
         last_close = max(self.closing_history)
         days_since = (current_date - last_close).days
         return days_since <= days_threshold
+    
+    def can_participate_in_closing(self) -> bool:
+        """Check if worker can participate in closing duties"""
+        return self.closing_interval > 0
     
     def get_closing_interval(self) -> int:
         """Get worker's closing interval"""
@@ -233,7 +233,11 @@ class EnhancedWorker:
  
     
     def assign_closing(self, closing_date: date):
-        """Assign closing to worker"""
+        """Assign closing to worker
+        
+        Note: Workers with closing_interval <= 0 should NEVER be assigned to close.
+        This method should only be called after validating closing_interval > 0.
+        """
         if closing_date not in self.closing_history:
             self.closing_history.append(closing_date)
             self.closing_history.sort()
@@ -289,9 +293,9 @@ class EnhancedWorker:
             'qualifications': self.qualifications,
             'closing_interval': self.closing_interval,
             'officer': self.officer,
-            'seniority': self.seniority,
+            'seniority': self.seniority,  # TODO: GET RID OF THIS
             'score': self.score,
-            'long_timer': self.long_timer,
+            'long_timer': self.long_timer,  # TODO: GET RID OF THIS
             'x_tasks': self.x_tasks,
             'y_tasks': {date_obj.isoformat(): task for date_obj, task in self.y_tasks.items()},
             'closing_history': [d.isoformat() for d in self.closing_history],
@@ -319,9 +323,9 @@ class EnhancedWorker:
             qualifications=data['qualifications'],
             closing_interval=data['closing_interval'],
             officer=data.get('officer', False),
-            seniority=data.get('seniority'),
+            seniority=data.get('seniority'),  # TODO: GET RID OF THIS   
             score=data.get('score', 0.0),
-            long_timer=data.get('long_timer', False),
+            long_timer=data.get('long_timer', False),  # TODO: GET RID OF THIS  
             weekends_home_owed=data.get('weekends_home_owed', data.get('home_weeks_owed', 0))
         )
         
@@ -366,14 +370,33 @@ class EnhancedWorker:
 # ============================================================================
 
 def load_workers_from_json(filepath: str, name_conv_path: str | None = None) -> List[EnhancedWorker]:
-    """Load workers from JSON file. Name conversion is no longer used; IDs are canonical."""
+    """Load workers from JSON file with proper name conversion from IDs to Hebrew names."""
     workers = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             workers_data = json.load(f)
         
+        # Load name conversion mapping (ID -> Hebrew name)
+        id_to_hebrew = {}
+        if name_conv_path and os.path.exists(name_conv_path):
+            try:
+                with open(name_conv_path, 'r', encoding='utf-8') as f:
+                    name_conv_list = json.load(f)
+                for entry in name_conv_list:
+                    for worker_id, hebrew_name in entry.items():
+                        id_to_hebrew[worker_id] = hebrew_name
+                print(f"✅ Loaded name conversion for {len(id_to_hebrew)} workers")
+            except Exception as e:
+                print(f"⚠️  Warning: Could not load name conversion: {e}")
+        
         for worker_data in workers_data:
-            # Keep name from JSON; IDs are authoritative
+            # Convert ID to Hebrew name if possible
+            worker_id = worker_data.get('id', '')
+            hebrew_name = id_to_hebrew.get(worker_id, worker_data.get('name', worker_id))
+            
+            # Update the worker data with Hebrew name
+            worker_data['name'] = hebrew_name
+            
             worker = EnhancedWorker.from_dict(worker_data)
             workers.append(worker)
             
@@ -420,11 +443,11 @@ def load_y_tasks_from_csv(filepath: str, workers: List[EnhancedWorker]):
                     continue
                     
                 task_name = row[0]
-                for i, worker_identifier in enumerate(row[1:]):
-                    if worker_identifier and i < len(dates):
-                        # Worker identifier must be ID (names are UI-only)
+                for i, worker_name in enumerate(row[1:]):
+                    if worker_name and i < len(dates):
+                        # Find worker and assign task
                         for worker in workers:
-                            if worker.id == worker_identifier:
+                            if worker.name == worker_name:
                                 worker.assign_y_task(dates[i], task_name)
                                 break
                     
@@ -456,8 +479,8 @@ def load_x_tasks_from_csv(filepath: str, workers: List[EnhancedWorker]):
                 if not row:
                     continue
                     
-                worker_identifier = row[0]
-                worker = next((w for w in workers if w.id == worker_identifier), None)
+                worker_name = row[0]
+                worker = next((w for w in workers if w.name == worker_name), None)
                 
                 if worker:
                     for i, task_name in enumerate(row[1:]):

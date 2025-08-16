@@ -94,6 +94,7 @@ function YTaskPage() {
   const [showInsufficientReport, setShowInsufficientReport] = useState(false);
   const [generatedCsvData, setGeneratedCsvData] = useState<string | null>(null);
   const [autoResetBeforeGenerate, setAutoResetBeforeGenerate] = useState(true);
+  const [workers, setWorkers] = useState<{id: string, name: string}[]>([]);
 
   // On mount, check for resolveConflict in localStorage
   useEffect(() => {
@@ -121,6 +122,27 @@ function YTaskPage() {
     localStorage.removeItem('resolveConflict');
   };
 
+  const loadWorkers = async () => {
+    try {
+      const res = await fetch('http://localhost:5001/api/workers', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setWorkers(data.workers || []);
+        console.log('Workers loaded:', data.workers?.length || 0);
+      } else {
+        console.error('Failed to load workers');
+      }
+    } catch (error) {
+      console.error('Error loading workers:', error);
+    }
+  };
+
+  const getWorkerName = (workerId: string): string => {
+    if (!workerId || workerId === '-' || workerId === '') return '';
+    const worker = workers.find(w => w.id === workerId);
+    return worker ? worker.name : workerId;
+  };
+
   const refreshScheduleList = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/y-tasks/list', { credentials: 'include' });
@@ -137,6 +159,7 @@ function YTaskPage() {
   };
 
   useEffect(() => {
+    loadWorkers();
     refreshScheduleList();
   }, []);
 
@@ -180,10 +203,13 @@ function YTaskPage() {
         
         const rows = parseCSV(csv);
         setDates(rows[0].slice(1));
-        // Patch: replace all '-' with '' in the grid
+        // Convert worker IDs to names and replace all '-' with '' in the grid
         setGrid(
           rows.slice(1).map(r =>
-            r.slice(1).map(cell => cell === '-' ? '' : cell)
+            r.slice(1).map(cell => {
+              if (cell === '-' || cell === '') return '';
+              return getWorkerName(cell);
+            })
           )
         );
         setLoading(false);
@@ -216,7 +242,8 @@ function YTaskPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      setGrid(data.grid);
+      // Convert worker IDs to names in the grid
+      setGrid(data.grid.map((row: any[]) => row.map((cell: any) => getWorkerName(cell))));
       setDates(data.dates);
       setWarnings(data.warnings || []);
       // Store detailed report for enhanced warning display
@@ -379,7 +406,15 @@ function YTaskPage() {
         
         const rows = parseCSV(csv);
         setDates(rows[0].slice(1));
-        setGrid(rows.slice(1).map(r => r.slice(1)));
+        // Convert worker IDs to names and replace all '-' with '' in the grid
+        setGrid(
+          rows.slice(1).map(r =>
+            r.slice(1).map(cell => {
+              if (cell === '-' || cell === '') return '';
+              return getWorkerName(cell);
+            })
+          )
+        );
       });
   };
 
@@ -432,7 +467,7 @@ function YTaskPage() {
     });
     const data = await res.json();
     if (res.ok && data.grid) {
-      setGrid(prevGrid => prevGrid.map((row, yIdx) => row.map((cell, dIdx) => cell || data.grid[yIdx][dIdx])));
+      setGrid(prevGrid => prevGrid.map((row, yIdx) => row.map((cell, dIdx) => cell || getWorkerName(data.grid[yIdx][dIdx]))));
       setWarnings(data.warnings || []);
     } else {
       setWarnings([data.error || 'Failed to generate schedule']);

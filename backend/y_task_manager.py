@@ -58,6 +58,44 @@ class YTaskManager:
         # Update index file
         self._update_y_task_index(start_date, end_date, filename)
         
+        # NEW: Trigger closing schedule recalculation after Y tasks are saved
+        try:
+            from .closing_schedule_calculator import ClosingScheduleCalculator
+            from .worker import load_workers_from_json, save_workers_to_json
+            
+            # Load workers
+            worker_file_path = os.path.join(self.data_dir, 'worker_data.json')
+            workers = load_workers_from_json(worker_file_path)
+            
+            # Parse start and end dates
+            start_date_obj = datetime.strptime(start_date, '%d/%m/%Y').date()
+            end_date_obj = datetime.strptime(end_date, '%d/%m/%Y').date()
+            
+            # Generate semester weeks (Fridays) for the date range
+            semester_weeks = []
+            current = start_date_obj
+            while current <= end_date_obj:
+                if current.weekday() == 4:  # Friday
+                    semester_weeks.append(current)
+                current += timedelta(days=1)
+            
+            # Trigger closing schedule recalculation
+            from .scoring_config import load_config
+            cfg = load_config()
+            calculator = ClosingScheduleCalculator(
+                allow_single_relief_min1=cfg.CLOSING_RELIEF_ENABLED,
+                relief_max_per_semester=cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
+            )
+            calculator.update_all_worker_schedules(workers, semester_weeks)
+            
+            # Save updated worker data with new optimal closing dates
+            save_workers_to_json(workers, worker_file_path)
+            
+            print(f"✅ Closing schedule recalculation completed after Y tasks save via manager")
+            
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to update closing schedules after Y tasks save via manager: {e}")
+        
         print(f"✅ Y tasks saved to {filename}")
         return filename
     
@@ -118,14 +156,15 @@ class YTaskManager:
                 
                 # Convert grid data to assignments
                 for i, y_task in enumerate(y_tasks):
-                    for j, worker_identifier in enumerate(grid_data[i]):
-                        if worker_identifier and worker_identifier.strip() and worker_identifier.strip() != '-':
+                    for j, worker_name in enumerate(grid_data[i]):
+                        if worker_name and worker_name.strip() and worker_name.strip() != '-':
                             date_str = dates[j]
-                            # Treat cell value as canonical worker ID
-                            worker_id = worker_identifier.strip()
-                            if worker_id not in assignments:
-                                assignments[worker_id] = {}
-                            assignments[worker_id][date_str] = y_task
+                            # Find worker ID by name
+                            worker_id = self._get_worker_id_by_name(worker_name.strip())
+                            if worker_id:
+                                if worker_id not in assignments:
+                                    assignments[worker_id] = {}
+                                assignments[worker_id][date_str] = y_task
             except Exception as e:
                 print(f"Error loading Y tasks from {filename}: {e}")
         
@@ -158,7 +197,29 @@ class YTaskManager:
         
         return relevant_files
     
-    # Name conversion is deprecated; all CSV cells must contain worker IDs.
+    def _get_worker_id_by_name(self, worker_name: str) -> Optional[str]:
+        """Get worker ID by name from name_conv.json mapping"""
+        try:
+            # Load name conversion mapping (Hebrew name -> ID)
+            name_conv_path = os.path.join(self.data_dir, 'name_conv.json')
+            if os.path.exists(name_conv_path):
+                with open(name_conv_path, 'r', encoding='utf-8') as f:
+                    name_conv_list = json.load(f)
+                
+                # Create reverse mapping: Hebrew name -> ID
+                hebrew_to_id = {}
+                for entry in name_conv_list:
+                    for worker_id, hebrew_name in entry.items():
+                        hebrew_to_id[hebrew_name] = worker_id
+                
+                # Return the ID for the Hebrew name
+                return hebrew_to_id.get(worker_name.strip())
+            else:
+                print(f"Warning: name_conv.json not found at {name_conv_path}")
+        except Exception as e:
+            print(f"Error getting worker ID for {worker_name}: {e}")
+        
+        return None
     
     def _update_y_task_index(self, start_date: str, end_date: str, filename: str):
         """Update the Y task index file"""
@@ -263,6 +324,44 @@ class YTaskManager:
                 # Save updated index
                 with open(index_path, 'w', encoding='utf-8') as f:
                     json.dump(index, f, indent=2, ensure_ascii=False)
+                
+                # NEW: Trigger closing schedule recalculation after deleting Y task period
+                try:
+                    from .closing_schedule_calculator import ClosingScheduleCalculator
+                    from .worker import load_workers_from_json, save_workers_to_json
+                    
+                    # Load workers
+                    worker_file_path = os.path.join(self.data_dir, 'worker_data.json')
+                    workers = load_workers_from_json(worker_file_path)
+                    
+                    # Parse start and end dates
+                    start_date_obj = datetime.strptime(start_date, '%d/%m/%Y').date()
+                    end_date_obj = datetime.strptime(end_date, '%d/%m/%Y').date()
+                    
+                    # Generate semester weeks (Fridays) for the date range
+                    semester_weeks = []
+                    current = start_date_obj
+                    while current <= end_date_obj:
+                        if current.weekday() == 4:  # Friday
+                            semester_weeks.append(current)
+                        current += timedelta(days=1)
+                    
+                    # Trigger closing schedule recalculation
+                    from .scoring_config import load_config
+                    cfg = load_config()
+                    calculator = ClosingScheduleCalculator(
+                        allow_single_relief_min1=cfg.CLOSING_RELIEF_ENABLED,
+                        relief_max_per_semester=cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
+                    )
+                    calculator.update_all_worker_schedules(workers, semester_weeks)
+                    
+                    # Save updated worker data with new optimal closing dates
+                    save_workers_to_json(workers, worker_file_path)
+                    
+                    print(f"✅ Closing schedule recalculation completed after deleting Y task period via manager")
+                    
+                except Exception as e:
+                    print(f"⚠️  Warning: Failed to update closing schedules after deleting Y task period: {e}")
                 
                 return True
             else:

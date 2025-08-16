@@ -22,7 +22,7 @@ def update_scores_from_y_tasks():
     worker_json_path = data_dir / 'worker_data.json'
     
     # Load workers
-    workers = load_workers_from_json(str(worker_json_path))
+    workers = load_workers_from_json(str(worker_json_path), str(data_dir / 'name_conv.json'))
     
     # Count Y task assignments per worker
     worker_assignments = {}

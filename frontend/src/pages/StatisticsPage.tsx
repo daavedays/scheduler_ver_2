@@ -22,8 +22,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ScatterChart,
-  Scatter,
   LineChart,
   Line,
   ComposedChart
@@ -327,8 +325,15 @@ function StatisticsPage() {
         </Button>
       </Box>
 
-      {/* Summary Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+      {/* Empty dataset notice */}
+      {(!data.summary || (data.summary.total_workers === 0 && data.summary.total_x_tasks === 0 && data.summary.total_y_tasks === 0 && data.summary.x_task_files === 0 && data.summary.y_task_files === 0)) && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          No statistics available yet. Generate and save X/Y schedules to populate this page.
+        </Alert>
+      )}
+
+        {/* Summary Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
         <Card>
           <CardContent>
             <Typography color="text.secondary" gutterBottom>
@@ -371,6 +376,157 @@ function StatisticsPage() {
         </Card>
       </Box>
 
+      {/* TOP: Y Tasks Pie (All Workers), then X Tasks Pie (All Workers) */}
+      <Paper sx={{ p: 3, mb: 6, height: '900px' }}>
+        <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
+          Y Tasks Distribution (All Workers)
+        </Typography>
+        {data.y_tasks_pie.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data.y_tasks_pie}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percentage }) => `${name}: ${(percentage ?? 0)}%`}
+                outerRadius={180}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.y_tasks_pie.map((entry, index) => (
+                  <Cell key={`cell-y-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const row = payload[0].payload;
+                  return (
+                    <Paper sx={{ p: 2, border: '1px solid #ccc' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>{row.name}</strong>
+                      </Typography>
+                      <Typography variant="body2">Tasks: {row.value}</Typography>
+                      <Typography variant="body2">Percentage: {row.percentage}%</Typography>
+                    </Paper>
+                  );
+                }
+                return null;
+              }} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Typography color="text.secondary">No Y tasks data available</Typography>
+          </Box>
+        )}
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 6, height: '900px' }}>
+        <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
+          X Tasks Distribution (All Workers)
+        </Typography>
+        {data.x_tasks_pie.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data.x_tasks_pie}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percentage }) => `${name}: ${(percentage ?? 0)}%`}
+                outerRadius={180}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.x_tasks_pie.map((entry, index) => (
+                  <Cell key={`cell-x-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const row = payload[0].payload;
+                  return (
+                    <Paper sx={{ p: 2, border: '1px solid #ccc' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>{row.name}</strong>
+                      </Typography>
+                      <Typography variant="body2">Tasks: {row.value}</Typography>
+                      <Typography variant="body2">Percentage: {row.percentage}%</Typography>
+                    </Paper>
+                  );
+                }
+                return null;
+              }} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Typography color="text.secondary">No X tasks data available</Typography>
+          </Box>
+        )}
+      </Paper>
+
+      {/* Y Tasks Distribution Pie Chart */}
+      <Paper sx={{ p: 3, mb: 6, height: '900px' }}>
+        <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
+          Y Tasks Distribution Analysis (All Workers)
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
+          Shows the distribution of Y task assignments among all workers. Larger slices indicate more Y tasks assigned.
+        </Typography>
+        {data.fairness_metrics?.y_task_analysis?.worker_distribution?.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data.fairness_metrics?.y_task_analysis?.worker_distribution ?? []}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ worker_name, y_tasks }) => `${worker_name}: ${y_tasks}`}
+                outerRadius={250}
+                fill="#8884d8"
+                dataKey="y_tasks"
+              >
+                {(data.fairness_metrics?.y_task_analysis?.worker_distribution ?? []).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <Box sx={{ bgcolor: 'background.paper', p: 2, border: 1, borderColor: 'divider' }}>
+                        <Typography variant="body2">
+                          <strong>{data.worker_name}</strong><br />
+                          Y Tasks: {data.y_tasks}<br />
+                          Score: {data.score}<br />
+                          Seniority: {data.seniority}<br />
+                          Closing Interval: {data.closing_interval}<br />
+                          Actual Closings: {data.closing_count || 0}<br />
+                          {data.closing_dates && data.closing_dates.length > 0 && (
+                            <>
+                              Closing Dates: {data.closing_dates.slice(0, 3).join(', ')}
+                              {data.closing_dates.length > 3 && '...'}
+                            </>
+                          )}
+                        </Typography>
+                      </Box>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Typography color="text.secondary">No Y tasks data available</Typography>
+          </Box>
+        )}
+      </Paper>
+
       {/* Worker Task Count Bar Chart */}
       <Paper sx={{ p: 3, mb: 3, height: '600px' }}>
         <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
@@ -379,10 +535,10 @@ function StatisticsPage() {
         <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
           Shows the total number of tasks (X + Y) assigned to each worker. Bar width represents the worker, height represents task count.
         </Typography>
-        {data.fairness_metrics.worker_performance_metrics.length > 0 ? (
+        {data.fairness_metrics?.worker_performance_metrics?.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data.fairness_metrics.worker_performance_metrics}
+              data={data.fairness_metrics?.worker_performance_metrics ?? []}
               margin={{ top: 20, right: 30, left: 100, bottom: 100 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -423,7 +579,7 @@ function StatisticsPage() {
                 fill="#8884d8"
                 name="Total Tasks" 
               >
-                {data.fairness_metrics.worker_performance_metrics.map((entry, index) => (
+                {(data.fairness_metrics?.worker_performance_metrics ?? []).map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={
@@ -463,127 +619,35 @@ function StatisticsPage() {
         </Typography>
       </Paper>
 
-      {/* X Tasks Pie Chart */}
-      <Paper sx={{ p: 3, mb: 3, height: '500px' }}>
-        <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
-          X Tasks Distribution (Top 15 Workers)
-        </Typography>
-        {data.x_tasks_pie.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data.x_tasks_pie.slice(0, 15)}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
-                outerRadius={120}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {data.x_tasks_pie.slice(0, 15).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <Typography color="text.secondary">No X tasks data available</Typography>
-          </Box>
-        )}
-      </Paper>
-
-      {/* Y Tasks Distribution Pie Chart */}
-      <Paper sx={{ p: 3, mb: 6, height: '800px' }}>
-        <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
-          Y Tasks Distribution Analysis (All Workers)
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
-          Shows the distribution of Y task assignments among all workers. Larger slices indicate more Y tasks assigned.
-        </Typography>
-        {data.fairness_metrics.y_task_analysis.worker_distribution.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data.fairness_metrics.y_task_analysis.worker_distribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ worker_name, y_tasks }) => `${worker_name}: ${y_tasks}`}
-                outerRadius={200}
-                fill="#8884d8"
-                dataKey="y_tasks"
-              >
-                {data.fairness_metrics.y_task_analysis.worker_distribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <Box sx={{ bgcolor: 'background.paper', p: 2, border: 1, borderColor: 'divider' }}>
-                        <Typography variant="body2">
-                          <strong>{data.worker_name}</strong><br />
-                          Y Tasks: {data.y_tasks}<br />
-                          Score: {data.score}<br />
-                          Seniority: {data.seniority}<br />
-                          Closing Interval: {data.closing_interval}<br />
-                          Actual Closings: {data.closing_count || 0}<br />
-                          {data.closing_dates && data.closing_dates.length > 0 && (
-                            <>
-                              Closing Dates: {data.closing_dates.slice(0, 3).join(', ')}
-                              {data.closing_dates.length > 3 && '...'}
-                            </>
-                          )}
-                        </Typography>
-                      </Box>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <Typography color="text.secondary">No Y tasks data available</Typography>
-          </Box>
-        )}
-      </Paper>
-
       {/* Y Task Statistics Summary */}
       <Paper sx={{ p: 3, mb: 6, height: '900px' }}>
         <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
           Y Task Statistics
         </Typography>
-        {data.fairness_metrics.y_task_analysis.statistics ? (
+        {data.fairness_metrics?.y_task_analysis?.statistics ? (
           <Box sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Distribution Summary</Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              Total Workers with Y Tasks: {data.fairness_metrics.y_task_analysis.statistics.total_workers_with_y_tasks}
+              Total Workers with Y Tasks: {data.fairness_metrics?.y_task_analysis?.statistics?.total_workers_with_y_tasks ?? 0}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              Average Y Tasks per Worker: {data.fairness_metrics.y_task_analysis.statistics.average_y_tasks_per_worker.toFixed(2)}
+              Average Y Tasks per Worker: {(data.fairness_metrics?.y_task_analysis?.statistics?.average_y_tasks_per_worker ?? 0).toFixed(2)}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              Median Y Tasks: {data.fairness_metrics.y_task_analysis.statistics.median_y_tasks}
+              Median Y Tasks: {data.fairness_metrics?.y_task_analysis?.statistics?.median_y_tasks ?? 0}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              Min Y Tasks: {data.fairness_metrics.y_task_analysis.statistics.min_y_tasks}
+              Min Y Tasks: {data.fairness_metrics?.y_task_analysis?.statistics?.min_y_tasks ?? 0}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              Max Y Tasks: {data.fairness_metrics.y_task_analysis.statistics.max_y_tasks}
+              Max Y Tasks: {data.fairness_metrics?.y_task_analysis?.statistics?.max_y_tasks ?? 0}
             </Typography>
             <Typography variant="body1" sx={{ mb: 3 }}>
-              Standard Deviation: {data.fairness_metrics.y_task_analysis.statistics.standard_deviation.toFixed(2)}
+              Standard Deviation: {(data.fairness_metrics?.y_task_analysis?.statistics?.standard_deviation ?? 0).toFixed(2)}
             </Typography>
             
             <Typography variant="h6" sx={{ mb: 2 }}>Top 10 Y Task Workers</Typography>
-            {data.fairness_metrics.y_task_analysis.worker_distribution.slice(0, 10).map((worker, index) => (
+            {(data.fairness_metrics?.y_task_analysis?.worker_distribution ?? []).slice(0, 10).map((worker, index) => (
               <Box key={worker.worker_id} sx={{ mb: 1, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
                 <Typography variant="body2">
                   {index + 1}. {worker.worker_name}: {worker.y_tasks} Y tasks (Score: {worker.score})
@@ -604,12 +668,64 @@ function StatisticsPage() {
           Closing Interval Delta Analysis
         </Typography>
         <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
-          Shows the difference between target and actual closing intervals for each worker. Positive values indicate workers are closing more frequently than their target interval.
+          Shows the difference between actual and target closing intervals. <strong>Negative bars</strong> = closing more frequently than target (shorter intervals), 
+          <strong> Positive bars</strong> = closing less frequently than target (longer intervals = more weekends home).
         </Typography>
-        {data.fairness_metrics.closing_interval_analysis.worker_distribution.length > 0 ? (
+        <Typography variant="body2" sx={{ mb: 3, textAlign: 'center', color: 'text.secondary', fontStyle: 'italic' }}>
+          Most workers should have small negative deltas (closing slightly more frequently than target). Large positive deltas indicate workers getting many more weekends home than intended.
+        </Typography>
+        
+        {/* Delta Summary */}
+        {data.fairness_metrics?.closing_interval_analysis?.worker_distribution?.length > 0 && (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
+            {(() => {
+              const deltas = (data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).map(w => w.actual_interval - w.closing_interval);
+              const negativeCount = deltas.filter(d => d < 0).length;
+              const positiveCount = deltas.filter(d => d > 0).length;
+              const zeroCount = deltas.filter(d => d === 0).length;
+              const medianAbsDelta = deltas.length > 0 ? 
+                deltas.map(d => Math.abs(d)).sort((a, b) => a - b)[Math.floor(deltas.length / 2)] : 0;
+              const lowCoverageCount = (data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).filter(w => w.total_closings < 2).length;
+              
+              return (
+                <>
+                  <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="info.dark">{negativeCount}</Typography>
+                    <Typography variant="body2" color="info.dark">Closing More Frequently</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'success.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="success.dark">{positiveCount}</Typography>
+                    <Typography variant="body2" color="success.dark">Closing Less Frequently</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'warning.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="warning.dark">{zeroCount}</Typography>
+                    <Typography variant="body2" color="warning.dark">Perfect Match</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'secondary.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="secondary.dark">{medianAbsDelta.toFixed(1)}</Typography>
+                    <Typography variant="body2" color="secondary.dark">Median Abs Delta</Typography>
+                  </Box>
+                </>
+              );
+            })()}
+          </Box>
+        )}
+        
+        {/* Low Coverage Warning */}
+        {data.fairness_metrics?.closing_interval_analysis?.worker_distribution?.length > 0 && 
+         (data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).filter(w => w.total_closings < 2).length > 0 && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              <strong>Note:</strong> {(data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).filter(w => w.total_closings < 2).length} worker(s) have fewer than 2 closings. 
+              Their accuracy and delta calculations may not be reliable (marked with ⚠️ in tooltips).
+            </Typography>
+          </Alert>
+        )}
+        
+        {data.fairness_metrics?.closing_interval_analysis?.worker_distribution?.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data.fairness_metrics.closing_interval_analysis.worker_distribution.map(worker => ({
+              data={(data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).map(worker => ({
                 ...worker,
                 interval_delta: worker.actual_interval - worker.closing_interval
               }))}
@@ -631,6 +747,7 @@ function StatisticsPage() {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     const delta = data.actual_interval - data.closing_interval;
+                    const isLowCoverage = data.total_closings < 2;
                     return (
                       <Box sx={{ bgcolor: 'background.paper', p: 2, border: 1, borderColor: 'divider' }}>
                         <Typography variant="body2">
@@ -638,6 +755,12 @@ function StatisticsPage() {
                           Target Interval: {data.closing_interval} weeks<br />
                           Actual Interval: {data.actual_interval} weeks<br />
                           Delta: {delta.toFixed(1)} weeks<br />
+                          {delta < 0 ? 'Closing MORE frequently than target' : 'Closing LESS frequently than target'}<br />
+                          {isLowCoverage && (
+                            <Typography variant="body2" color="warning.main" sx={{ fontWeight: 'bold' }}>
+                              ⚠️ Low Coverage (N/A)
+                            </Typography>
+                          )}
                           Accuracy: {data.interval_accuracy}%<br />
                           Total Closings: {data.total_closings}<br />
                           Total Weeks: {data.total_weeks_served}<br />
@@ -655,7 +778,7 @@ function StatisticsPage() {
                 fill="#82ca9d"
                 name="Interval Delta (weeks)" 
               >
-                {data.fairness_metrics.closing_interval_analysis.worker_distribution.map((entry, index) => {
+                {(data.fairness_metrics?.closing_interval_analysis?.worker_distribution ?? []).map((entry, index) => {
                   const delta = entry.actual_interval - entry.closing_interval;
                   return (
                     <Cell 
@@ -719,6 +842,42 @@ function StatisticsPage() {
         <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
           Shows how accurately workers are assigned to close according to their target intervals. Higher bars indicate better accuracy.
         </Typography>
+        
+        {/* Accuracy Summary */}
+        {data.fairness_metrics.closing_interval_analysis.worker_distribution.length > 0 && (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
+            {(() => {
+              const accuracies = data.fairness_metrics.closing_interval_analysis.worker_distribution.map(w => w.interval_accuracy);
+              const medianAccuracy = accuracies.length > 0 ? 
+                accuracies.sort((a, b) => a - b)[Math.floor(accuracies.length / 2)] : 0;
+              const weightedAvgAccuracy = data.fairness_metrics.closing_interval_analysis.statistics?.average_accuracy || 0;
+              const highAccuracyCount = accuracies.filter(a => a >= 80).length;
+              const lowAccuracyCount = accuracies.filter(a => a < 50).length;
+              
+              return (
+                <>
+                  <Box sx={{ p: 2, bgcolor: 'success.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="success.dark">{medianAccuracy.toFixed(1)}%</Typography>
+                    <Typography variant="body2" color="success.dark">Median Accuracy</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'primary.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="primary.dark">{weightedAvgAccuracy.toFixed(1)}%</Typography>
+                    <Typography variant="body2" color="primary.dark">Weighted Average</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="info.dark">{highAccuracyCount}</Typography>
+                    <Typography variant="body2" color="info.dark">High Accuracy (≥80%)</Typography>
+                  </Box>
+                  <Box sx={{ p: 2, bgcolor: 'warning.light', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" color="warning.dark">{lowAccuracyCount}</Typography>
+                    <Typography variant="body2" color="warning.dark">Low Accuracy (&lt;50%)</Typography>
+                  </Box>
+                </>
+              );
+            })()}
+          </Box>
+        )}
+        
         {data.fairness_metrics.closing_interval_analysis.worker_distribution.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -740,11 +899,17 @@ function StatisticsPage() {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
+                    const isLowCoverage = data.total_closings < 2;
                     return (
                       <Box sx={{ bgcolor: 'background.paper', p: 2, border: 1, borderColor: 'divider' }}>
                         <Typography variant="body2">
                           <strong>{data.worker_name}</strong><br />
                           Accuracy: {data.interval_accuracy}%<br />
+                          {isLowCoverage && (
+                            <Typography variant="body2" color="warning.main" sx={{ fontWeight: 'bold' }}>
+                              ⚠️ Low Coverage (N/A)
+                            </Typography>
+                          )}
                           Target Interval: {data.closing_interval} weeks<br />
                           Actual Interval: {data.actual_interval} weeks<br />
                           Total Closings: {data.total_closings}<br />
@@ -768,82 +933,7 @@ function StatisticsPage() {
         )}
       </Paper>
 
-      {/* Accuracy Deviation Scatter Plot */}
-      <Paper sx={{ p: 3, mb: 3, height: '600px' }}>
-        <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
-          Accuracy Deviation from 100% (All Workers)
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
-          Shows how far each worker's closing interval accuracy deviates from perfect 100%. Points closer to 0% deviation are better.
-        </Typography>
-        {data.fairness_metrics.closing_interval_analysis.worker_distribution.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart
-              data={data.fairness_metrics.closing_interval_analysis.worker_distribution}
-              margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                type="number" 
-                dataKey="score" 
-                name="Worker Score"
-                label={{ value: 'Worker Score', position: 'insideBottom', offset: -10 }}
-              />
-              <YAxis 
-                type="number" 
-                dataKey="interval_accuracy" 
-                name="Interval Accuracy"
-                label={{ value: 'Interval Accuracy (%)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    const deviation = 100 - data.interval_accuracy;
-                    return (
-                      <Box sx={{ bgcolor: 'background.paper', p: 2, border: 1, borderColor: 'divider' }}>
-                        <Typography variant="body2">
-                          <strong>{data.worker_name}</strong><br />
-                          Score: {data.score}<br />
-                          Accuracy: {data.interval_accuracy}%<br />
-                          Deviation from 100%: {deviation.toFixed(1)}%<br />
-                          Target Interval: {data.closing_interval} weeks<br />
-                          Actual Interval: {data.actual_interval} weeks<br />
-                          Total Closings: {data.total_closings}
-                        </Typography>
-                      </Box>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Scatter 
-                dataKey="interval_accuracy"
-                fill="#8884d8"
-              >
-                {data.fairness_metrics.closing_interval_analysis.worker_distribution.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={
-                      (() => {
-                        const deviation = 100 - entry.interval_accuracy;
-                        if (deviation <= 10) return '#00ff00'; // Green for excellent
-                        if (deviation <= 20) return '#ffff00'; // Yellow for good
-                        if (deviation <= 30) return '#ff8800'; // Orange for fair
-                        return '#ff0000'; // Red for poor
-                      })()
-                    } 
-                  />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <Typography color="text.secondary">No accuracy deviation data available</Typography>
-          </Box>
-        )}
-      </Paper>
+      {/* Removed Accuracy Deviation Scatter Plot */}
 
       {/* Algorithm Accuracy Summary */}
       <Paper sx={{ p: 3, mb: 3, height: '400px' }}>
@@ -983,11 +1073,11 @@ function StatisticsPage() {
         <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
           Worker Performance Summary
         </Typography>
-        {data.fairness_metrics.worker_performance_metrics.length > 0 ? (
+        {data.fairness_metrics?.worker_performance_metrics?.length > 0 ? (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
             <Box sx={{ p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
               <Typography variant="h6" color="error.dark">
-                {data.fairness_metrics.worker_performance_metrics.filter(w => w.workload_deviation > 20).length}
+                {(data.fairness_metrics?.worker_performance_metrics ?? []).filter(w => w.workload_deviation > 20).length}
               </Typography>
               <Typography variant="body2" color="error.dark">
                 Overworked Workers (&gt;20%)
@@ -995,7 +1085,7 @@ function StatisticsPage() {
             </Box>
             <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
               <Typography variant="h6" color="info.dark">
-                {data.fairness_metrics.worker_performance_metrics.filter(w => w.workload_deviation < -20).length}
+                {(data.fairness_metrics?.worker_performance_metrics ?? []).filter(w => w.workload_deviation < -20).length}
               </Typography>
               <Typography variant="body2" color="info.dark">
                 Underworked Workers (&lt;-20%)
@@ -1003,7 +1093,7 @@ function StatisticsPage() {
             </Box>
             <Box sx={{ p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
               <Typography variant="h6" color="success.dark">
-                {data.fairness_metrics.worker_performance_metrics.filter(w => w.workload_deviation >= -20 && w.workload_deviation <= 20).length}
+                {(data.fairness_metrics?.worker_performance_metrics ?? []).filter(w => w.workload_deviation >= -20 && w.workload_deviation <= 20).length}
               </Typography>
               <Typography variant="body2" color="success.dark">
                 Balanced Workers (±20%)
@@ -1011,7 +1101,7 @@ function StatisticsPage() {
             </Box>
             <Box sx={{ p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
               <Typography variant="h6" color="warning.dark">
-                {data.fairness_metrics.worker_performance_metrics.length}
+                {data.fairness_metrics?.worker_performance_metrics?.length ?? 0}
               </Typography>
               <Typography variant="body2" color="warning.dark">
                 Total Workers Analyzed

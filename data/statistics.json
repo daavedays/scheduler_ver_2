@@ -1,0 +1,1628 @@
+{
+  "metadata": {
+    "created_at": "2025-08-16T23:06:57.295827",
+    "last_updated": "2025-08-16T23:13:47.839612",
+    "version": "1.0"
+  },
+  "data_sources": {
+    "x_task_files": [
+      "x_tasks_2025_1.csv"
+    ],
+    "y_task_files": [
+      "y_tasks_05-01-2025_to_18-01-2025.csv",
+      "y_tasks_19-01-2025_to_01-02-2025.csv",
+      "y_tasks_02-02-2025_to_15-02-2025.csv",
+      "y_tasks_16-02-2025_to_08-03-2025.csv",
+      "y_tasks_09-03-2025_to_29-03-2025.csv",
+      "y_tasks_30-03-2025_to_05-07-2025.csv"
+    ],
+    "worker_data": {
+      "updated_at": "2025-08-16T23:13:47.839315",
+      "worker_count": 24
+    }
+  },
+  "statistics": {
+    "workers": {
+      "9597864": {
+        "id": "9597864",
+        "name": "יעל ויינשטיין",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "C&N Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 17.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-04",
+          "2025-05-02",
+          "2025-06-13",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9168925": {
+        "id": "9168925",
+        "name": "דימה חלסטוב",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-05-16",
+          "2025-05-30"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9356189": {
+        "id": "9356189",
+        "name": "אנגלינה פרידלין",
+        "qualifications": [
+          "Southern Driver",
+          "Southern Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 15.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-05-09",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9051978": {
+        "id": "9051978",
+        "name": "ניקיטה סידורוביץ",
+        "qualifications": [
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Escort",
+          "Southern Driver"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 17.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9631934": {
+        "id": "9631934",
+        "name": "אושר טייב",
+        "qualifications": [
+          "Southern Escort"
+        ],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 14.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8837802": {
+        "id": "8837802",
+        "name": "איילה אפריים",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "Southern Escort",
+          "C&N Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-05-16",
+          "2025-06-13"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9386605": {
+        "id": "9386605",
+        "name": "נועה דרעי",
+        "qualifications": [
+          "Southern Driver",
+          "Southern Escort",
+          "C&N Driver",
+          "C&N Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 16.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-11",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9570530": {
+        "id": "9570530",
+        "name": "רואי כוכבי",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 15.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9241047": {
+        "id": "9241047",
+        "name": "נתנאל פרסבורגר",
+        "qualifications": [
+          "Southern Driver",
+          "Southern Escort",
+          "C&N Driver",
+          "C&N Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9150226": {
+        "id": "9150226",
+        "name": "קארינה פפרליצה",
+        "qualifications": [
+          "C&N Driver",
+          "Southern Escort",
+          "C&N Escort",
+          "Supervisor",
+          "Southern Driver"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 16.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9053378": {
+        "id": "9053378",
+        "name": "לינוי מונרדוס",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "Supervisor",
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 16.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-04",
+          "2025-05-09",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9617384": {
+        "id": "9617384",
+        "name": "אלין אלון",
+        "qualifications": [
+          "Southern Escort"
+        ],
+        "closing_interval": 2,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-04",
+          "2025-04-25",
+          "2025-05-09",
+          "2025-06-06",
+          "2025-06-20",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9434252": {
+        "id": "9434252",
+        "name": "דניאל פטקוב",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "Southern Escort",
+          "C&N Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-18",
+          "2025-05-02",
+          "2025-06-06",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9175557": {
+        "id": "9175557",
+        "name": "אייל נחושתן",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 16.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-05-02",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9053851": {
+        "id": "9053851",
+        "name": "חן אטדגי",
+        "qualifications": [
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 17.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-11",
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9127472": {
+        "id": "9127472",
+        "name": "רומן נפטלייב",
+        "qualifications": [
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 14.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-13"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9437517": {
+        "id": "9437517",
+        "name": "מליסה רופה",
+        "qualifications": [
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 15.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8837884": {
+        "id": "8837884",
+        "name": "לידר פנקר",
+        "qualifications": [
+          "Southern Driver",
+          "C&N Driver",
+          "Supervisor",
+          "C&N Escort",
+          "Southern Escort"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 16.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-04",
+          "2025-05-23",
+          "2025-06-13"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9518772": {
+        "id": "9518772",
+        "name": "תהילה טרנר",
+        "qualifications": [
+          "Southern Escort"
+        ],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 15.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9517593": {
+        "id": "9517593",
+        "name": "רבקה ארבינצר",
+        "qualifications": [
+          "Southern Escort"
+        ],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 15.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8320845": {
+        "id": "8320845",
+        "name": "David",
+        "qualifications": [
+          "Supervisor",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Driver",
+          "Southern Escort"
+        ],
+        "closing_interval": 2,
+        "officer": false,
+        "score": 17.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-18",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "1111111": {
+        "id": "1111111",
+        "name": "Vitalchik",
+        "qualifications": [
+          "Supervisor",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Driver",
+          "Southern Escort"
+        ],
+        "closing_interval": 2,
+        "officer": false,
+        "score": 17.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-04",
+          "2025-04-18",
+          "2025-05-02",
+          "2025-05-16",
+          "2025-05-30",
+          "2025-06-13",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "2222222": {
+        "id": "2222222",
+        "name": "Shlomo",
+        "qualifications": [
+          "Supervisor",
+          "C&N Driver",
+          "C&N Escort",
+          "Southern Driver",
+          "Southern Escort"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 17.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-11",
+          "2025-05-02",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "000000000": {
+        "id": "000000000",
+        "name": "ניר כהן",
+        "qualifications": [
+          "Southern Escort",
+          "Southern Driver",
+          "C&N Escort",
+          "C&N Driver"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 15.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-04-25"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      }
+    },
+    "x_tasks": {
+      "x_tasks_2025_1.csv": {
+        "file": "x_tasks_2025_1.csv",
+        "updated_at": "2025-08-16T23:09:09.915422",
+        "data": {
+          "9597864": {
+            "Guarding Duties": 2,
+            "Kitchen": 2,
+            "RASAR": 1
+          },
+          "9168925": {
+            "RASAR": 1,
+            "Guarding Duties": 2,
+            "Kitchen": 2
+          },
+          "9356189": {
+            "RASAR": 1,
+            "Kitchen": 1,
+            "Guarding Duties": 1
+          },
+          "9051978": {
+            "RASAR": 2,
+            "Kitchen": 2,
+            "Guarding Duties": 2
+          },
+          "8837802": {
+            "Guarding Duties": 4
+          },
+          "9386605": {
+            "Guarding Duties": 2,
+            "Kitchen": 1,
+            "RASAR": 1
+          },
+          "9570530": {
+            "Kitchen": 2,
+            "RASAR": 1
+          },
+          "9241047": {
+            "RASAR": 2,
+            "Kitchen": 3
+          },
+          "9150226": {
+            "Guarding Duties": 2,
+            "Kitchen": 1
+          },
+          "9053378": {
+            "Guarding Duties": 1
+          },
+          "9617384": {
+            "RASAR": 2,
+            "Kitchen": 1,
+            "Guarding Duties": 2
+          },
+          "9434252": {
+            "RASAR": 1,
+            "Guarding Duties": 2,
+            "Kitchen": 1
+          },
+          "9175557": {
+            "RASAR": 2,
+            "Kitchen": 2,
+            "Guarding Duties": 1
+          },
+          "9053851": {
+            "Guarding Duties": 3,
+            "RASAR": 1
+          },
+          "9127472": {
+            "RASAR": 2,
+            "Guarding Duties": 2
+          },
+          "9437517": {
+            "Kitchen": 1,
+            "RASAR": 1,
+            "Guarding Duties": 4
+          },
+          "8837884": {
+            "RASAR": 3
+          },
+          "9518772": {
+            "Kitchen": 3
+          },
+          "000000000": {
+            "RASAR": 5,
+            "Guarding Duties": 2
+          }
+        }
+      }
+    },
+    "y_tasks": {
+      "y_tasks_05-01-2025_to_18-01-2025.csv": {
+        "file": "y_tasks_05-01-2025_to_18-01-2025.csv",
+        "updated_at": "2025-08-16T23:11:21.506520",
+        "data": {
+          "2222222": {
+            "Supervisor": 3,
+            "Southern Escort": 3
+          },
+          "1111111": {
+            "Supervisor": 4
+          },
+          "9053378": {
+            "Supervisor": 2,
+            "Southern Driver": 3
+          },
+          "8837884": {
+            "Supervisor": 1
+          },
+          "8320845": {
+            "Supervisor": 4
+          },
+          "9570530": {
+            "C&N Driver": 2
+          },
+          "000000000": {
+            "C&N Driver": 1,
+            "C&N Escort": 1
+          },
+          "9386605": {
+            "C&N Driver": 4,
+            "Southern Driver": 1
+          },
+          "9168925": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9434252": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "8837802": {
+            "C&N Driver": 1,
+            "Southern Escort": 3
+          },
+          "9241047": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9051978": {
+            "C&N Driver": 3,
+            "C&N Escort": 1
+          },
+          "9437517": {
+            "C&N Escort": 6
+          },
+          "9127472": {
+            "C&N Escort": 5
+          },
+          "9597864": {
+            "C&N Escort": 1
+          },
+          "9175557": {
+            "Southern Driver": 2
+          },
+          "9356189": {
+            "Southern Driver": 4
+          },
+          "9150226": {
+            "Southern Driver": 1
+          },
+          "9517593": {
+            "Southern Escort": 3
+          },
+          "9518772": {
+            "Southern Escort": 2
+          },
+          "9631934": {
+            "Southern Escort": 2
+          },
+          "9617384": {
+            "Southern Escort": 1
+          }
+        }
+      },
+      "y_tasks_19-01-2025_to_01-02-2025.csv": {
+        "file": "y_tasks_19-01-2025_to_01-02-2025.csv",
+        "updated_at": "2025-08-16T23:11:58.721083",
+        "data": {
+          "1111111": {
+            "Supervisor": 1,
+            "Southern Escort": 3
+          },
+          "8837884": {
+            "Supervisor": 5,
+            "Southern Driver": 1
+          },
+          "9150226": {
+            "Supervisor": 2,
+            "C&N Driver": 1,
+            "Southern Driver": 3
+          },
+          "9053378": {
+            "Supervisor": 2,
+            "C&N Driver": 3
+          },
+          "8320845": {
+            "Supervisor": 4,
+            "Southern Driver": 1
+          },
+          "9570530": {
+            "C&N Driver": 4
+          },
+          "9434252": {
+            "C&N Driver": 1,
+            "C&N Escort": 2
+          },
+          "9168925": {
+            "C&N Driver": 1,
+            "C&N Escort": 1
+          },
+          "9597864": {
+            "C&N Driver": 2,
+            "Southern Driver": 1
+          },
+          "8837802": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9051978": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9053851": {
+            "C&N Escort": 2
+          },
+          "9175557": {
+            "C&N Escort": 1,
+            "Southern Driver": 3
+          },
+          "000000000": {
+            "C&N Escort": 3,
+            "Southern Driver": 1
+          },
+          "9127472": {
+            "C&N Escort": 2
+          },
+          "9437517": {
+            "C&N Escort": 3
+          },
+          "9241047": {
+            "Southern Driver": 1
+          },
+          "9356189": {
+            "Southern Driver": 1
+          },
+          "9518772": {
+            "Southern Escort": 3
+          },
+          "9631934": {
+            "Southern Escort": 2
+          },
+          "9617384": {
+            "Southern Escort": 5
+          },
+          "9517593": {
+            "Southern Escort": 1
+          }
+        }
+      },
+      "y_tasks_02-02-2025_to_15-02-2025.csv": {
+        "file": "y_tasks_02-02-2025_to_15-02-2025.csv",
+        "updated_at": "2025-08-16T23:12:21.621554",
+        "data": {
+          "1111111": {
+            "Supervisor": 4
+          },
+          "9053378": {
+            "Supervisor": 1,
+            "C&N Escort": 3
+          },
+          "2222222": {
+            "Supervisor": 2,
+            "Southern Driver": 1
+          },
+          "8320845": {
+            "Supervisor": 2,
+            "C&N Escort": 1
+          },
+          "8837884": {
+            "Supervisor": 1,
+            "C&N Driver": 1
+          },
+          "9150226": {
+            "Supervisor": 4,
+            "C&N Driver": 1
+          },
+          "000000000": {
+            "C&N Driver": 4
+          },
+          "9175557": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9570530": {
+            "C&N Driver": 1,
+            "C&N Escort": 1
+          },
+          "8837802": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9241047": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9386605": {
+            "C&N Driver": 1,
+            "C&N Escort": 1
+          },
+          "9597864": {
+            "C&N Driver": 3,
+            "Southern Driver": 1
+          },
+          "9053851": {
+            "C&N Escort": 4,
+            "Southern Escort": 1
+          },
+          "9437517": {
+            "C&N Escort": 1
+          },
+          "9127472": {
+            "C&N Escort": 1,
+            "Southern Escort": 4
+          },
+          "9168925": {
+            "C&N Escort": 1,
+            "Southern Driver": 4
+          },
+          "9434252": {
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "9051978": {
+            "Southern Driver": 3,
+            "Southern Escort": 1
+          },
+          "9356189": {
+            "Southern Driver": 1,
+            "Southern Escort": 1
+          },
+          "9517593": {
+            "Southern Escort": 2
+          },
+          "9617384": {
+            "Southern Escort": 3
+          },
+          "9518772": {
+            "Southern Escort": 1
+          },
+          "9631934": {
+            "Southern Escort": 1
+          }
+        }
+      },
+      "y_tasks_16-02-2025_to_08-03-2025.csv": {
+        "file": "y_tasks_16-02-2025_to_08-03-2025.csv",
+        "updated_at": "2025-08-16T23:12:39.868703",
+        "data": {
+          "1111111": {
+            "Supervisor": 8
+          },
+          "9053378": {
+            "Supervisor": 2,
+            "Southern Driver": 3
+          },
+          "2222222": {
+            "Supervisor": 5,
+            "C&N Driver": 1
+          },
+          "8320845": {
+            "Supervisor": 2,
+            "C&N Escort": 3,
+            "Southern Driver": 1
+          },
+          "9150226": {
+            "Supervisor": 3,
+            "C&N Driver": 1
+          },
+          "8837884": {
+            "Supervisor": 1,
+            "C&N Driver": 3,
+            "Southern Escort": 1
+          },
+          "9051978": {
+            "C&N Driver": 4,
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "9241047": {
+            "C&N Driver": 1,
+            "Southern Driver": 1,
+            "Southern Escort": 4
+          },
+          "9570530": {
+            "C&N Driver": 2,
+            "Southern Driver": 3
+          },
+          "000000000": {
+            "C&N Driver": 2,
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "8837802": {
+            "C&N Driver": 1,
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "9434252": {
+            "C&N Driver": 3,
+            "C&N Escort": 1,
+            "Southern Escort": 1
+          },
+          "9168925": {
+            "C&N Driver": 1,
+            "C&N Escort": 1,
+            "Southern Driver": 4
+          },
+          "9386605": {
+            "C&N Driver": 1,
+            "C&N Escort": 1,
+            "Southern Driver": 1,
+            "Southern Escort": 1
+          },
+          "9597864": {
+            "C&N Driver": 1,
+            "Southern Driver": 2
+          },
+          "9053851": {
+            "C&N Escort": 4
+          },
+          "9437517": {
+            "C&N Escort": 2
+          },
+          "9175557": {
+            "C&N Escort": 1,
+            "Southern Driver": 1,
+            "Southern Escort": 3
+          },
+          "9127472": {
+            "C&N Escort": 5,
+            "Southern Escort": 1
+          },
+          "9356189": {
+            "Southern Driver": 2
+          },
+          "9517593": {
+            "Southern Escort": 3
+          },
+          "9617384": {
+            "Southern Escort": 3
+          },
+          "9518772": {
+            "Southern Escort": 2
+          },
+          "9631934": {
+            "Southern Escort": 2
+          }
+        }
+      },
+      "y_tasks_09-03-2025_to_29-03-2025.csv": {
+        "file": "y_tasks_09-03-2025_to_29-03-2025.csv",
+        "updated_at": "2025-08-16T23:13:19.834618",
+        "data": {
+          "1111111": {
+            "Supervisor": 8
+          },
+          "9053378": {
+            "Supervisor": 2,
+            "Southern Driver": 3
+          },
+          "2222222": {
+            "Supervisor": 3,
+            "C&N Driver": 4
+          },
+          "8320845": {
+            "Supervisor": 3,
+            "Southern Driver": 4
+          },
+          "8837884": {
+            "Supervisor": 1,
+            "Southern Driver": 1,
+            "Southern Escort": 1
+          },
+          "9150226": {
+            "Supervisor": 4,
+            "Southern Driver": 1
+          },
+          "9051978": {
+            "C&N Driver": 2,
+            "Southern Driver": 2
+          },
+          "9168925": {
+            "C&N Driver": 4,
+            "Southern Escort": 1
+          },
+          "9434252": {
+            "C&N Driver": 2,
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "8837802": {
+            "C&N Driver": 4,
+            "C&N Escort": 1
+          },
+          "000000000": {
+            "C&N Driver": 1,
+            "C&N Escort": 4,
+            "Southern Driver": 2
+          },
+          "9175557": {
+            "C&N Driver": 2,
+            "C&N Escort": 1,
+            "Southern Driver": 1
+          },
+          "9241047": {
+            "C&N Driver": 1,
+            "Southern Driver": 1
+          },
+          "9597864": {
+            "C&N Driver": 1,
+            "C&N Escort": 1
+          },
+          "9053851": {
+            "C&N Escort": 5
+          },
+          "9386605": {
+            "C&N Escort": 1,
+            "Southern Escort": 1
+          },
+          "9437517": {
+            "C&N Escort": 2
+          },
+          "9127472": {
+            "C&N Escort": 4,
+            "Southern Escort": 1
+          },
+          "9570530": {
+            "C&N Escort": 1,
+            "Southern Driver": 1,
+            "Southern Escort": 3
+          },
+          "9356189": {
+            "Southern Driver": 4,
+            "Southern Escort": 1
+          },
+          "9517593": {
+            "Southern Escort": 2
+          },
+          "9617384": {
+            "Southern Escort": 7
+          },
+          "9631934": {
+            "Southern Escort": 2
+          },
+          "9518772": {
+            "Southern Escort": 2
+          }
+        }
+      },
+      "y_tasks_30-03-2025_to_05-07-2025.csv": {
+        "file": "y_tasks_30-03-2025_to_05-07-2025.csv",
+        "updated_at": "2025-08-16T23:13:47.836661",
+        "data": {
+          "1111111": {
+            "Supervisor": 22,
+            "C&N Escort": 3,
+            "Southern Escort": 3
+          },
+          "9053378": {
+            "Supervisor": 17,
+            "C&N Driver": 1,
+            "C&N Escort": 3
+          },
+          "2222222": {
+            "Supervisor": 18,
+            "C&N Driver": 1,
+            "C&N Escort": 1,
+            "Southern Escort": 3
+          },
+          "8320845": {
+            "Supervisor": 15,
+            "C&N Driver": 4,
+            "C&N Escort": 3,
+            "Southern Driver": 1
+          },
+          "8837884": {
+            "Supervisor": 10,
+            "C&N Driver": 3,
+            "Southern Driver": 4,
+            "Southern Escort": 4
+          },
+          "9150226": {
+            "Supervisor": 16,
+            "C&N Driver": 4,
+            "Southern Driver": 1
+          },
+          "9051978": {
+            "C&N Driver": 6,
+            "C&N Escort": 3,
+            "Southern Driver": 11
+          },
+          "9168925": {
+            "C&N Driver": 8,
+            "C&N Escort": 5,
+            "Southern Driver": 6
+          },
+          "9434252": {
+            "C&N Driver": 10,
+            "C&N Escort": 5,
+            "Southern Driver": 7
+          },
+          "9597864": {
+            "C&N Driver": 14,
+            "C&N Escort": 2,
+            "Southern Driver": 7
+          },
+          "000000000": {
+            "C&N Driver": 9,
+            "C&N Escort": 3,
+            "Southern Driver": 5
+          },
+          "8837802": {
+            "C&N Driver": 7,
+            "C&N Escort": 2,
+            "Southern Driver": 10
+          },
+          "9175557": {
+            "C&N Driver": 6,
+            "C&N Escort": 3,
+            "Southern Driver": 4,
+            "Southern Escort": 6
+          },
+          "9386605": {
+            "C&N Driver": 8,
+            "C&N Escort": 6,
+            "Southern Driver": 7
+          },
+          "9241047": {
+            "C&N Driver": 9,
+            "C&N Escort": 3,
+            "Southern Driver": 10
+          },
+          "9570530": {
+            "C&N Driver": 8,
+            "C&N Escort": 3,
+            "Southern Driver": 6,
+            "Southern Escort": 3
+          },
+          "9053851": {
+            "C&N Escort": 21,
+            "Southern Escort": 1
+          },
+          "9437517": {
+            "C&N Escort": 19,
+            "Southern Escort": 1
+          },
+          "9127472": {
+            "C&N Escort": 13,
+            "Southern Escort": 7
+          },
+          "9356189": {
+            "Southern Driver": 19,
+            "Southern Escort": 1
+          },
+          "9517593": {
+            "Southern Escort": 15
+          },
+          "9617384": {
+            "Southern Escort": 25
+          },
+          "9518772": {
+            "Southern Escort": 15
+          },
+          "9631934": {
+            "Southern Escort": 14
+          }
+        }
+      }
+    },
+    "closing_intervals": {
+      "9597864": {
+        "worker_id": "9597864",
+        "worker_name": "יעל ויינשטיין",
+        "target_interval": 3,
+        "actual_avg_interval": 4.33,
+        "min_interval": 3.0,
+        "max_interval": 6.0,
+        "total_closings": 4,
+        "accuracy_percentage": 55.6,
+        "intervals": [
+          4.0,
+          6.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-04-04",
+          "2025-05-02",
+          "2025-06-13",
+          "2025-07-04"
+        ],
+        "color": "red"
+      },
+      "9168925": {
+        "worker_id": "9168925",
+        "worker_name": "דימה חלסטוב",
+        "target_interval": 3,
+        "actual_avg_interval": 2.0,
+        "min_interval": 2.0,
+        "max_interval": 2.0,
+        "total_closings": 2,
+        "accuracy_percentage": 66.7,
+        "intervals": [
+          2.0
+        ],
+        "closing_dates": [
+          "2025-05-16",
+          "2025-05-30"
+        ],
+        "color": "orange"
+      },
+      "9356189": {
+        "worker_id": "9356189",
+        "worker_name": "אנגלינה פרידלין",
+        "target_interval": 3,
+        "actual_avg_interval": 3.0,
+        "min_interval": 3.0,
+        "max_interval": 3.0,
+        "total_closings": 3,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          3.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-05-09",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9051978": {
+        "worker_id": "9051978",
+        "worker_name": "ניקיטה סידורוביץ",
+        "target_interval": 4,
+        "actual_avg_interval": 6.0,
+        "min_interval": 6.0,
+        "max_interval": 6.0,
+        "total_closings": 2,
+        "accuracy_percentage": 50.0,
+        "intervals": [
+          6.0
+        ],
+        "closing_dates": [
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "color": "red"
+      },
+      "8837802": {
+        "worker_id": "8837802",
+        "worker_name": "איילה אפריים",
+        "target_interval": 4,
+        "actual_avg_interval": 4.0,
+        "min_interval": 4.0,
+        "max_interval": 4.0,
+        "total_closings": 2,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          4.0
+        ],
+        "closing_dates": [
+          "2025-05-16",
+          "2025-06-13"
+        ],
+        "color": "green"
+      },
+      "9386605": {
+        "worker_id": "9386605",
+        "worker_name": "נועה דרעי",
+        "target_interval": 4,
+        "actual_avg_interval": 5.5,
+        "min_interval": 4.0,
+        "max_interval": 7.0,
+        "total_closings": 3,
+        "accuracy_percentage": 62.5,
+        "intervals": [
+          7.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-04-11",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "color": "orange"
+      },
+      "9570530": {
+        "worker_id": "9570530",
+        "worker_name": "רואי כוכבי",
+        "target_interval": 4,
+        "actual_avg_interval": 3.5,
+        "min_interval": 3.0,
+        "max_interval": 4.0,
+        "total_closings": 3,
+        "accuracy_percentage": 87.5,
+        "intervals": [
+          3.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "color": "green"
+      },
+      "9241047": {
+        "worker_id": "9241047",
+        "worker_name": "נתנאל פרסבורגר",
+        "target_interval": 3,
+        "actual_avg_interval": 3.67,
+        "min_interval": 2.0,
+        "max_interval": 6.0,
+        "total_closings": 4,
+        "accuracy_percentage": 77.8,
+        "intervals": [
+          2.0,
+          3.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-27"
+        ],
+        "color": "orange"
+      },
+      "9150226": {
+        "worker_id": "9150226",
+        "worker_name": "קארינה פפרליצה",
+        "target_interval": 5,
+        "actual_avg_interval": 4.0,
+        "min_interval": 3.0,
+        "max_interval": 5.0,
+        "total_closings": 3,
+        "accuracy_percentage": 80.0,
+        "intervals": [
+          3.0,
+          5.0
+        ],
+        "closing_dates": [
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9053378": {
+        "worker_id": "9053378",
+        "worker_name": "לינוי מונרדוס",
+        "target_interval": 5,
+        "actual_avg_interval": 5.5,
+        "min_interval": 5.0,
+        "max_interval": 6.0,
+        "total_closings": 3,
+        "accuracy_percentage": 90.0,
+        "intervals": [
+          5.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-04-04",
+          "2025-05-09",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9617384": {
+        "worker_id": "9617384",
+        "worker_name": "אלין אלון",
+        "target_interval": 2,
+        "actual_avg_interval": 2.6,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 6,
+        "accuracy_percentage": 70.0,
+        "intervals": [
+          3.0,
+          2.0,
+          4.0,
+          2.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-04-04",
+          "2025-04-25",
+          "2025-05-09",
+          "2025-06-06",
+          "2025-06-20",
+          "2025-07-04"
+        ],
+        "color": "orange"
+      },
+      "9434252": {
+        "worker_id": "9434252",
+        "worker_name": "דניאל פטקוב",
+        "target_interval": 4,
+        "actual_avg_interval": 3.33,
+        "min_interval": 2.0,
+        "max_interval": 5.0,
+        "total_closings": 4,
+        "accuracy_percentage": 83.3,
+        "intervals": [
+          2.0,
+          5.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-04-18",
+          "2025-05-02",
+          "2025-06-06",
+          "2025-06-27"
+        ],
+        "color": "green"
+      },
+      "9175557": {
+        "worker_id": "9175557",
+        "worker_name": "אייל נחושתן",
+        "target_interval": 4,
+        "actual_avg_interval": 8.0,
+        "min_interval": 8.0,
+        "max_interval": 8.0,
+        "total_closings": 2,
+        "accuracy_percentage": 0,
+        "intervals": [
+          8.0
+        ],
+        "closing_dates": [
+          "2025-05-02",
+          "2025-06-27"
+        ],
+        "color": "red"
+      },
+      "9053851": {
+        "worker_id": "9053851",
+        "worker_name": "חן אטדגי",
+        "target_interval": 3,
+        "actual_avg_interval": 6.0,
+        "min_interval": 6.0,
+        "max_interval": 6.0,
+        "total_closings": 3,
+        "accuracy_percentage": 0,
+        "intervals": [
+          6.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-04-11",
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "color": "red"
+      },
+      "9127472": {
+        "worker_id": "9127472",
+        "worker_name": "רומן נפטלייב",
+        "target_interval": 3,
+        "actual_avg_interval": 3.0,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 4,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          2.0,
+          4.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-13"
+        ],
+        "color": "green"
+      },
+      "9437517": {
+        "worker_id": "9437517",
+        "worker_name": "מליסה רופה",
+        "target_interval": 3,
+        "actual_avg_interval": 3.5,
+        "min_interval": 3.0,
+        "max_interval": 4.0,
+        "total_closings": 3,
+        "accuracy_percentage": 83.3,
+        "intervals": [
+          3.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "color": "green"
+      },
+      "8837884": {
+        "worker_id": "8837884",
+        "worker_name": "לידר פנקר",
+        "target_interval": 5,
+        "actual_avg_interval": 5.0,
+        "min_interval": 3.0,
+        "max_interval": 7.0,
+        "total_closings": 3,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          7.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-04-04",
+          "2025-05-23",
+          "2025-06-13"
+        ],
+        "color": "green"
+      },
+      "8320845": {
+        "worker_id": "8320845",
+        "worker_name": "David",
+        "target_interval": 2,
+        "actual_avg_interval": 3.0,
+        "min_interval": 2.0,
+        "max_interval": 5.0,
+        "total_closings": 4,
+        "accuracy_percentage": 50.0,
+        "intervals": [
+          5.0,
+          2.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-04-18",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-06-20"
+        ],
+        "color": "red"
+      },
+      "1111111": {
+        "worker_id": "1111111",
+        "worker_name": "Vitalchik",
+        "target_interval": 2,
+        "actual_avg_interval": 2.17,
+        "min_interval": 2.0,
+        "max_interval": 3.0,
+        "total_closings": 7,
+        "accuracy_percentage": 91.7,
+        "intervals": [
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          2.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-04-04",
+          "2025-04-18",
+          "2025-05-02",
+          "2025-05-16",
+          "2025-05-30",
+          "2025-06-13",
+          "2025-07-04"
+        ],
+        "color": "green"
+      },
+      "2222222": {
+        "worker_id": "2222222",
+        "worker_name": "Shlomo",
+        "target_interval": 4,
+        "actual_avg_interval": 3.67,
+        "min_interval": 3.0,
+        "max_interval": 4.0,
+        "total_closings": 4,
+        "accuracy_percentage": 91.7,
+        "intervals": [
+          3.0,
+          4.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-04-11",
+          "2025-05-02",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "color": "green"
+      }
+    },
+    "aggregates": {
+      "total_workers": 24,
+      "total_x_tasks": 0,
+      "total_y_tasks": 0,
+      "closing_interval_summary": {
+        "workers_with_closings": 20,
+        "average_accuracy": 72.0,
+        "workers_above_90_percent": 7,
+        "workers_above_80_percent": 11,
+        "workers_below_50_percent": 2
+      }
+    }
+  },
+  "summary": {
+    "total_workers": 24,
+    "total_x_tasks": 0,
+    "total_y_tasks": 0
+  }
+}
