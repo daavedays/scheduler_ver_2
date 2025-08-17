@@ -27,11 +27,12 @@ except ImportError:
 
 
 try:
-	from .constants import get_y_task_types
+	from .constants import get_y_task_types, get_y_task_definitions
 except ImportError:
-	from constants import get_y_task_types
+	from constants import get_y_task_types, get_y_task_definitions
 
 Y_TASK_TYPES = get_y_task_types()
+Y_TASK_DEFS = {d['name']: bool(d.get('requiresQualification', True)) for d in (get_y_task_definitions() or [])}
 
 
 def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[str, int], Dict[str, float]]:
@@ -42,7 +43,8 @@ def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[
     availability: Dict[str, int] = {t: 0 for t in Y_TASK_TYPES}
     for w in workers:
         for t in Y_TASK_TYPES:
-            if t in w.qualifications:
+            requires = Y_TASK_DEFS.get(t, True)
+            if (not requires) or (t in w.qualifications):
                 availability[t] += 1
     scarcity: Dict[str, float] = {}
     for t, n in availability.items():
@@ -57,7 +59,8 @@ def compute_worker_scarcity_index(worker: EnhancedWorker, task_scarcity: Dict[st
     """
     values: List[float] = []
     for t in Y_TASK_TYPES:
-        if t in worker.qualifications:
+        requires = Y_TASK_DEFS.get(t, True)
+        if (not requires) or (t in worker.qualifications):
             values.append(task_scarcity.get(t, 0.0))
     if not values:
         return 0.0
@@ -288,7 +291,45 @@ class SchedulingEngineV2:
                 return False
             return True
 
-        # 2. Prefer candidates whose Friday is an optimal closing date
+        # 2a. Prefer severely overdue candidates (fairness catch-up) before optimal
+        if unassigned_tasks and len(assigned_closers) < num_slots:
+            overdue_candidates = [w for w in workers if eligible_base(w)]
+            # Compute overdue ratio (weeks_overdue / interval) and weeks_overdue
+            overdue_candidates.sort(
+                key=lambda w: (
+                    -w.get_overdue_ratio(friday),  # highest ratio first
+                    -w.get_weeks_overdue(friday),  # then absolute overdue
+                    w.score,
+                    sum(w.y_task_counts.values()),
+                    w.id
+                )
+            )
+            for worker in overdue_candidates:
+                if len(assigned_closers) >= num_slots or not unassigned_tasks:
+                    break
+                # Only pick those actually overdue
+                if worker.get_weeks_overdue(friday) <= 0:
+                    break
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
+                if not qualified:
+                    continue
+                task_to_assign = qualified[0]
+                assigned_closers.append(worker)
+                for day in weekend_dates:
+                    assignments[day].append((task_to_assign, worker.id))
+                worker.assign_closing(friday)
+                try:
+                    worker.update_score_after_assignment("closing", friday)
+                except Exception:
+                    pass
+                worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
+                if task_to_assign in unassigned_tasks:
+                    unassigned_tasks.remove(task_to_assign)
+                logs.append(
+                    f"Assigned OVERDUE {worker.name} to {task_to_assign} (overdue_ratio={worker.get_overdue_ratio(friday):.2f}, weeks_overdue={worker.get_weeks_overdue(friday)})"
+                )
+
+        # 2b. Prefer candidates whose Friday is an optimal closing date
         if unassigned_tasks and len(assigned_closers) < num_slots:
             optimal_candidates = [w for w in workers if eligible_base(w) and (friday in w.optimal_closing_dates)]
             # Sort by score asc, then total Y asc, then id
@@ -402,7 +443,8 @@ class SchedulingEngineV2:
             if any(t == task for t, _ in assignments.get(task_date, [])):
                 continue
             
-            candidates_all = [w for w in available_workers if task in w.qualifications]
+            requires = Y_TASK_DEFS.get(task, True)
+            candidates_all = [w for w in available_workers if (not requires) or (task in w.qualifications)]
             # Prefer workers without another Y-task this same week
             week_start = task_date - timedelta(days=task_date.weekday())
             candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]

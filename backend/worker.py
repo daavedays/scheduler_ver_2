@@ -27,14 +27,29 @@ class EnhancedWorker:
         self.weekends_home_owed = int(weekends_home_owed)
         self.home_weeks_owed = int(weekends_home_owed)
         
-        # Y task tracking by type for scoring
-        self.y_task_counts = {
-            "Supervisor": 0,
-            "C&N Driver": 0,
-            "C&N Escort": 0,
-            "Southern Driver": 0,
-            "Southern Escort": 0
-        }
+        # Y task tracking by type for scoring (dynamic based on constants)
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        self.y_task_counts: Dict[str, int] = {}
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                self.y_task_counts = {t: 0 for t in types}
+            else:
+                raise Exception("no types")
+        except Exception:
+            self.y_task_counts = {
+                "Supervisor": 0,
+                "C&N Driver": 0,
+                "C&N Escort": 0,
+                "Southern Driver": 0,
+                "Southern Escort": 0
+            }
         
         # Task tracking (required by multiple methods and persistence)
         self.x_tasks = {}  # date_string -> task_name
@@ -79,6 +94,20 @@ class EnhancedWorker:
         last_close = max(self.closing_history)
         weeks_since = (current_week - last_close).days // 7
         return max(0, self.closing_interval - weeks_since)
+    
+    def get_weeks_overdue(self, current_week: date) -> int:
+        """How many weeks overdue relative to target interval (0 if not overdue)."""
+        if self.closing_interval <= 0 or not self.closing_history:
+            return 0
+        last_close = max(self.closing_history)
+        weeks_since = (current_week - last_close).days // 7
+        return max(0, weeks_since - self.closing_interval)
+    
+    def get_overdue_ratio(self, current_week: date) -> float:
+        """Overdue normalized by interval; 0 means on target or early."""
+        if self.closing_interval <= 0:
+            return 0.0
+        return (self.get_weeks_overdue(current_week) / float(self.closing_interval)) if self.closing_interval else 0.0
     
     def has_closing_scheduled(self, target_date: date) -> bool:
         """Check if worker has closing scheduled on target date"""
@@ -343,10 +372,30 @@ class EnhancedWorker:
         worker.closing_history = [datetime.strptime(d, '%Y-%m-%d').date() for d in closing_history_data]
         
         # Load enhanced data
-        worker.y_task_counts = data.get('y_task_counts', {
-            "Supervisor": 0, "C&N Driver": 0, "C&N Escort": 0,
-            "Southern Driver": 0, "Southern Escort": 0
-        })
+        # Load y_task_counts, but ensure keys cover current dynamic task types
+        raw_counts = data.get('y_task_counts')
+        counts: Dict[str, int]
+        if isinstance(raw_counts, dict):
+            counts = {str(k): int(v) for k, v in raw_counts.items() if isinstance(k, str)}
+        else:
+            counts = {}
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                for t in types:
+                    counts.setdefault(t, 0)
+        except Exception:
+            # ensure legacy defaults
+            for t in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
+                counts.setdefault(t, 0)
+        worker.y_task_counts = counts
         worker.home_weeks_owed = data.get('home_weeks_owed', data.get('weekends_home_owed', 0))
         worker.weekends_home_owed = data.get('weekends_home_owed', worker.home_weeks_owed)
         
@@ -502,13 +551,28 @@ def load_y_tasks_for_worker(worker: EnhancedWorker, y_tasks_data: Dict[str, Dict
     """Load Y tasks for a specific worker from parsed data"""
     if worker.name in y_tasks_data:
         worker.y_tasks = {}
-        worker.y_task_counts = {
-            "Supervisor": 0,
-            "C&N Driver": 0,
-            "C&N Escort": 0,
-            "Southern Driver": 0,
-            "Southern Escort": 0
-        }
+        # Initialize counts according to dynamic task types
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                worker.y_task_counts = {t: 0 for t in types}
+            else:
+                raise Exception("no types")
+        except Exception:
+            worker.y_task_counts = {
+                "Supervisor": 0,
+                "C&N Driver": 0,
+                "C&N Escort": 0,
+                "Southern Driver": 0,
+                "Southern Escort": 0
+            }
         
         for date_str, task_name in y_tasks_data[worker.name].items():
             try:
