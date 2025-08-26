@@ -1,0 +1,72 @@
+{
+  "y_tasks": {
+    "departments": {
+      "default": {
+        "definitions": [
+          {
+            "id": 1,
+            "name": "Supervisor",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 2,
+            "name": "C&N Driver",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 3,
+            "name": "C&N Escort",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 5,
+            "name": "Southern Driver",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 6,
+            "name": "Southern Escort",
+            "requiresQualification": true,
+            "autoAssign": true
+          }
+        ]
+      }
+    }
+  },
+  "x_tasks": {
+    "definitions": [
+      {
+        "id": 1,
+        "name": "Guard",
+        "isDefault": true,
+        "start_day": 6,
+        "end_day": 5
+      },
+      {
+        "id": 2,
+        "name": "Kitchen",
+        "isDefault": true,
+        "start_day": 6,
+        "end_day": 5
+      },
+      {
+        "id": 3,
+        "name": "HQ",
+        "isDefault": true,
+        "start_day": 6,
+        "end_day": 5
+      },
+      {
+        "id": 4,
+        "name": "Rituk",
+        "isDefault": false,
+        "start_day": 4,
+        "end_day": 6
+      }
+    ]
+  }
+}
