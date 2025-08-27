@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-08-26T23:20:42.168456",
+  "summary": {
+    "total_tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "test_results": [
+    {
+      "test": "Worker Count Consistency",
+      "passed": true,
+      "details": "Raw: 23, Stats: 23",
+      "timestamp": "2025-08-26T23:20:42.161476"
+    },
+    {
+      "test": "Individual Worker Data Consistency",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.161499"
+    },
+    {
+      "test": "X Tasks Total Consistency",
+      "passed": true,
+      "details": "CSV Total: 1, Stats Total: 1",
+      "timestamp": "2025-08-26T23:20:42.162463"
+    },
+    {
+      "test": "Individual X Tasks Counts",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.162473"
+    },
+    {
+      "test": "Y Tasks Total Consistency",
+      "passed": true,
+      "details": "CSV Total: 1014, Stats Total: 1014",
+      "timestamp": "2025-08-26T23:20:42.163460"
+    },
+    {
+      "test": "Individual Y Tasks Counts",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.163475"
+    },
+    {
+      "test": "Closing Analysis Worker Count",
+      "passed": true,
+      "details": "Expected: 19, Actual: 19",
+      "timestamp": "2025-08-26T23:20:42.164384"
+    },
+    {
+      "test": "Individual Closing Interval Calculations",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.166078"
+    },
+    {
+      "test": "Worker Count in Summary",
+      "passed": true,
+      "details": "Expected: 23, Actual: 23",
+      "timestamp": "2025-08-26T23:20:42.166747"
+    },
+    {
+      "test": "X Tasks Total in Summary",
+      "passed": true,
+      "details": "Expected: 1, Actual: 1",
+      "timestamp": "2025-08-26T23:20:42.166754"
+    },
+    {
+      "test": "Y Tasks Total in Summary",
+      "passed": true,
+      "details": "Expected: 1014, Actual: 1014",
+      "timestamp": "2025-08-26T23:20:42.166759"
+    },
+    {
+      "test": "Combined Total in Summary",
+      "passed": true,
+      "details": "Expected: 1015, Actual: 1015",
+      "timestamp": "2025-08-26T23:20:42.166762"
+    },
+    {
+      "test": "X Tasks Percentages",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.167365"
+    },
+    {
+      "test": "Y Tasks Percentages",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.167376"
+    },
+    {
+      "test": "Qualification Analysis Accuracy",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-26T23:20:42.168304"
+    }
+  ]
+}

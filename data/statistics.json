@@ -1,0 +1,1234 @@
+{
+  "metadata": {
+    "created_at": "2025-08-26T23:21:09.125272",
+    "last_updated": "2025-08-26T23:24:19.365861",
+    "version": "1.0"
+  },
+  "data_sources": {
+    "x_task_files": [
+      "x_tasks_2025_1.csv"
+    ],
+    "y_task_files": [
+      "y_tasks_05-01-2025_to_05-07-2025.csv"
+    ],
+    "worker_data": {
+      "updated_at": "2025-08-26T23:24:19.365090",
+      "worker_count": 23
+    }
+  },
+  "statistics": {
+    "workers": {
+      "9597864": {
+        "id": "9597864",
+        "name": "יעל ויינשטיין",
+        "qualifications": [
+          "מלווה כבל רשת",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 36.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-02-14",
+          "2025-03-07",
+          "2025-04-04",
+          "2025-05-02",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9168925": {
+        "id": "9168925",
+        "name": "דימה חלסטוב",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 37.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-07",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9356189": {
+        "id": "9356189",
+        "name": "אנגלינה פרידלין",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-14",
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9051978": {
+        "id": "9051978",
+        "name": "ניקיטה סידורוביץ",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-10",
+          "2025-02-07",
+          "2025-03-14",
+          "2025-04-04",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9631934": {
+        "id": "9631934",
+        "name": "אושר טייב",
+        "qualifications": [],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 34.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8837802": {
+        "id": "8837802",
+        "name": "איילה אפריים",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-10",
+          "2025-02-14",
+          "2025-03-21",
+          "2025-05-02",
+          "2025-06-13"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9386605": {
+        "id": "9386605",
+        "name": "נועה דרעי",
+        "qualifications": [],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9570530": {
+        "id": "9570530",
+        "name": "רואי כוכבי",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-31",
+          "2025-03-07",
+          "2025-04-11",
+          "2025-05-02",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9241047": {
+        "id": "9241047",
+        "name": "נתנאל פרסבורגר",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "מגש״ק תורן",
+          "מלווה דרומי",
+          "גורר דרומי"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 37.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-24",
+          "2025-02-28",
+          "2025-04-11",
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9150226": {
+        "id": "9150226",
+        "name": "קארינה פפרליצה",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-21",
+          "2025-05-02",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9053378": {
+        "id": "9053378",
+        "name": "לינוי מונרדוס",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "גורר דרומי",
+          "מלווה כבל רשת",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 5,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-10",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-25",
+          "2025-06-06"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9617384": {
+        "id": "9617384",
+        "name": "אלין אלון",
+        "qualifications": [
+          "מלווה דרומי"
+        ],
+        "closing_interval": 2,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-02-07",
+          "2025-02-28",
+          "2025-03-14",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-02",
+          "2025-05-16",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9434252": {
+        "id": "9434252",
+        "name": "דניאל פטקוב",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-31",
+          "2025-03-07",
+          "2025-04-11",
+          "2025-05-16",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9175557": {
+        "id": "9175557",
+        "name": "אייל נחושתן",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-24",
+          "2025-02-28",
+          "2025-03-28",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9053851": {
+        "id": "9053851",
+        "name": "חן אטדגי",
+        "qualifications": [
+          "מלווה כבל רשת",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-10",
+          "2025-02-07",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9127472": {
+        "id": "9127472",
+        "name": "רומן נפטלייב",
+        "qualifications": [
+          "מלווה כבל רשת",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 36.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-04",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9437517": {
+        "id": "9437517",
+        "name": "מליסה רופה",
+        "qualifications": [
+          "מלווה כבל רשת",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-28",
+          "2025-03-28",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8837884": {
+        "id": "8837884",
+        "name": "לידר פנקר",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 6,
+        "officer": false,
+        "score": 36.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-10",
+          "2025-02-21",
+          "2025-04-11",
+          "2025-05-30"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9518772": {
+        "id": "9518772",
+        "name": "תהילה טרנר",
+        "qualifications": [
+          "מלווה דרומי"
+        ],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "9517593": {
+        "id": "9517593",
+        "name": "רבקה ארבינצר",
+        "qualifications": [
+          "מלווה דרומי"
+        ],
+        "closing_interval": 0,
+        "officer": false,
+        "score": 35.0,
+        "seniority": null,
+        "closing_history": [],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "8320845": {
+        "id": "8320845",
+        "name": "David",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מגש״ק תורן",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 2,
+        "officer": false,
+        "score": 36.0,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-17",
+          "2025-02-07",
+          "2025-02-28",
+          "2025-03-14",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-05-23",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "1111111": {
+        "id": "1111111",
+        "name": "Vitalchik",
+        "qualifications": [
+          "מגש״ק תורן",
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 3,
+        "officer": false,
+        "score": 35.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-21",
+          "2025-03-14",
+          "2025-04-04",
+          "2025-04-18",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      },
+      "000000000": {
+        "id": "000000000",
+        "name": "ניר כהן",
+        "qualifications": [
+          "נהג כבל רשת",
+          "מלווה כבל רשת",
+          "גורר דרומי",
+          "מלווה דרומי"
+        ],
+        "closing_interval": 4,
+        "officer": false,
+        "score": 37.5,
+        "seniority": null,
+        "closing_history": [
+          "2025-01-17",
+          "2025-02-07",
+          "2025-03-07",
+          "2025-04-04",
+          "2025-05-09",
+          "2025-05-30",
+          "2025-07-04"
+        ],
+        "required_closing_dates": [],
+        "optimal_closing_dates": []
+      }
+    },
+    "x_tasks": {
+      "x_tasks_2025_1.csv": {
+        "file": "x_tasks_2025_1.csv",
+        "updated_at": "2025-08-26T23:24:03.677448",
+        "data": {
+          "9597864": {
+            "שמירות": 1
+          }
+        }
+      }
+    },
+    "y_tasks": {
+      "y_tasks_05-01-2025_to_05-07-2025.csv": {
+        "file": "y_tasks_05-01-2025_to_05-07-2025.csv",
+        "updated_at": "2025-08-26T23:24:19.362611",
+        "data": {
+          "1111111": {
+            "מגש״ק תורן": 25,
+            "נהג כבל רשת": 11,
+            "מלווה כבל רשת": 1,
+            "גורר דרומי": 8,
+            "מלווה דרומי": 4
+          },
+          "9053378": {
+            "מגש״ק תורן": 20,
+            "נהג כבל רשת": 7,
+            "מלווה כבל רשת": 4,
+            "גורר דרומי": 12
+          },
+          "9241047": {
+            "מגש״ק תורן": 21,
+            "נהג כבל רשת": 12,
+            "מלווה כבל רשת": 4,
+            "גורר דרומי": 7,
+            "מלווה דרומי": 1
+          },
+          "8320845": {
+            "מגש״ק תורן": 29,
+            "נהג כבל רשת": 13,
+            "מלווה כבל רשת": 3,
+            "גורר דרומי": 6
+          },
+          "8837802": {
+            "מגש״ק תורן": 21,
+            "נהג כבל רשת": 7,
+            "מלווה כבל רשת": 2,
+            "גורר דרומי": 7,
+            "מלווה דרומי": 6
+          },
+          "9150226": {
+            "מגש״ק תורן": 22,
+            "נהג כבל רשת": 8,
+            "מלווה כבל רשת": 3,
+            "גורר דרומי": 9,
+            "מלווה דרומי": 1
+          },
+          "9168925": {
+            "מגש״ק תורן": 25,
+            "נהג כבל רשת": 7,
+            "מלווה כבל רשת": 2,
+            "גורר דרומי": 12,
+            "מלווה דרומי": 3
+          },
+          "8837884": {
+            "מגש״ק תורן": 19,
+            "נהג כבל רשת": 10,
+            "מלווה כבל רשת": 1,
+            "גורר דרומי": 8,
+            "מלווה דרומי": 4
+          },
+          "000000000": {
+            "נהג כבל רשת": 14,
+            "מלווה כבל רשת": 6,
+            "גורר דרומי": 24,
+            "מלווה דרומי": 4
+          },
+          "9356189": {
+            "נהג כבל רשת": 16,
+            "מלווה כבל רשת": 6,
+            "גורר דרומי": 21,
+            "מלווה דרומי": 4
+          },
+          "9570530": {
+            "נהג כבל רשת": 20,
+            "מלווה כבל רשת": 7,
+            "גורר דרומי": 15,
+            "מלווה דרומי": 2
+          },
+          "9051978": {
+            "נהג כבל רשת": 24,
+            "מלווה כבל רשת": 5,
+            "גורר דרומי": 13,
+            "מלווה דרומי": 1,
+            "מראה יחידה": 1
+          },
+          "9434252": {
+            "נהג כבל רשת": 14,
+            "מלווה כבל רשת": 6,
+            "גורר דרומי": 21,
+            "מלווה דרומי": 2
+          },
+          "9175557": {
+            "נהג כבל רשת": 19,
+            "מלווה כבל רשת": 5,
+            "גורר דרומי": 19,
+            "מראה יחידה": 1
+          },
+          "9053851": {
+            "מלווה כבל רשת": 35,
+            "מלווה דרומי": 12
+          },
+          "9437517": {
+            "מלווה כבל רשת": 34,
+            "מלווה דרומי": 13
+          },
+          "9127472": {
+            "מלווה כבל רשת": 30,
+            "מלווה דרומי": 20
+          },
+          "9597864": {
+            "מלווה כבל רשת": 28,
+            "מלווה דרומי": 18,
+            "מראה יחידה": 1
+          },
+          "9517593": {
+            "מלווה דרומי": 23,
+            "מראה יחידה": 12
+          },
+          "9518772": {
+            "מלווה דרומי": 22,
+            "מראה יחידה": 13
+          },
+          "9617384": {
+            "מלווה דרומי": 42,
+            "מראה יחידה": 7
+          },
+          "9386605": {
+            "מראה יחידה": 35
+          },
+          "9631934": {
+            "מראה יחידה": 34
+          }
+        }
+      }
+    },
+    "closing_intervals": {
+      "9597864": {
+        "worker_id": "9597864",
+        "worker_name": "יעל ויינשטיין",
+        "target_interval": 3,
+        "actual_avg_interval": 3.33,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 7,
+        "accuracy_percentage": 88.9,
+        "intervals": [
+          3.0,
+          4.0,
+          4.0,
+          3.0,
+          2.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-02-14",
+          "2025-03-07",
+          "2025-04-04",
+          "2025-05-02",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "color": "green"
+      },
+      "9168925": {
+        "worker_id": "9168925",
+        "worker_name": "דימה חלסטוב",
+        "target_interval": 3,
+        "actual_avg_interval": 3.29,
+        "min_interval": 3.0,
+        "max_interval": 4.0,
+        "total_closings": 8,
+        "accuracy_percentage": 90.5,
+        "intervals": [
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          4.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-07",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "color": "green"
+      },
+      "9356189": {
+        "worker_id": "9356189",
+        "worker_name": "אנגלינה פרידלין",
+        "target_interval": 3,
+        "actual_avg_interval": 3.14,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 8,
+        "accuracy_percentage": 95.2,
+        "intervals": [
+          3.0,
+          4.0,
+          4.0,
+          2.0,
+          3.0,
+          4.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-14",
+          "2025-04-11",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "color": "green"
+      },
+      "9051978": {
+        "worker_id": "9051978",
+        "worker_name": "ניקיטה סידורוביץ",
+        "target_interval": 4,
+        "actual_avg_interval": 4.2,
+        "min_interval": 3.0,
+        "max_interval": 5.0,
+        "total_closings": 6,
+        "accuracy_percentage": 95.0,
+        "intervals": [
+          4.0,
+          5.0,
+          3.0,
+          5.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-01-10",
+          "2025-02-07",
+          "2025-03-14",
+          "2025-04-04",
+          "2025-05-09",
+          "2025-06-06"
+        ],
+        "color": "green"
+      },
+      "8837802": {
+        "worker_id": "8837802",
+        "worker_name": "איילה אפריים",
+        "target_interval": 5,
+        "actual_avg_interval": 5.5,
+        "min_interval": 5.0,
+        "max_interval": 6.0,
+        "total_closings": 5,
+        "accuracy_percentage": 90.0,
+        "intervals": [
+          5.0,
+          5.0,
+          6.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-01-10",
+          "2025-02-14",
+          "2025-03-21",
+          "2025-05-02",
+          "2025-06-13"
+        ],
+        "color": "green"
+      },
+      "9570530": {
+        "worker_id": "9570530",
+        "worker_name": "רואי כוכבי",
+        "target_interval": 4,
+        "actual_avg_interval": 4.2,
+        "min_interval": 3.0,
+        "max_interval": 5.0,
+        "total_closings": 6,
+        "accuracy_percentage": 95.0,
+        "intervals": [
+          5.0,
+          5.0,
+          3.0,
+          4.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-01-31",
+          "2025-03-07",
+          "2025-04-11",
+          "2025-05-02",
+          "2025-05-30",
+          "2025-06-27"
+        ],
+        "color": "green"
+      },
+      "9241047": {
+        "worker_id": "9241047",
+        "worker_name": "נתנאל פרסבורגר",
+        "target_interval": 5,
+        "actual_avg_interval": 5.75,
+        "min_interval": 5.0,
+        "max_interval": 6.0,
+        "total_closings": 5,
+        "accuracy_percentage": 85.0,
+        "intervals": [
+          5.0,
+          6.0,
+          6.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-01-24",
+          "2025-02-28",
+          "2025-04-11",
+          "2025-05-23",
+          "2025-07-04"
+        ],
+        "color": "green"
+      },
+      "9150226": {
+        "worker_id": "9150226",
+        "worker_name": "קארינה פפרליצה",
+        "target_interval": 5,
+        "actual_avg_interval": 5.25,
+        "min_interval": 3.0,
+        "max_interval": 7.0,
+        "total_closings": 5,
+        "accuracy_percentage": 95.0,
+        "intervals": [
+          3.0,
+          5.0,
+          6.0,
+          7.0
+        ],
+        "closing_dates": [
+          "2025-01-24",
+          "2025-02-14",
+          "2025-03-21",
+          "2025-05-02",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9053378": {
+        "worker_id": "9053378",
+        "worker_name": "לינוי מונרדוס",
+        "target_interval": 5,
+        "actual_avg_interval": 5.25,
+        "min_interval": 4.0,
+        "max_interval": 6.0,
+        "total_closings": 5,
+        "accuracy_percentage": 95.0,
+        "intervals": [
+          6.0,
+          4.0,
+          5.0,
+          6.0
+        ],
+        "closing_dates": [
+          "2025-01-10",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-25",
+          "2025-06-06"
+        ],
+        "color": "green"
+      },
+      "9617384": {
+        "worker_id": "9617384",
+        "worker_name": "אלין אלון",
+        "target_interval": 2,
+        "actual_avg_interval": 2.38,
+        "min_interval": 2.0,
+        "max_interval": 3.0,
+        "total_closings": 9,
+        "accuracy_percentage": 81.2,
+        "intervals": [
+          3.0,
+          2.0,
+          2.0,
+          3.0,
+          2.0,
+          2.0,
+          2.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-02-07",
+          "2025-02-28",
+          "2025-03-14",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-02",
+          "2025-05-16",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9434252": {
+        "worker_id": "9434252",
+        "worker_name": "דניאל פטקוב",
+        "target_interval": 4,
+        "actual_avg_interval": 5.0,
+        "min_interval": 5.0,
+        "max_interval": 5.0,
+        "total_closings": 5,
+        "accuracy_percentage": 75.0,
+        "intervals": [
+          5.0,
+          5.0,
+          5.0,
+          5.0
+        ],
+        "closing_dates": [
+          "2025-01-31",
+          "2025-03-07",
+          "2025-04-11",
+          "2025-05-16",
+          "2025-06-20"
+        ],
+        "color": "orange"
+      },
+      "9175557": {
+        "worker_id": "9175557",
+        "worker_name": "אייל נחושתן",
+        "target_interval": 4,
+        "actual_avg_interval": 4.2,
+        "min_interval": 4.0,
+        "max_interval": 5.0,
+        "total_closings": 6,
+        "accuracy_percentage": 95.0,
+        "intervals": [
+          5.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-01-24",
+          "2025-02-28",
+          "2025-03-28",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9053851": {
+        "worker_id": "9053851",
+        "worker_name": "חן אטדגי",
+        "target_interval": 3,
+        "actual_avg_interval": 3.29,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 8,
+        "accuracy_percentage": 90.5,
+        "intervals": [
+          4.0,
+          2.0,
+          4.0,
+          4.0,
+          3.0,
+          3.0,
+          3.0
+        ],
+        "closing_dates": [
+          "2025-01-10",
+          "2025-02-07",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-05-30",
+          "2025-06-20"
+        ],
+        "color": "green"
+      },
+      "9127472": {
+        "worker_id": "9127472",
+        "worker_name": "רומן נפטלייב",
+        "target_interval": 3,
+        "actual_avg_interval": 3.0,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 9,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          2.0,
+          3.0,
+          4.0,
+          2.0,
+          3.0,
+          4.0,
+          2.0,
+          4.0
+        ],
+        "closing_dates": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-21",
+          "2025-03-21",
+          "2025-04-04",
+          "2025-04-25",
+          "2025-05-23",
+          "2025-06-06",
+          "2025-07-04"
+        ],
+        "color": "green"
+      },
+      "9437517": {
+        "worker_id": "9437517",
+        "worker_name": "מליסה רופה",
+        "target_interval": 3,
+        "actual_avg_interval": 3.29,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 8,
+        "accuracy_percentage": 90.5,
+        "intervals": [
+          2.0,
+          4.0,
+          4.0,
+          4.0,
+          3.0,
+          4.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-28",
+          "2025-03-28",
+          "2025-04-25",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "color": "green"
+      },
+      "8837884": {
+        "worker_id": "8837884",
+        "worker_name": "לידר פנקר",
+        "target_interval": 6,
+        "actual_avg_interval": 6.67,
+        "min_interval": 6.0,
+        "max_interval": 7.0,
+        "total_closings": 4,
+        "accuracy_percentage": 88.9,
+        "intervals": [
+          6.0,
+          7.0,
+          7.0
+        ],
+        "closing_dates": [
+          "2025-01-10",
+          "2025-02-21",
+          "2025-04-11",
+          "2025-05-30"
+        ],
+        "color": "green"
+      },
+      "8320845": {
+        "worker_id": "8320845",
+        "worker_name": "David",
+        "target_interval": 2,
+        "actual_avg_interval": 2.56,
+        "min_interval": 2.0,
+        "max_interval": 3.0,
+        "total_closings": 10,
+        "accuracy_percentage": 72.2,
+        "intervals": [
+          3.0,
+          3.0,
+          2.0,
+          2.0,
+          3.0,
+          3.0,
+          2.0,
+          3.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-01-17",
+          "2025-02-07",
+          "2025-02-28",
+          "2025-03-14",
+          "2025-03-28",
+          "2025-04-18",
+          "2025-05-09",
+          "2025-05-23",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "color": "orange"
+      },
+      "1111111": {
+        "worker_id": "1111111",
+        "worker_name": "Vitalchik",
+        "target_interval": 3,
+        "actual_avg_interval": 2.88,
+        "min_interval": 2.0,
+        "max_interval": 4.0,
+        "total_closings": 9,
+        "accuracy_percentage": 95.8,
+        "intervals": [
+          2.0,
+          3.0,
+          3.0,
+          3.0,
+          2.0,
+          4.0,
+          4.0,
+          2.0
+        ],
+        "closing_dates": [
+          "2025-01-17",
+          "2025-01-31",
+          "2025-02-21",
+          "2025-03-14",
+          "2025-04-04",
+          "2025-04-18",
+          "2025-05-16",
+          "2025-06-13",
+          "2025-06-27"
+        ],
+        "color": "green"
+      },
+      "000000000": {
+        "worker_id": "000000000",
+        "worker_name": "ניר כהן",
+        "target_interval": 4,
+        "actual_avg_interval": 4.0,
+        "min_interval": 3.0,
+        "max_interval": 5.0,
+        "total_closings": 7,
+        "accuracy_percentage": 100.0,
+        "intervals": [
+          3.0,
+          4.0,
+          4.0,
+          5.0,
+          3.0,
+          5.0
+        ],
+        "closing_dates": [
+          "2025-01-17",
+          "2025-02-07",
+          "2025-03-07",
+          "2025-04-04",
+          "2025-05-09",
+          "2025-05-30",
+          "2025-07-04"
+        ],
+        "color": "green"
+      }
+    },
+    "aggregates": {
+      "total_workers": 23,
+      "total_x_tasks": 0,
+      "total_y_tasks": 0,
+      "closing_interval_summary": {
+        "workers_with_closings": 19,
+        "average_accuracy": 90.5,
+        "workers_above_90_percent": 13,
+        "workers_above_80_percent": 17,
+        "workers_below_50_percent": 0
+      }
+    }
+  },
+  "summary": {
+    "total_workers": 23,
+    "total_x_tasks": 0,
+    "total_y_tasks": 0
+  }
+}

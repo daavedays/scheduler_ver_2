@@ -17,12 +17,23 @@ class EnhancedWorker:
         self.id = id
         self.name = name
         self.qualifications = qualifications.copy() if qualifications else []
-        self.closing_interval = closing_interval
-        # Higher = more overworked = lower priority. Handle None or invalid input safely
+        # Derived: set of qualification IDs based on centralized tasks.json
+        self.qualification_ids: set[int] = set()
         try:
-            self.score = float(score) if score is not None else 0.0
-        except (ValueError, TypeError):
-            self.score = 0.0
+            try:
+                from .constants import get_y_task_maps  # type: ignore
+            except Exception:
+                from constants import get_y_task_maps  # type: ignore
+            _, name_to_id = get_y_task_maps()
+            for q in (self.qualifications or []):
+                qid = name_to_id.get(q)
+                if isinstance(qid, int):
+                    self.qualification_ids.add(qid)
+        except Exception:
+            # Fallback: leave empty; downstream will also check names
+            self.qualification_ids = set()
+        self.closing_interval = closing_interval
+        self.score = float(score)  # Higher = more overworked = lower priority
         
         # Pre-computed closing schedule based on X tasks
         self.required_closing_dates = []  # Must close (due to X tasks)
@@ -31,14 +42,29 @@ class EnhancedWorker:
         self.weekends_home_owed = int(weekends_home_owed)
         self.home_weeks_owed = int(weekends_home_owed)
         
-        # Y task tracking by type for scoring
-        self.y_task_counts = {
-            "Supervisor": 0,
-            "C&N Driver": 0,
-            "C&N Escort": 0,
-            "Southern Driver": 0,
-            "Southern Escort": 0
-        }
+        # Y task tracking by type for scoring (dynamic based on constants)
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        self.y_task_counts: Dict[str, int] = {}
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                self.y_task_counts = {t: 0 for t in types}
+            else:
+                raise Exception("no types")
+        except Exception:
+            self.y_task_counts = {
+                "Supervisor": 0,
+                "C&N Driver": 0,
+                "C&N Escort": 0,
+                "Southern Driver": 0,
+                "Southern Escort": 0
+            }
         
         # Task tracking (required by multiple methods and persistence)
         self.x_tasks = {}  # date_string -> task_name
@@ -84,6 +110,20 @@ class EnhancedWorker:
         weeks_since = (current_week - last_close).days // 7
         return max(0, self.closing_interval - weeks_since)
     
+    def get_weeks_overdue(self, current_week: date) -> int:
+        """How many weeks overdue relative to target interval (0 if not overdue)."""
+        if self.closing_interval <= 0 or not self.closing_history:
+            return 0
+        last_close = max(self.closing_history)
+        weeks_since = (current_week - last_close).days // 7
+        return max(0, weeks_since - self.closing_interval)
+    
+    def get_overdue_ratio(self, current_week: date) -> float:
+        """Overdue normalized by interval; 0 means on target or early."""
+        if self.closing_interval <= 0:
+            return 0.0
+        return (self.get_weeks_overdue(current_week) / float(self.closing_interval)) if self.closing_interval else 0.0
+    
     def has_closing_scheduled(self, target_date: date) -> bool:
         """Check if worker has closing scheduled on target date"""
         return target_date in self.required_closing_dates or target_date in self.optimal_closing_dates
@@ -105,6 +145,10 @@ class EnhancedWorker:
         last_close = max(self.closing_history)
         days_since = (current_date - last_close).days
         return days_since <= days_threshold
+    
+    def can_participate_in_closing(self) -> bool:
+        """Check if worker can participate in closing duties"""
+        return self.closing_interval > 0
     
     def get_closing_interval(self) -> int:
         """Get worker's closing interval"""
@@ -233,7 +277,11 @@ class EnhancedWorker:
  
     
     def assign_closing(self, closing_date: date):
-        """Assign closing to worker"""
+        """Assign closing to worker
+        
+        Note: Workers with closing_interval <= 0 should NEVER be assigned to close.
+        This method should only be called after validating closing_interval > 0.
+        """
         if closing_date not in self.closing_history:
             self.closing_history.append(closing_date)
             self.closing_history.sort()
@@ -287,11 +335,12 @@ class EnhancedWorker:
             'name': self.name,
             'start_date': self.start_date.isoformat() if self.start_date else None,
             'qualifications': self.qualifications,
+            'qualification_ids': sorted(list(self.qualification_ids)) if hasattr(self, 'qualification_ids') else [],
             'closing_interval': self.closing_interval,
             'officer': self.officer,
-            'seniority': self.seniority,
+            'seniority': self.seniority,  # TODO: GET RID OF THIS
             'score': self.score,
-            'long_timer': self.long_timer,
+            'long_timer': self.long_timer,  # TODO: GET RID OF THIS
             'x_tasks': self.x_tasks,
             'y_tasks': {date_obj.isoformat(): task for date_obj, task in self.y_tasks.items()},
             'closing_history': [d.isoformat() for d in self.closing_history],
@@ -319,9 +368,9 @@ class EnhancedWorker:
             qualifications=data['qualifications'],
             closing_interval=data['closing_interval'],
             officer=data.get('officer', False),
-            seniority=data.get('seniority'),
+            seniority=data.get('seniority'),  # TODO: GET RID OF THIS   
             score=data.get('score', 0.0),
-            long_timer=data.get('long_timer', False),
+            long_timer=data.get('long_timer', False),  # TODO: GET RID OF THIS  
             weekends_home_owed=data.get('weekends_home_owed', data.get('home_weeks_owed', 0))
         )
         
@@ -339,10 +388,30 @@ class EnhancedWorker:
         worker.closing_history = [datetime.strptime(d, '%Y-%m-%d').date() for d in closing_history_data]
         
         # Load enhanced data
-        worker.y_task_counts = data.get('y_task_counts', {
-            "Supervisor": 0, "C&N Driver": 0, "C&N Escort": 0,
-            "Southern Driver": 0, "Southern Escort": 0
-        })
+        # Load y_task_counts, but ensure keys cover current dynamic task types
+        raw_counts = data.get('y_task_counts')
+        counts: Dict[str, int]
+        if isinstance(raw_counts, dict):
+            counts = {str(k): int(v) for k, v in raw_counts.items() if isinstance(k, str)}
+        else:
+            counts = {}
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                for t in types:
+                    counts.setdefault(t, 0)
+        except Exception:
+            # ensure legacy defaults
+            for t in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
+                counts.setdefault(t, 0)
+        worker.y_task_counts = counts
         worker.home_weeks_owed = data.get('home_weeks_owed', data.get('weekends_home_owed', 0))
         worker.weekends_home_owed = data.get('weekends_home_owed', worker.home_weeks_owed)
         
@@ -358,6 +427,13 @@ class EnhancedWorker:
         worker.y_task_count = data.get('y_task_count', 0)
         worker.closing_delta = data.get('closing_delta', 0)
         
+        # Override qualification_ids from persisted data if present
+        try:
+            persisted_qids = data.get('qualification_ids')
+            if isinstance(persisted_qids, (list, set, tuple)):
+                worker.qualification_ids = set(int(x) for x in persisted_qids)
+        except Exception:
+            pass
         return worker
 
 
@@ -366,14 +442,18 @@ class EnhancedWorker:
 # ============================================================================
 
 def load_workers_from_json(filepath: str, name_conv_path: str | None = None) -> List[EnhancedWorker]:
-    """Load workers from JSON file. Name conversion is no longer used; IDs are canonical."""
+    """Load workers from JSON file. Backend logic uses worker IDs exclusively.
+
+    Note: Any external name conversion file is ignored to prevent stale name rewrites.
+    Names are loaded as-is from `worker_data.json` and are only for display on the frontend.
+    """
     workers = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             workers_data = json.load(f)
         
+        # Ignore name conversion to avoid overwriting names from source of truth
         for worker_data in workers_data:
-            # Keep name from JSON; IDs are authoritative
             worker = EnhancedWorker.from_dict(worker_data)
             workers.append(worker)
             
@@ -420,11 +500,11 @@ def load_y_tasks_from_csv(filepath: str, workers: List[EnhancedWorker]):
                     continue
                     
                 task_name = row[0]
-                for i, worker_identifier in enumerate(row[1:]):
-                    if worker_identifier and i < len(dates):
-                        # Worker identifier must be ID (names are UI-only)
+                for i, worker_name in enumerate(row[1:]):
+                    if worker_name and i < len(dates):
+                        # Find worker and assign task
                         for worker in workers:
-                            if worker.id == worker_identifier:
+                            if worker.name == worker_name:
                                 worker.assign_y_task(dates[i], task_name)
                                 break
                     
@@ -456,8 +536,8 @@ def load_x_tasks_from_csv(filepath: str, workers: List[EnhancedWorker]):
                 if not row:
                     continue
                     
-                worker_identifier = row[0]
-                worker = next((w for w in workers if w.id == worker_identifier), None)
+                worker_name = row[0]
+                worker = next((w for w in workers if w.name == worker_name), None)
                 
                 if worker:
                     for i, task_name in enumerate(row[1:]):
@@ -479,13 +559,28 @@ def load_y_tasks_for_worker(worker: EnhancedWorker, y_tasks_data: Dict[str, Dict
     """Load Y tasks for a specific worker from parsed data"""
     if worker.name in y_tasks_data:
         worker.y_tasks = {}
-        worker.y_task_counts = {
-            "Supervisor": 0,
-            "C&N Driver": 0,
-            "C&N Escort": 0,
-            "Southern Driver": 0,
-            "Southern Escort": 0
-        }
+        # Initialize counts according to dynamic task types
+        try:
+            from .constants import get_y_task_types  # type: ignore
+        except Exception:
+            try:
+                from constants import get_y_task_types  # type: ignore
+            except Exception:
+                get_y_task_types = None  # type: ignore
+        try:
+            types = get_y_task_types() if get_y_task_types else []  # type: ignore
+            if isinstance(types, list) and types:
+                worker.y_task_counts = {t: 0 for t in types}
+            else:
+                raise Exception("no types")
+        except Exception:
+            worker.y_task_counts = {
+                "Supervisor": 0,
+                "C&N Driver": 0,
+                "C&N Escort": 0,
+                "Southern Driver": 0,
+                "Southern Escort": 0
+            }
         
         for date_str, task_name in y_tasks_data[worker.name].items():
             try:

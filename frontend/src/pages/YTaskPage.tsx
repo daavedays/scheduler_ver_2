@@ -57,13 +57,8 @@ import TableContainer from '../components/TableContainer';
 import Header from '../components/Header';
 
 function YTaskPage() {
-  const Y_TASKS = [
-    "Supervisor",
-    "C&N Driver",
-    "C&N Escort",
-    "Southern Driver",
-    "Southern Escort"
-  ];
+  // Dynamically loaded Y task names from backend definitions
+  const [yTaskNames, setYTaskNames] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [mode, setMode] = useState('');
@@ -93,7 +88,9 @@ function YTaskPage() {
   const [insufficientWorkersReport, setInsufficientWorkersReport] = useState<any | null>(null);
   const [showInsufficientReport, setShowInsufficientReport] = useState(false);
   const [generatedCsvData, setGeneratedCsvData] = useState<string | null>(null);
-  const [autoResetBeforeGenerate, setAutoResetBeforeGenerate] = useState(true);
+  // Removed: backend reset option is no longer available/allowed
+  const [autoResetBeforeGenerate, setAutoResetBeforeGenerate] = useState(false);
+  const [workers, setWorkers] = useState<{id: string, name: string}[]>([]);
 
   // On mount, check for resolveConflict in localStorage
   useEffect(() => {
@@ -121,6 +118,27 @@ function YTaskPage() {
     localStorage.removeItem('resolveConflict');
   };
 
+  const loadWorkers = async () => {
+    try {
+      const res = await fetch('http://localhost:5001/api/workers', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setWorkers(data.workers || []);
+        console.log('Workers loaded:', data.workers?.length || 0);
+      } else {
+        console.error('Failed to load workers');
+      }
+    } catch (error) {
+      console.error('Error loading workers:', error);
+    }
+  };
+
+  const getWorkerName = (workerId: string): string => {
+    if (!workerId || workerId === '-' || workerId === '') return '';
+    const worker = workers.find(w => w.id === workerId);
+    return worker ? worker.name : workerId;
+  };
+
   const refreshScheduleList = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/y-tasks/list', { credentials: 'include' });
@@ -137,7 +155,23 @@ function YTaskPage() {
   };
 
   useEffect(() => {
+    loadWorkers();
     refreshScheduleList();
+    // Load Y task definitions for dynamic names
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/y-tasks/definitions', { credentials: 'include' });
+        const data = await res.json();
+        if (res.ok) {
+          const defs = (data.definitions || []) as Array<{ name: string }>;
+          setYTaskNames(defs.map(d => d.name));
+        } else {
+          setYTaskNames([]);
+        }
+      } catch {
+        setYTaskNames([]);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -180,10 +214,13 @@ function YTaskPage() {
         
         const rows = parseCSV(csv);
         setDates(rows[0].slice(1));
-        // Patch: replace all '-' with '' in the grid
+        // Convert worker IDs to names and replace all '-' with '' in the grid
         setGrid(
           rows.slice(1).map(r =>
-            r.slice(1).map(cell => cell === '-' ? '' : cell)
+            r.slice(1).map(cell => {
+              if (cell === '-' || cell === '') return '';
+              return getWorkerName(cell);
+            })
           )
         );
         setLoading(false);
@@ -195,17 +232,7 @@ function YTaskPage() {
     if (!startDate || !endDate) return;
     setLoading(true);
     setWarnings([]);
-    // Optional: reset backend worker data and history before generation to ensure a clean slate
-    if (autoResetBeforeGenerate) {
-      try {
-        await fetch('http://localhost:5001/api/reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ clear_y: false, reset_workers: true, clear_history: true, clear_x: false })
-        });
-      } catch {}
-    }
+    // Reset option removed by requirement; do not call backend reset
     const start = startDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
     const end = endDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
     const res = await fetch('http://localhost:5001/api/y-tasks/generate', {
@@ -216,7 +243,8 @@ function YTaskPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      setGrid(data.grid);
+      // Convert worker IDs to names in the grid
+      setGrid(data.grid.map((row: any[]) => row.map((cell: any) => getWorkerName(cell))));
       setDates(data.dates);
       setWarnings(data.warnings || []);
       // Store detailed report for enhanced warning display
@@ -255,8 +283,8 @@ function YTaskPage() {
       if (!csv) {
         // Fallback: generate CSV from grid using state variables
         csv = 'Y Task,' + (dates || []).join(',') + '\n';
-        for (let y = 0; y < Y_TASKS.length; ++y) {
-          const row = [Y_TASKS[y], ...(grid[y] || []).map(s => s || '-')];
+        for (let y = 0; y < yTaskNames.length; ++y) {
+          const row = [yTaskNames[y], ...(grid[y] || []).map(s => s || '-')];
           csv += row.join(',') + '\n';
         }
       }
@@ -379,7 +407,15 @@ function YTaskPage() {
         
         const rows = parseCSV(csv);
         setDates(rows[0].slice(1));
-        setGrid(rows.slice(1).map(r => r.slice(1)));
+        // Convert worker IDs to names and replace all '-' with '' in the grid
+        setGrid(
+          rows.slice(1).map(r =>
+            r.slice(1).map(cell => {
+              if (cell === '-' || cell === '') return '';
+              return getWorkerName(cell);
+            })
+          )
+        );
       });
   };
 
@@ -388,13 +424,13 @@ function YTaskPage() {
     setPickerOpen(true);
     setPickerLoading(true);
     const current_assignments: Record<string, Record<string, string>> = {};
-    for (let yy = 0; yy < Y_TASKS.length; ++yy) {
+    for (let yy = 0; yy < yTaskNames.length; ++yy) {
       for (let dd = 0; dd < (dates?.length || 0); ++dd) {
         const s = grid[yy]?.[dd];
         if (!s) continue;
         if (!current_assignments[s]) current_assignments[s] = {};
         if (dates && dates[dd]) {
-          current_assignments[s][dates[dd]] = Y_TASKS[yy];
+          current_assignments[s][dates[dd]] = yTaskNames[yy];
         }
       }
     }
@@ -404,7 +440,7 @@ function YTaskPage() {
       credentials: 'include',
       body: JSON.stringify({
         date: dates && dates[d] ? dates[d] : '',
-        task: Y_TASKS[y],
+        task: yTaskNames[y],
         current_assignments,
       }),
     });
@@ -426,13 +462,13 @@ function YTaskPage() {
         end: dates && dates.length > 0 ? dates[dates.length - 1] : '',
         mode: 'hybrid',
         partial_grid: grid,
-        y_tasks: Y_TASKS,
+        y_tasks: yTaskNames,
         dates,
       }),
     });
     const data = await res.json();
     if (res.ok && data.grid) {
-      setGrid(prevGrid => prevGrid.map((row, yIdx) => row.map((cell, dIdx) => cell || data.grid[yIdx][dIdx])));
+      setGrid(prevGrid => prevGrid.map((row, yIdx) => row.map((cell, dIdx) => cell || getWorkerName(data.grid[yIdx][dIdx]))));
       setWarnings(data.warnings || []);
     } else {
       setWarnings([data.error || 'Failed to generate schedule']);
@@ -634,10 +670,7 @@ function YTaskPage() {
               </Box>
             </LocalizationProvider>
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <FormControlLabel
-                control={<Switch checked={autoResetBeforeGenerate} onChange={(e) => setAutoResetBeforeGenerate(e.target.checked)} />}
-                label="איפוס נתוני עובדים לפני שיבוץ"
-              />
+              {/* Reset toggle removed by requirement */}
               <Button variant={mode === 'auto' ? 'contained' : 'outlined'} onClick={() => { setMode('auto'); handleGenerate(); }} disabled={!startDate || !endDate || loading}>אוטומציה</Button>
               <Button
                 variant={mode === 'hybrid' ? 'contained' : 'outlined'}
@@ -653,7 +686,7 @@ function YTaskPage() {
                       days.push(dd);
                     }
                     setDates(days);
-                    setGrid(Array(Y_TASKS.length).fill(0).map(() => Array(days.length).fill('')));
+                    setGrid(Array(yTaskNames.length).fill(0).map(() => Array(days.length).fill('')));
                     setWarnings([]);
                   }
                 }}
@@ -805,7 +838,7 @@ function YTaskPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Y_TASKS.map((yTask: string, rIdx: number) => (
+                  {yTaskNames.map((yTask: string, rIdx: number) => (
                     <tr key={rIdx} style={{ background: rIdx % 2 === 0 ? (tableDarkMode ? '#232a36' : '#f9fafb') : (tableDarkMode ? '#181c23' : '#fff') }}>
                       <td
                         style={{

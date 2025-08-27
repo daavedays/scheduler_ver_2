@@ -1,0 +1,74 @@
+{
+  "y_tasks": {
+    "departments": {
+      "default": {
+        "definitions": [
+          {
+            "id": 1,
+            "name": "מגש״ק תורן",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 2,
+            "name": "נהג כבל רשת",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 3,
+            "name": "מלווה כבל רשת",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 4,
+            "name": "גורר דרומי",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 5,
+            "name": "מלווה דרומי",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 6,
+            "name": "מראה יחידה",
+            "requiresQualification": false,
+            "autoAssign": true
+          }
+        ]
+      }
+    }
+  },
+  "x_tasks": {
+    "definitions": [
+      {
+        "id": 1,
+        "name": "שמירות",
+        "isDefault": false,
+        "start_day": 3,
+        "end_day": 3,
+        "duration_days": 8
+      },
+      {
+        "id": 2,
+        "name": "רסר",
+        "isDefault": false,
+        "start_day": 1,
+        "end_day": 1,
+        "duration_days": 8
+      },
+      {
+        "id": 3,
+        "name": "מטבח",
+        "isDefault": false,
+        "start_day": 1,
+        "end_day": 1,
+        "duration_days": 8
+      }
+    ]
+  }
+}

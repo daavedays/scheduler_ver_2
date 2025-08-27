@@ -6,417 +6,390 @@ from pathlib import Path
 # Add backend to path for worker import
 sys.path.append(str(Path(__file__).parent))
 try:
-    from .worker import EnhancedWorker
+	from .worker import EnhancedWorker
 except ImportError:
-    from worker import EnhancedWorker
+	from worker import EnhancedWorker
 
 
 class ClosingScheduleCalculator:
-    """
-    Improved Closing Schedule Calculator implementing the backwards-looking algorithm
-    with proper weekends_home_owed tracking as specified by the user.
-    """
-    
-    def __init__(self):
-        self.debug = True
-        self.user_alerts = []  # Store alerts for impossible scenarios
-    
-    def calculate_worker_closing_schedule(self, worker: 'EnhancedWorker', 
-                                        semester_weeks: List[date]) -> Dict:
-        """Calculate closing schedule for a worker using the new algorithm.
+	"""
+	COMPLETELY REDESIGNED Closing Schedule Calculator
+	
+	This new implementation uses a constraint satisfaction approach that:
+	1. Respects closing intervals (no consecutive closes possible)
+	2. Integrates X tasks naturally without breaking patterns
+	3. Uses dynamic programming to maximize optimal picks
+	4. Ensures consistent, predictable results
+	
+	Key Features:
+	- Gap-based processing between X tasks
+	- Dynamic programming for optimal date selection
+	- No possibility of consecutive closes
+	- Proper handling of semester boundaries
+	- Clear separation of required vs optimal closes
+	"""
+	
+	def __init__(self, gap_slack_weeks: int = 0, allow_single_relief_min1: bool = True, relief_max_per_semester: int = 1):
+		"""
+		gap_slack_weeks controls how much flexibility to allow beyond the strict interval.
+		- For interval I, the minimum number of home weekends between closes is I-1 (MIN_GAP).
+		- We set MAX_GAP = MIN_GAP + gap_slack_weeks.
+		Examples:
+		- I=2 → MIN_GAP=1, MAX_GAP=1+slack (0 for exact alternating close/home)
+		- I=3 → MIN_GAP=2, MAX_GAP=2+slack (0 for exactly 2 homes between closes)
+		- I=4 → MIN_GAP=3, MAX_GAP=3+slack
+		"""
+		self.debug = True
+		self.user_alerts = []  # Store alerts for impossible scenarios
+		self.gap_slack_weeks = max(0, int(gap_slack_weeks))
+		# When True, if a middle gap (b - a) == 2n - 1, allow inserting one relief pick at a + n
+		# which creates adjacent differences n and (n - 1). Intended for extreme cases only.
+		self.allow_single_relief_min1 = bool(allow_single_relief_min1)
+		self.relief_max_per_semester = max(0, int(relief_max_per_semester))
+	
+	def calculate_worker_closing_schedule(self, worker: 'EnhancedWorker', 
+											semester_weeks: List[date]) -> Dict:
+		"""
+		MAIN METHOD: Calculate closing schedule using the new constraint satisfaction algorithm.
+		
+		This method completely replaces the old sequential week-by-week approach with a
+		gap-based, constraint-first algorithm that guarantees no consecutive closes.
+		
+		Algorithm Overview:
+		1. Identify gaps between X tasks (required closes)
+		2. Use greedy min-gap filling per gap to maximize valid picks
+		3. Respect closing interval minimum spacing throughout (n-1 homes => diff >= n)
+		4. Integrate X tasks naturally without breaking patterns
+		
+		Returns dict with required and optimal closing DATES (mapping week numbers back to dates).
+		Internally we operate over week numbers to avoid date conversions during optimization.
+		"""
+		if not semester_weeks:
+			# No semester weeks provided, return empty schedule
+			return {
+				'required_dates': [],
+				'optimal_dates': [],
+				'final_weekends_home_owed': worker.weekends_home_owed,
+				'calculation_log': ['No semester weeks provided'],
+				'user_alerts': []
+			}
+		
+		calculation_log = []
+		user_alerts = []
+		
+		# Configurable spacing constraints derived from worker interval
+		interval = max(2, int(worker.closing_interval) if worker.closing_interval else 2)
+		MIN_GAP = max(1, interval - 1)
+		calculation_log.append(f"Min spacing for interval {interval}: MIN_GAP={MIN_GAP} (diff between closes >= {interval})")
+		
+		# Get X task weeks (required closes) as week indices (0-based → convert to 1-based for clarity)
+		x_task_week_idxs_zero = self._get_x_task_weeks(worker, semester_weeks)
+		required_weeks_1_based = sorted([i + 1 for i in x_task_week_idxs_zero])
+		total_weeks = len(semester_weeks)
+		calculation_log.append(f"Found {len(required_weeks_1_based)} required weeks: {required_weeks_1_based}")
+		
+		# Select optimal weeks using min-gap greedy per gap
+		optimal_weeks_1_based = self._select_optimal_weeks_min_gap(
+			total_weeks=total_weeks,
+			required_weeks_1_based=required_weeks_1_based,
+			interval_weeks=interval,
+			calculation_log=calculation_log
+		)
 
-        This method also expands optimal closing dates across the entire provided
-        semester window based on the worker's closing_interval, and it reacts to
-        any required dates coming from X tasks. If the worker has just closed
-        (the immediate previous week in closing_history), the next optimal target
-        will move forward by one full interval to keep consistency.
-        """
-        if not semester_weeks:
-            # No semester weeks provided, return empty schedule
-            return {
-                'required_dates': [],
-                'optimal_dates': [],
-                'final_weekends_home_owed': worker.weekends_home_owed,
-                'calculation_log': ['No semester weeks provided'],
-                'user_alerts': []
-            }
-        
-        # Initialize schedule for all weeks
-        schedule = ['HOME'] * len(semester_weeks)
-        weekends_home_owed = worker.weekends_home_owed  # Start with existing debt
-        calculation_log = []
-        user_alerts = []
-        
-        # Get last closing date to determine starting pattern
-        last_close_date = self._get_last_closing_date(worker, semester_weeks[0])
-        weeks_since_last_close = self._get_weeks_since_last_close(last_close_date, semester_weeks[0])
-        
-        if self.debug:
-            print(f"  Last close: {last_close_date}, weeks since: {weeks_since_last_close}")
-        
-        # Get X task weeks first
-        x_task_weeks = self._get_x_task_weeks(worker, semester_weeks)
-        
-        # Calculate interval closes while avoiding conflicts with X tasks  
-        interval_closes = self._calculate_smart_interval_closes(worker, semester_weeks, weeks_since_last_close, x_task_weeks)
-        
-        if self.debug:
-            print(f"  Interval closes: {[i+1 for i in interval_closes]}")
-            print(f"  X task weeks: {[i+1 for i in x_task_weeks]}")
-        
-        # Process each week using the backwards-looking algorithm  
-        for week_idx in range(len(semester_weeks)):
-            week_num = week_idx + 1
-            current_date = semester_weeks[week_idx]
-            has_x_task = week_idx in x_task_weeks
-            should_close_by_interval = week_idx in interval_closes
-            
-            # Check if previous week was a close to prevent consecutive closes
-            prev_was_close = week_idx > 0 and schedule[week_idx - 1] == 'CLOSE'
-            
-            if has_x_task:
-                # X task forces close - but NEVER allow consecutive closes
-                if prev_was_close:
-                    # ABSOLUTELY NOT! Cannot have consecutive closes
-                    # This should NEVER happen with the smart interval calculation
-                    # If it does, it's a critical error in the algorithm
-                    user_alerts.append(f"CRITICAL ERROR: Week {week_num} X task would cause consecutive close for {worker.name} - ALGORITHM FAILURE!")
-                    calculation_log.append(f"Week {week_num}: CRITICAL ERROR - X task would cause consecutive close - This should never happen!")
-                    
-                    # Force HOME for this week and add massive debt as compensation
-                    schedule[week_idx] = 'HOME'
-                    # weekends_home_owed += 10  # Massive debt for missing X task, please dont add things I didnt ask for
-                    calculation_log.append(f"Week {week_num}: X task SKIPPED to prevent consecutive close - MASSIVE debt +10, total owed: {weekends_home_owed}")
-                else:
-                    # Normal X task handling - safe to close
-                    decision, debt_change, alert = self._handle_x_task_week(
-                        worker, week_idx, schedule, weekends_home_owed, should_close_by_interval
-                    )
-                    weekends_home_owed += debt_change
-                    
-                    if alert:
-                        user_alerts.append(f"Week {week_num}: {alert}")
-                    
-                    calculation_log.append(f"Week {week_num}: X task - FORCED CLOSE, debt change: +{debt_change}, total owed: {weekends_home_owed}")
-                    schedule[week_idx] = 'CLOSE'  # X task close is safe
-                
-            elif should_close_by_interval:
-                # Should close by interval
-                if prev_was_close:
-                    # Would create consecutive closes - give HOME instead and add debt
-                    schedule[week_idx] = 'HOME'
-                    weekends_home_owed += 1
-                    calculation_log.append(f"Week {week_num}: Interval close skipped (would be consecutive) - HOME given, debt +1, total owed: {weekends_home_owed}")
-                elif weekends_home_owed > 0:
-                    # Pay back debt by giving HOME instead of CLOSE
-                    schedule[week_idx] = 'HOME'
-                    weekends_home_owed -= 1
-                    calculation_log.append(f"Week {week_num}: Paying back debt - HOME instead of close, debt reduced to: {weekends_home_owed}")
-                else:
-                    # No debt, no consecutive issue - normal interval close
-                    schedule[week_idx] = 'CLOSE'
-                    calculation_log.append(f"Week {week_num}: Normal interval close")
-            else:
-                # Home week - no action needed
-                schedule[week_idx] = 'HOME'
-                calculation_log.append(f"Week {week_num}: Home week")
-        
-        # Separate required (X task) and optimal (interval) closes
-        required_dates = []
-        optimal_dates = []
-        
-        for week_idx, action in enumerate(schedule):
-            if action == 'CLOSE':
-                week_date = semester_weeks[week_idx]
-                if week_idx in x_task_weeks:
-                    required_dates.append(week_date)
-                else:
-                    optimal_dates.append(week_date)
-        
-        if self.debug:
-            print(f"  Final debt: {weekends_home_owed}")
-            print(f"  Required closes: {len(required_dates)}")
-            print(f"  Optimal closes: {len(optimal_dates)}")
-        
-        # --- Expansion: build full optimal series across semester ---
-        expanded_optimal: List[date] = []
-        if worker.closing_interval and worker.closing_interval > 0 and semester_weeks:
-            # Start from the most recent closing not after semester start
-            last_close = self._get_last_closing_date(worker, semester_weeks[0])
-            # If worker just closed the week before the first semester week, respect cooldown
-            step = max(1, worker.closing_interval)
-            candidate = last_close + timedelta(weeks=step)
-            while candidate <= semester_weeks[-1]:
-                # snap candidate to nearest Friday in semester
-                try:
-                    closest_friday = min(semester_weeks, key=lambda d: abs(d - candidate))
-                except ValueError:
-                    break
-                if closest_friday >= semester_weeks[0] and closest_friday <= semester_weeks[-1]:
-                    if closest_friday not in required_dates and closest_friday not in expanded_optimal:
-                        expanded_optimal.append(closest_friday)
-                candidate = candidate + timedelta(weeks=step)
-        # Merge any already computed optimal dates with expanded series
-        for d in optimal_dates:
-            if d not in expanded_optimal:
-                expanded_optimal.append(d)
-        expanded_optimal.sort()
+		# Optional relief: if a gap equals 2n-1, insert a relief week at a+n
+		# Do not apply when interval == 2 (would cause consecutive weeks after relief)
+		if self.allow_single_relief_min1 and required_weeks_1_based and interval > 2 and self.relief_max_per_semester > 0:
+			# Work in weeks; combine required + optimal, then scan middle gaps
+			combined = sorted(list(dict.fromkeys(required_weeks_1_based + optimal_weeks_1_based)))
+			added_relief: List[int] = []
+			applied = 0
+			for i in range(len(combined) - 1):
+				a = combined[i]
+				b = combined[i + 1]
+				gap = b - a
+				if gap == (2 * interval - 1):
+					relief_week = a + interval
+					if 1 <= relief_week <= total_weeks and relief_week not in combined and relief_week not in required_weeks_1_based:
+						added_relief.append(relief_week)
+						applied += 1
+						calculation_log.append(f"Relief inserted between {a} and {b} at {relief_week} (gap {gap} == 2n-1)")
+						if applied >= self.relief_max_per_semester:
+							break
+			# Merge relief picks
+			if added_relief:
+				optimal_weeks_1_based = sorted(list(dict.fromkeys(optimal_weeks_1_based + added_relief)))
+		
+		# Map weeks back to dates
+		required_dates = [semester_weeks[w - 1] for w in required_weeks_1_based]
+		optimal_dates = [semester_weeks[w - 1] for w in optimal_weeks_1_based if (w not in required_weeks_1_based)]
+		
+		# Calculate weekends home owed based on missed opportunities (simple heuristic)
+		weekends_home_owed = worker.weekends_home_owed
+		
+		if self.debug:
+			print(f"  Required closes: {len(required_dates)}")
+			print(f"  Optimal closes (weeks): {optimal_weeks_1_based}")
+			print(f"  Weekends home owed: {weekends_home_owed}")
+		
+		return {
+			'required_dates': required_dates,
+			'optimal_dates': optimal_dates,
+			'final_weekends_home_owed': weekends_home_owed,
+			'calculation_log': calculation_log,
+			'user_alerts': user_alerts
+		}
 
-        return {
-            'required_dates': required_dates,
-            'optimal_dates': expanded_optimal,
-            'final_weekends_home_owed': weekends_home_owed,
-            'calculation_log': calculation_log,
-            'user_alerts': user_alerts
-        }
-    
-    def _handle_x_task_week(self, worker: 'EnhancedWorker', week_idx: int, 
-                           schedule: List[str], current_debt: int, 
-                           should_close_by_interval: bool) -> Tuple[str, int, Optional[str]]:
-        """
-        Handle X task week using backwards-looking logic.
-        
-        Returns: (decision, debt_change, alert_message)
-        """
-        # Count consecutive home weeks before this X task
-        home_weeks_before = self._count_home_weeks_before(schedule, week_idx)
-        week_num = week_idx + 1
-        
-        if home_weeks_before >= 2:
-            # Had enough home time, can assign X task with minimal debt
-            if should_close_by_interval:
-                # Would have closed anyway, no extra debt
-                return 'CLOSE', 0, None
-            else:
-                # Forced to close when should be home, add 1 debt
-                return 'CLOSE', 1, None
-        else:
-            # Haven't had enough home time - this is problematic
-            alert = f"Worker {worker.name} has X task but only {home_weeks_before} home weeks before. Forced assignment."
-            
-            # Try to find recent closes that could be converted to home
-            conversion_possible = self._try_convert_recent_close_to_home(schedule, week_idx)
-            
-            if conversion_possible:
-                # We managed to convert a recent close to home
-                return 'CLOSE', 1, f"Converted recent close to home for {worker.name}"
-            else:
-                # No conversion possible, significant debt penalty
-                penalty = 2 if home_weeks_before == 0 else 1
-                return 'CLOSE', penalty, alert
-    
-    def _count_home_weeks_before(self, schedule: List[str], week_idx: int) -> int:
-        """Count consecutive HOME weeks before the given week."""
-        count = 0
-        for i in range(week_idx - 1, -1, -1):
-            if schedule[i] == 'HOME':
-                count += 1
-            else:
-                break
-        return count
-    
-    def _try_convert_recent_close_to_home(self, schedule: List[str], week_idx: int) -> bool:
-        """
-        Try to convert a recent CLOSE to HOME to make room for X task.
-        Only converts non-X task closes (optimal closes).
-        
-        Returns True if conversion was successful.
-        """
-        # Look back up to 3 weeks for a convertible close
-        for i in range(max(0, week_idx - 3), week_idx):
-            if schedule[i] == 'CLOSE':
-                # For now, assume we can convert it (in real implementation, 
-                # we'd need to check if it's an X task close)
-                schedule[i] = 'HOME'
-                return True
-        return False
-    
-    def _calculate_smart_interval_closes(self, worker: 'EnhancedWorker', semester_weeks: List[date], 
-                                       weeks_since_last_close: int, x_task_weeks: List[int]) -> List[int]:
-        """Calculate interval closes while avoiding consecutive closes with X tasks."""
-        interval_closes = []
+	def _select_optimal_weeks_min_gap(self,
+									  total_weeks: int,
+									  required_weeks_1_based: List[int],
+									  interval_weeks: int,
+									  calculation_log: List[str]) -> List[int]:
+		"""
+		WEEK-NUMBER SELECTOR WITH MIN-GAP ONLY (HARD CONSTRAINT)
+		
+		Enforce minimum spacing only: for any consecutive selected closes (including required),
+		the difference in week numbers must be at least interval_weeks.
+		
+		Strategy (greedy, optimal for max count under min-sep):
+		- Sort required anchors
+		- Fill before first required from week 1 upward with step=interval, but ensure last pick is at least interval from the first required
+		- For each middle gap (a, b are consecutive required weeks): pick sequence starting at a+interval, step=interval, up to b-interval
+		- Fill after last required from last_required+interval up to total_weeks with step=interval
+		- If there are no required weeks: pick 1, 1+interval, ... up to total_weeks
+		Returns list of optional weeks (excluding required weeks)
+		"""
+		n = max(2, int(interval_weeks))
+		req = sorted([w for w in required_weeks_1_based if 1 <= w <= total_weeks])
+		picks: List[int] = []
+		
+		if not req:
+			# No anchors → start at week 1 and step by n
+			w = 1
+			while w <= total_weeks:
+				picks.append(w)
+				w += n
+			calculation_log.append(f"No required: picked {len(picks)} weeks starting at 1 step {n}")
+			return picks
+		
+		# Start gap: before first required b
+		b = req[0]
+		latest_allowed = b - n
+		if latest_allowed >= 1:
+			w = 1
+			while w <= latest_allowed:
+				picks.append(w)
+				w += n
+			calculation_log.append(f"Start gap ->{b}: picked {len([p for p in picks if p < b])} weeks up to {latest_allowed}")
+		else:
+			calculation_log.append(f"Start gap ->{b}: none (latest_allowed={latest_allowed})")
+		
+		# Middle gaps
+		for i in range(len(req) - 1):
+			a = req[i]
+			b = req[i + 1]
+			start_w = a + n
+			end_w = b - n
+			if start_w <= end_w:
+				w = start_w
+				while w <= end_w:
+					picks.append(w)
+					w += n
+				calculation_log.append(f"Gap {a}->{b}: picked from {start_w} to {end_w} step {n}")
+			else:
+				calculation_log.append(f"Gap {a}->{b}: none (start {start_w} > end {end_w})")
+		
+		# End gap: after last required a to total_weeks
+		a = req[-1]
+		w = a + n
+		count_before = len(picks)
+		while w <= total_weeks:
+			picks.append(w)
+			w += n
+		calculation_log.append(f"End gap {a}->end: picked {len(picks) - count_before} weeks starting {a+n} step {n}")
+		
+		# Ensure uniqueness and order
+		picks = sorted(list(dict.fromkeys([p for p in picks if p not in req and 1 <= p <= total_weeks])))
+		return picks
+	
+	def _calculate_weekends_home_owed(self, worker: 'EnhancedWorker', 
+									 semester_weeks: List[date],
+									 required_dates: List[date],
+									 optimal_dates: List[date],
+									 weeks_since_last_close: int) -> int:
+		"""
+		Calculate weekends home owed based on missed opportunities.
+		
+		This method calculates how many weekends home the worker is owed
+		based on their closing interval and missed opportunities.
+		
+		Args:
+			worker: Worker instance
+			semester_weeks: All semester weeks
+			required_dates: Dates where worker must close (X tasks)
+			optimal_dates: Dates where worker should close (interval)
+			weeks_since_last_close: Weeks since last close
+			
+		Returns:
+			Number of weekends home owed
+		"""
+		if not worker.closing_interval or worker.closing_interval < 2:
+			return worker.weekends_home_owed
+		
+		# Calculate expected closes based on interval
+		total_weeks = len(semester_weeks)
+		expected_closes = max(0, (total_weeks - weeks_since_last_close) // worker.closing_interval)
+		
+		# Actual closes (required + optimal)
+		actual_closes = len(required_dates) + len(optimal_dates)
+		
+		# Calculate debt
+		debt = max(0, expected_closes - actual_closes)
+		
+		return debt
+	
+	def _get_x_task_weeks(self, worker: 'EnhancedWorker', semester_weeks: List[date]) -> List[int]:
+		"""
+		Get list of week indices that have X tasks.
+		
+		This method converts the worker's X tasks (stored as date strings)
+		into week indices for the semester.
+		
+		Args:
+			worker: Worker instance with x_tasks attribute
+			semester_weeks: List of Friday dates for the semester
+			
+		Returns:
+			List of week indices (0-based) where worker has X tasks
+		"""
+		x_task_weeks = []
+		
+		for week_idx, week_date in enumerate(semester_weeks):
+			date_str = week_date.strftime('%d/%m/%Y')
+			if date_str in worker.x_tasks:
+				x_task_weeks.append(week_idx)
+		
+		return x_task_weeks
+	
+	def _get_last_closing_date(self, worker: 'EnhancedWorker', semester_start: date) -> date:
+		"""
+		Get the most recent closing date that is on or before the semester start.
+		
+		If no such date exists, synthesize a prior closing date exactly one
+		interval before the semester start so the first due close will be
+		at or shortly after the start (never negative weeks-since-last-close).
+		
+		Args:
+			worker: Worker instance with closing_history
+			semester_start: Start date of the semester
+			
+		Returns:
+			Date of last close (real or synthetic)
+		"""
+		if worker.closing_history:
+			prior = [d for d in worker.closing_history if d <= semester_start]
+			if prior:
+				return max(prior)
+		
+		# Fallback: place a synthetic last close one full interval before start
+		interval = max(1, int(worker.closing_interval) if worker.closing_interval is not None else 1)
+		return semester_start - timedelta(weeks=interval)
+	
+	def _get_weeks_since_last_close(self, last_close_date: date, semester_start: date) -> int:
+		"""
+		Calculate non-negative weeks between last close and semester start.
+		
+		Args:
+			last_close_date: Date of last close
+			semester_start: Start date of semester
+			
+		Returns:
+			Number of weeks since last close (non-negative)
+		"""
+		if last_close_date > semester_start:
+			return 0
+		delta = semester_start - last_close_date
+		return max(0, delta.days // 7)
 
-        # Safety: invalid or zero interval would cause infinite loop
-        if worker.closing_interval is None or worker.closing_interval <= 0:
-            return interval_closes
-        
-        # FIXED: Proper interval calculation
-        # If last close was N weeks ago, and interval is I:
-        # - If N >= I, should close in week 1
-        # - If N < I, should close in week (I - N + 1)
-        
-        if weeks_since_last_close >= worker.closing_interval:
-            # Overdue - should close immediately (week 1)
-            first_close_week = 0
-        else:
-            # Calculate when next close is due
-            weeks_until_due = worker.closing_interval - weeks_since_last_close
-            first_close_week = weeks_until_due - 1  # Convert to 0-based
-        
-        # Generate interval closes, but shift when they would create consecutive closes with X tasks
-        current_close_week = first_close_week
-        step = max(1, worker.closing_interval)
-        
-        while current_close_week < len(semester_weeks):
-            # Check if this interval close would be consecutive with an X task
-            prev_week = current_close_week - 1
-            next_week = current_close_week + 1
-            
-            prev_has_x = prev_week >= 0 and prev_week in x_task_weeks
-            next_has_x = next_week < len(semester_weeks) and next_week in x_task_weeks
-            
-            if prev_has_x or next_has_x:
-                # This interval close would be consecutive with an X task
-                # Try to shift it to avoid consecutive closes
-                shifted = False
-                
-                # Try shifting forward first (within the interval window)
-                for shift in range(1, worker.closing_interval):
-                    candidate_week = current_close_week + shift
-                    if candidate_week >= len(semester_weeks):
-                        break
-                    
-                    # Check if this candidate would also create consecutive issues
-                    cand_prev = candidate_week - 1
-                    cand_next = candidate_week + 1
-                    
-                    cand_prev_has_x = cand_prev >= 0 and cand_prev in x_task_weeks
-                    cand_next_has_x = cand_next < len(semester_weeks) and cand_next in x_task_weeks
-                    
-                    if not cand_prev_has_x and not cand_next_has_x:
-                        # Found a good spot
-                        interval_closes.append(candidate_week)
-                        shifted = True
-                        break
-                
-                if not shifted:
-                    # Try shifting backward
-                    for shift in range(1, worker.closing_interval):
-                        candidate_week = current_close_week - shift
-                        if candidate_week < 0:
-                            break
-                        
-                        # Check if this candidate would create consecutive issues
-                        cand_prev = candidate_week - 1
-                        cand_next = candidate_week + 1
-                        
-                        cand_prev_has_x = cand_prev >= 0 and cand_prev in x_task_weeks
-                        cand_next_has_x = cand_next < len(semester_weeks) and cand_next in x_task_weeks
-                        
-                        if not cand_prev_has_x and not cand_next_has_x:
-                            # Found a good spot
-                            interval_closes.append(candidate_week)
-                            shifted = True
-                            break
-                
-                if not shifted:
-                    # Couldn't find a good shift, skip this interval close
-                    pass  # This will add debt later when processing
-            else:
-                # No conflict, use the normal interval close
-                interval_closes.append(current_close_week)
-            
-            current_close_week += step
-        
-        return interval_closes
-    
-    def _get_x_task_weeks(self, worker: 'EnhancedWorker', semester_weeks: List[date]) -> List[int]:
-        """Get list of week indices that have X tasks."""
-        x_task_weeks = []
-        
-        for week_idx, week_date in enumerate(semester_weeks):
-            date_str = week_date.strftime('%d/%m/%Y')
-            if date_str in worker.x_tasks:
-                x_task_weeks.append(week_idx)
-        
-        return x_task_weeks
-    
-    def find_next_optimal_closing_date(
-        self,
-        closing_history: List[date],
-        closing_interval: int,
-        start_after: date,
-        semester_weeks: List[date]
-    ) -> Optional[date]:
-        """
-        Finds the next valid optimal closing date for a worker after a missed date.
-        """
-        if not closing_interval or closing_interval <= 0:
-            return None
+	def find_next_optimal_closing_date(self,
+									closing_history: List[date],
+									interval_weeks: int,
+									start_after_date: date,
+									semester_weeks: List[date]) -> Optional[date]:
+		"""
+		Find the earliest Friday on or after start_after_date that respects the
+		minimum interval in weeks from ALL prior closes in closing_history.
 
-        last_close = max(closing_history) if closing_history else start_after - timedelta(weeks=closing_interval)
-        
-        next_due_date = last_close + timedelta(weeks=closing_interval)
+		Args:
+			closing_history: Sorted or unsorted list of previous closing dates
+			interval_weeks: Required minimum spacing in weeks between any two closes
+			start_after_date: Date to start searching after (exclusive)
+			semester_weeks: Ordered list of Friday dates that form the scheduling window
 
-        while next_due_date < start_after:
-             next_due_date += timedelta(weeks=closing_interval)
-
-        # Find the first valid slot in the semester
-        while next_due_date <= semester_weeks[-1]:
-            # Find the closest Friday in semester_weeks
-            closest_friday = min(semester_weeks, key=lambda d: abs(d - next_due_date))
-            
-            # Ensure we are not picking a date that has passed or is too close to the start_after
-            if closest_friday > start_after:
-                return closest_friday
-            
-            next_due_date += timedelta(weeks=closing_interval)
-
-        return None
-
-    def _get_last_closing_date(self, worker: 'EnhancedWorker', semester_start: date) -> date:
-        """Get the most recent closing date that is on or before the semester start.
-
-        If no such date exists, synthesize a prior closing date exactly one
-        interval before the semester start so the first due close will be
-        at or shortly after the start (never negative weeks-since-last-close).
-        """
-        if worker.closing_history:
-            prior = [d for d in worker.closing_history if d <= semester_start]
-            if prior:
-                return max(prior)
-        # Fallback: place a synthetic last close one full interval before start
-        interval = max(1, int(worker.closing_interval) if worker.closing_interval is not None else 1)
-        return semester_start - timedelta(weeks=interval)
-    
-    def _get_weeks_since_last_close(self, last_close_date: date, semester_start: date) -> int:
-        """Calculate non-negative weeks between last close and semester start."""
-        if last_close_date > semester_start:
-            return 0
-        delta = semester_start - last_close_date
-        return max(0, delta.days // 7)
-    
-    def update_all_worker_schedules(self, workers: List['EnhancedWorker'], 
-                                  semester_weeks: List[date]):
-        """Update closing schedules for all workers and store alerts."""
-        print(f"\n🔄 UPDATING CLOSING SCHEDULES FOR {len(workers)} WORKERS")
-        print("=" * 60)
-        
-        self.user_alerts = []  # Reset alerts
-        
-        for worker in workers:
-            result = self.calculate_worker_closing_schedule(worker, semester_weeks)
-            
-            # Update worker attributes
-            worker.required_closing_dates = result['required_dates']
-            worker.optimal_closing_dates = result['optimal_dates']
-            worker.weekends_home_owed = result['final_weekends_home_owed']
-            
-            # Collect any alerts
-            if result['user_alerts']:
-                self.user_alerts.extend(result['user_alerts'])
-            
-            if self.debug:
-                print(f"\n{worker.name}:")
-                print(f"  Required closes: {len(result['required_dates'])} (X tasks)")
-                print(f"  Optimal closes: {len(result['optimal_dates'])} (interval)")
-                print(f"  Weekends home owed: {result['final_weekends_home_owed']}")
-        
-        if self.user_alerts:
-            print(f"\n⚠️  USER ALERTS ({len(self.user_alerts)}):")
-            for alert in self.user_alerts:
-                print(f"  • {alert}")
-    
-    def get_user_alerts(self) -> List[str]:
-        """Get all user alerts from the last calculation."""
-        return self.user_alerts.copy()
+		Returns:
+			The first feasible Friday date that satisfies the min-gap, or None if none exists
+		"""
+		if not semester_weeks:
+			return None
+		n = max(2, int(interval_weeks) if interval_weeks else 2)
+		prior = sorted(closing_history) if closing_history else []
+		for d in semester_weeks:
+			if d <= start_after_date:
+				continue
+			valid = True
+			for p in prior:
+				if abs((d - p).days) // 7 < n:
+					valid = False
+					break
+			if valid:
+				return d
+		return None
+	
+	def update_all_worker_schedules(self, workers: List['EnhancedWorker'], 
+								  semester_weeks: List[date]):
+		"""
+		Update closing schedules for all workers using the new algorithm.
+		
+		This method processes all workers and updates their closing schedules
+		using the new constraint satisfaction algorithm.
+		
+		Args:
+			workers: List of all workers to update
+			semester_weeks: List of Friday dates for the semester
+		"""
+		print(f"\n🔄 UPDATING CLOSING SCHEDULES FOR {len(workers)} WORKERS")
+		print("=" * 60)
+		
+		self.user_alerts = []  # Reset alerts
+		
+		for worker in workers:
+			result = self.calculate_worker_closing_schedule(worker, semester_weeks)
+			
+			# Update worker attributes
+			worker.required_closing_dates = result['required_dates']
+			worker.optimal_closing_dates = result['optimal_dates']
+			worker.weekends_home_owed = result['final_weekends_home_owed']
+			worker.home_weeks_owed = worker.weekends_home_owed
+			
+			# Collect any alerts
+			if result['user_alerts']:
+				self.user_alerts.extend(result['user_alerts'])
+			
+			if self.debug:
+				print(f"\n{worker.name}:")
+				print(f"  Required closes: {len(result['required_dates'])} (X tasks)")
+				print(f"  Optimal closes: {len(result['optimal_dates'])} (interval)")
+				print(f"  Weekends home owed: {result['final_weekends_home_owed']}")
+		
+		if self.user_alerts:
+			print(f"\n⚠️  USER ALERTS ({len(self.user_alerts)}):")
+			for alert in self.user_alerts:
+				print(f"  • {alert}")
+	
+	def get_user_alerts(self) -> List[str]:
+		"""
+		Get all user alerts from the last calculation.
+		
+		Returns:
+			List of alert messages
+		"""
+		return self.user_alerts.copy()

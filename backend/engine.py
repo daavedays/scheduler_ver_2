@@ -26,13 +26,22 @@ except ImportError:
     )
 
 
-Y_TASK_TYPES = [
-    "Supervisor",
-    "C&N Driver",
-    "C&N Escort",
-    "Southern Driver",
-    "Southern Escort",
-]
+try:
+	from .constants import (
+		get_y_task_types,
+		get_y_task_definitions,
+		get_y_task_maps,
+	)
+except ImportError:
+	from constants import (
+		get_y_task_types,
+		get_y_task_definitions,
+		get_y_task_maps,
+	)
+
+Y_TASK_TYPES = get_y_task_types()
+Y_TASK_DEFS = {d['name']: bool(d.get('requiresQualification', True)) for d in (get_y_task_definitions() or [])}
+Y_ID_TO_NAME, Y_NAME_TO_ID = get_y_task_maps()
 
 
 def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[str, int], Dict[str, float]]:
@@ -43,7 +52,11 @@ def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[
     availability: Dict[str, int] = {t: 0 for t in Y_TASK_TYPES}
     for w in workers:
         for t in Y_TASK_TYPES:
-            if t in w.qualifications:
+            requires = Y_TASK_DEFS.get(t, True)
+            # Prefer ID-based check; fallback to name list
+            tid = Y_NAME_TO_ID.get(t)
+            qualified = (tid in getattr(w, 'qualification_ids', set())) if isinstance(tid, int) else False
+            if (not requires) or qualified or (t in w.qualifications):
                 availability[t] += 1
     scarcity: Dict[str, float] = {}
     for t, n in availability.items():
@@ -58,7 +71,10 @@ def compute_worker_scarcity_index(worker: EnhancedWorker, task_scarcity: Dict[st
     """
     values: List[float] = []
     for t in Y_TASK_TYPES:
-        if t in worker.qualifications:
+        requires = Y_TASK_DEFS.get(t, True)
+        tid = Y_NAME_TO_ID.get(t)
+        qualified = (tid in getattr(worker, 'qualification_ids', set())) if isinstance(tid, int) else False
+        if (not requires) or qualified or (t in worker.qualifications):
             values.append(task_scarcity.get(t, 0.0))
     if not values:
         return 0.0
@@ -87,7 +103,10 @@ class SchedulingEngineV2:
     """
     def __init__(self, cfg: Optional[ScoringConfig] = None):
         self.cfg = cfg or load_config()
-        self.calc = ClosingScheduleCalculator()
+        self.calc = ClosingScheduleCalculator(
+            allow_single_relief_min1=self.cfg.CLOSING_RELIEF_ENABLED,
+            relief_max_per_semester=self.cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
+        )
         self.assignment_errors: List[AssignmentError] = []
         self.task_scarcity: Dict[str, float] = {}
         self.worker_scarcity_index: Dict[str, float] = {}
@@ -107,6 +126,10 @@ class SchedulingEngineV2:
         """
         If a worker misses an optimal closing date, find the next available one.
         """
+        # Skip workers who cannot participate in closing
+        if not worker.can_participate_in_closing():
+            return
+            
         if missed_friday in worker.optimal_closing_dates:
             worker.optimal_closing_dates.remove(missed_friday)
             # Find next optimal slot
@@ -126,8 +149,7 @@ class SchedulingEngineV2:
         workers: List[EnhancedWorker],
         start_date: date,
         end_date: date,
-        tasks_by_date: Dict[date, List[str]],
-        num_closers_per_weekend: Optional[int] = None,
+        tasks_by_date: Dict[date, List[str]]
     ) -> Dict:
         """
         Main orchestration function for assigning all Y-tasks within a date range.
@@ -149,8 +171,7 @@ class SchedulingEngineV2:
         except Exception as e:
             logs.append(f"WARNING: Failed to update closing schedules: {e}")
 
-        for w in workers:
-            recalc_worker_schedule(w, all_fridays_in_range if all_fridays_in_range else [start_date])
+        # Remove redundant per-worker recalc; schedules already updated via self.calc
         self._precompute_scarcity(workers)
         
         # 2. Separate dates into weekends and weekdays
@@ -173,8 +194,7 @@ class SchedulingEngineV2:
                         weekend_tasks_for_dates,
                         assignments,
                         logs,
-                        all_fridays_in_range,
-                        num_closers_per_weekend
+                        all_fridays_in_range
                     )
                 
                 date_cursor = thursday + timedelta(days=3) # Move to next Sunday
@@ -190,6 +210,25 @@ class SchedulingEngineV2:
                 date_cursor += timedelta(days=1)
         
         # 3. Finalization and reporting
+        
+        # NEW: Trigger closing schedule recalculation after all Y task assignments
+        try:
+            # Generate semester weeks for the entire date range
+            semester_weeks = []
+            current = start_date
+            while current <= end_date:
+                if current.weekday() == 4:  # Friday
+                    semester_weeks.append(current)
+                current += timedelta(days=1)
+            
+            # Update all worker closing schedules
+            self.calc.update_all_worker_schedules(workers, semester_weeks)
+            
+            logs.append("✅ Closing schedule recalculation completed after Y task assignments")
+            
+        except Exception as e:
+            logs.append(f"⚠️  Warning: Failed to update closing schedules after Y task assignments: {e}")
+        
         return {"y_tasks": assignments, "logs": logs, "assignment_errors": [e.__dict__ for e in self.assignment_errors]}
 
 
@@ -208,89 +247,168 @@ class SchedulingEngineV2:
 
         assigned_closers: List[EnhancedWorker] = []
         
-        # Determine closer slots: prefer override; else derive from task count
+        # Dynamically determine the number of closer slots from the number of tasks
         all_weekend_tasks = sorted(list(set(t for d_tasks in weekend_tasks.values() for t in d_tasks)))
         num_slots = len(all_weekend_tasks)
         logs.append(f"Weekend of {thursday.strftime('%d/%m/%Y')} requires {num_slots} closers for tasks: {all_weekend_tasks}")
 
-        # 1. Assign required closers (X-Task "Rituk")
-        # Only workers with a positive closing interval can be considered closers
-        required_closers = [w for w in workers if w.closing_interval and w.closing_interval > 0 and friday in w.required_closing_dates]
-        
+        # 0. Helper filters
+        def has_non_rituk_x_on_friday(w: EnhancedWorker) -> bool:
+            return w.has_x_task_on_date(friday) and not w.has_specific_x_task(friday, "Rituk")
+
+        # Helper function to check if worker has X task conflict (for deprioritization)
+        def has_x_task_conflict(w: EnhancedWorker) -> bool:
+            # Check for X task conflicts on any of the weekend days
+            return any(w.has_x_task_on_date(day) for day in [thursday, friday, thursday + timedelta(days=2)])
+
+        # 1. Assign required closers (ONLY those with X task 'Rituk') and give them a Y task by scarcity
+        rituk_required = [
+            w for w in workers
+            if w.can_participate_in_closing() and w.has_specific_x_task(friday, "Rituk")
+        ]
+
         # Create a mutable copy of tasks to assign
         unassigned_tasks = all_weekend_tasks[:]
 
-        for worker in required_closers:
-            if len(assigned_closers) >= num_slots:
+        # Helper: check if worker qualifies for a given Y task name
+        def worker_qualifies_for(task_name: str, worker: EnhancedWorker) -> bool:
+            tid_local = Y_NAME_TO_ID.get(task_name)
+            qualified_by_id = (isinstance(tid_local, int) and (tid_local in getattr(worker, 'qualification_ids', set())))
+            qualified_by_name = (task_name in (worker.qualifications or []))
+            return qualified_by_id or qualified_by_name
+
+        for worker in rituk_required:
+            if len(assigned_closers) >= num_slots or not unassigned_tasks:
                 break
-            
             # Find the scarcest task they can do
-            qualified_scarce_tasks = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
-            
+            qualified_scarce_tasks = self._prioritize_tasks_by_scarcity(
+                [t for t in unassigned_tasks if worker_qualifies_for(t, worker)]
+            )
             if qualified_scarce_tasks:
                 task_to_assign = qualified_scarce_tasks[0]
-                
                 assigned_closers.append(worker)
-                
                 for day in weekend_dates:
                     assignments[day].append((task_to_assign, worker.id))
-                
                 worker.assign_closing(friday)
                 worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
-                
-                logs.append(f"Assigned required closer {worker.name} to {task_to_assign} for weekend of {thursday.strftime('%d/%m/%Y')}")
-                unassigned_tasks.remove(task_to_assign)
+                logs.append(
+                    f"Assigned RITUK closer {worker.name} to {task_to_assign} for weekend of {thursday.strftime('%d/%m/%Y')}"
+                )
+                if task_to_assign in unassigned_tasks:
+                    unassigned_tasks.remove(task_to_assign)
             else:
-                logs.append(f"WARNING: Required closer {worker.name} has no qualifying tasks for this weekend.")
+                logs.append(
+                    f"WARNING: RITUK closer {worker.name} has no qualifying Y task for this weekend; leaving for manual assignment if needed."
+                )
 
-        # 2. Fill remaining closer slots with optimal-first policy, then score
-        if len(assigned_closers) < num_slots:
-            candidates = []
-            for w in workers:
-                if w.id in [c.id for c in assigned_closers] or w.id in [c.id for c in required_closers]:
-                    continue
-                if not w.closing_interval or w.closing_interval <= 0:
-                    continue
-                
-                # Enforce cooldown relative to closing_interval (skip too-soon assignments)
-                if w.closing_history:
-                    last_close = max(w.closing_history)
-                    weeks_since = (friday - last_close).days // 7
-                    min_gap = max(0, (w.closing_interval or 0) - 1)
-                    if weeks_since < min_gap:
-                        continue
-                if friday + timedelta(days=7) in w.required_closing_dates:
-                    continue
+        # Build base pool of eligible candidates for Y-task closings (include all but deprioritize X task conflicts)
+        def eligible_base(w: EnhancedWorker) -> bool:
+            if not w.can_participate_in_closing():
+                return False
+            if w.id in [c.id for c in assigned_closers]:
+                return False
+            # Note: Workers with X tasks are still eligible but will be deprioritized
+            # Avoid back-to-back and upcoming required
+            if friday - timedelta(days=7) in w.closing_history:
+                return False
+            if friday + timedelta(days=7) in w.required_closing_dates:
+                return False
+            return True
 
-                is_optimal = friday in w.optimal_closing_dates
-                total_y = sum(w.y_task_counts.values())
-                # Prefer optimal first, then lower score, then lower load
-                key = (0 if is_optimal else 1, w.score, total_y, w.id)
-                candidates.append((w, key))
-
-            candidates.sort(key=lambda x: x[1])
-
-            for worker, _ in candidates:
-                if len(assigned_closers) >= num_slots:
+        # 2a. Prefer severely overdue candidates (fairness catch-up) before optimal
+        if unassigned_tasks and len(assigned_closers) < num_slots:
+            overdue_candidates = [w for w in workers if eligible_base(w)]
+            # Compute overdue ratio (weeks_overdue / interval) and weeks_overdue
+            overdue_candidates.sort(
+                key=lambda w: (
+                    has_x_task_conflict(w),  # X task conflicts last (False sorts before True)
+                    -w.get_overdue_ratio(friday),  # highest ratio first
+                    -w.get_weeks_overdue(friday),  # then absolute overdue
+                    w.score,
+                    sum(w.y_task_counts.values()),
+                    w.id
+                )
+            )
+            for worker in overdue_candidates:
+                if len(assigned_closers) >= num_slots or not unassigned_tasks:
                     break
+                # Only pick those actually overdue
+                if worker.get_weeks_overdue(friday) <= 0:
+                    break
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
+                if not qualified:
+                    continue
+                task_to_assign = qualified[0]
+                assigned_closers.append(worker)
+                for day in weekend_dates:
+                    assignments[day].append((task_to_assign, worker.id))
+                worker.assign_closing(friday)
+                try:
+                    worker.update_score_after_assignment("closing", friday)
+                except Exception:
+                    pass
+                worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
+                if task_to_assign in unassigned_tasks:
+                    unassigned_tasks.remove(task_to_assign)
+                logs.append(
+                    f"Assigned OVERDUE {worker.name} to {task_to_assign} (overdue_ratio={worker.get_overdue_ratio(friday):.2f}, weeks_overdue={worker.get_weeks_overdue(friday)})"
+                )
 
-                qualified_tasks = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
-                if qualified_tasks:
-                    task_to_assign = qualified_tasks[0]
-                    assigned_closers.append(worker)
-                    
-                    for day in weekend_dates:
-                         assignments[day].append((task_to_assign, worker.id))
+        # 2b. Prefer candidates whose Friday is an optimal closing date
+        if unassigned_tasks and len(assigned_closers) < num_slots:
+            optimal_candidates = [w for w in workers if eligible_base(w) and (friday in w.optimal_closing_dates)]
+            # Sort by X task conflicts first (False before True), then score asc, then total Y asc, then id
+            optimal_candidates.sort(key=lambda w: (has_x_task_conflict(w), w.score, sum(w.y_task_counts.values()), w.id))
+            for worker in optimal_candidates:
+                if len(assigned_closers) >= num_slots or not unassigned_tasks:
+                    break
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
+                if not qualified:
+                    continue
+                task_to_assign = qualified[0]
+                assigned_closers.append(worker)
+                for day in weekend_dates:
+                    assignments[day].append((task_to_assign, worker.id))
+                worker.assign_closing(friday)
+                try:
+                    worker.update_score_after_assignment("closing", friday)
+                except Exception:
+                    pass
+                worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
+                if task_to_assign in unassigned_tasks:
+                    unassigned_tasks.remove(task_to_assign)
+                logs.append(
+                    f"Assigned optimal-date {worker.name} to {task_to_assign} for weekend of {thursday.strftime('%d/%m/%Y')}"
+                )
 
-                    worker.assign_closing(friday)
-                    # Nudge score after each closing to reduce immediate future priority
-                    try:
-                        worker.update_score_after_assignment("closing", friday)
-                    except Exception:
-                        pass
-                    worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
-                    # Do not deplete task list when using slot-based assignment
-                    logs.append(f"Assigned {worker.name} to {task_to_assign} for weekend of {thursday.strftime('%d/%m/%Y')} (Optimal: {friday in worker.optimal_closing_dates})")
+        # 3. If still missing, pick candidates closest to their optimal (min weeks_until_due), tie-break score
+        if unassigned_tasks and len(assigned_closers) < num_slots:
+            remaining_candidates = [w for w in workers if eligible_base(w)]
+            # Sort by X task conflicts first (False before True), then proximity to due date, then score, then total Y, then id
+            remaining_candidates.sort(
+                key=lambda w: (has_x_task_conflict(w), w.get_weeks_until_due_to_close(friday), w.score, sum(w.y_task_counts.values()), w.id)
+            )
+            for worker in remaining_candidates:
+                if len(assigned_closers) >= num_slots or not unassigned_tasks:
+                    break
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
+                if not qualified:
+                    continue
+                task_to_assign = qualified[0]
+                assigned_closers.append(worker)
+                for day in weekend_dates:
+                    assignments[day].append((task_to_assign, worker.id))
+                worker.assign_closing(friday)
+                try:
+                    worker.update_score_after_assignment("closing", friday)
+                except Exception:
+                    pass
+                worker.y_task_counts[task_to_assign] = worker.y_task_counts.get(task_to_assign, 0) + 1
+                if task_to_assign in unassigned_tasks:
+                    unassigned_tasks.remove(task_to_assign)
+                logs.append(
+                    f"Assigned proximity {worker.name} to {task_to_assign} (weeks_until_due={worker.get_weeks_until_due_to_close(friday)})"
+                )
 
         # 3. Update workers who had an optimal date but were not picked
         for worker in workers:
@@ -299,10 +417,26 @@ class SchedulingEngineV2:
                  
         # 4. Handle any unassigned weekend tasks
         if unassigned_tasks:
-            for task in unassigned_tasks:
-                reason = f"No qualified and available closers for weekend task '{task}'"
-                self.assignment_errors.append(AssignmentError(task, thursday, reason, 'warning'))
-                logs.append(f"WARNING: {reason} for weekend of {thursday.strftime('%d/%m/%Y')}")
+            # Check if the only remaining pool are last-week closers (blocked by policy)
+            potential_last_week_only = [
+                w for w in workers
+                if w.can_participate_in_closing()
+                and not has_non_rituk_x_on_friday(w)
+                and w.id not in [c.id for c in assigned_closers]
+                and (friday - timedelta(days=7)) in w.closing_history
+            ]
+            if potential_last_week_only:
+                for task in unassigned_tasks:
+                    reason = (
+                        f"Missing closer for '{task}'. Only remaining candidates closed last week. Manual assignment required."
+                    )
+                    self.assignment_errors.append(AssignmentError(task, thursday, reason, 'error'))
+                    logs.append(f"ERROR: {reason}")
+            else:
+                for task in unassigned_tasks:
+                    reason = f"No qualified and available closers for weekend task '{task}'"
+                    self.assignment_errors.append(AssignmentError(task, thursday, reason, 'warning'))
+                    logs.append(f"WARNING: {reason} for weekend of {thursday.strftime('%d/%m/%Y')}")
 
 
     def _assign_weekday_tasks(
@@ -321,37 +455,33 @@ class SchedulingEngineV2:
             if w.id not in assigned_worker_ids_today and task_date not in w.closing_history
         ]
 
-        # Hard constraint: never assign Y if worker has any X task that day (including Guarding Duties)
-        strictly_available = [
+        # Soft constraint: prefer workers without X tasks, but allow manual assignment
+        preferred_available = [
             w for w in base_available
             if not w.has_x_task_on_date(task_date)
         ]
-
-        available_workers = strictly_available
+        
+        # If no preferred workers, fall back to all available (for manual assignment visibility)
+        available_workers = preferred_available if preferred_available else base_available
         
         for task in self._prioritize_tasks_by_scarcity(tasks_needed):
             # Check if task already assigned today
             if any(t == task for t, _ in assignments.get(task_date, [])):
                 continue
             
-            candidates_all = [w for w in available_workers if task in w.qualifications]
-            # Prefer workers without another Y-task this same week and enforce cooldown to closing interval
+            requires = Y_TASK_DEFS.get(task, True)
+            tid = Y_NAME_TO_ID.get(task)
+            def is_worker_qualified(worker: EnhancedWorker) -> bool:
+                if not requires:
+                    return True
+                qualified_by_id = (isinstance(tid, int) and (tid in getattr(worker, 'qualification_ids', set())))
+                qualified_by_name = (task in (worker.qualifications or []))
+                return qualified_by_id or qualified_by_name
+            candidates_all = [w for w in available_workers if is_worker_qualified(w)]
+            # Prefer workers without another Y-task this same week
             week_start = task_date - timedelta(days=task_date.weekday())
             candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]
             candidates = candidates_pref if candidates_pref else candidates_all
-
-            def cooldown_ok(w: EnhancedWorker) -> bool:
-                if not w.closing_history:
-                    return True
-                # Only enforce if they have a positive closing interval
-                if not w.closing_interval or w.closing_interval <= 0:
-                    return True
-                last_close = max(w.closing_history)
-                weeks_since = (task_date - last_close).days // 7
-                min_gap = max(0, w.closing_interval - 1)
-                return weeks_since >= min_gap
-
-            candidates = [w for w in candidates if cooldown_ok(w)]
             
             if not candidates:
                 reason = f"No qualified workers for {task}"
@@ -359,15 +489,9 @@ class SchedulingEngineV2:
                 logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
                 continue
             
-            # Prefer workers closer to their optimal closing date this week, then score, then fairness
-            def weeks_to_nearest_optimal(worker: EnhancedWorker) -> int:
-                if not getattr(worker, 'optimal_closing_dates', None):
-                    return 999
-                diffs = [abs((opt - task_date).days) // 7 for opt in worker.optimal_closing_dates]
-                return min(diffs) if diffs else 999
-
+            # Sort by X task conflicts first (False before True), then score, then per-task count, then total Y, then ID
             candidates.sort(key=lambda w: (
-                weeks_to_nearest_optimal(w),
+                w.has_x_task_on_date(task_date),  # X task conflicts last
                 w.score,
                 w.y_task_counts.get(task, 0),
                 sum(w.y_task_counts.values()),
