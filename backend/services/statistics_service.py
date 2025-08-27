@@ -251,6 +251,28 @@ class StatisticsService:
                     stats["statistics"]["workers"][wid]["y_task_counts"].values()
                 )
     
+    def _recompute_worker_x_counts_from_stats(self, stats: Dict[str, Any]):
+        """Recompute all worker X task totals from current stats['statistics']['x_tasks']."""
+        # Reset
+        for w in stats["statistics"]["workers"].values():
+            w["x_task_counts"] = {}
+            w["total_x_tasks"] = 0
+        # Aggregate from remaining x_tasks entries
+        x_tasks_dict = stats["statistics"].get("x_tasks", {}) or {}
+        for period in x_tasks_dict.values():
+            per_worker = period.get("data", {}) or {}
+            for wid, counts in per_worker.items():
+                if wid not in stats["statistics"]["workers"]:
+                    continue
+                for task, cnt in (counts or {}).items():
+                    stats["statistics"]["workers"][wid].setdefault("x_task_counts", {})
+                    stats["statistics"]["workers"][wid]["x_task_counts"][task] = (
+                        stats["statistics"]["workers"][wid]["x_task_counts"].get(task, 0) + int(cnt)
+                    )
+                stats["statistics"]["workers"][wid]["total_x_tasks"] = sum(
+                    stats["statistics"]["workers"][wid]["x_task_counts"].values()
+                )
+    
     def _update_closing_interval_analysis(self, stats: Dict[str, Any]):
         """Calculate accurate closing interval analysis"""
         closing_intervals = {}

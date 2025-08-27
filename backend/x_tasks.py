@@ -6,12 +6,14 @@ try:
     from .worker import load_workers_from_json, save_workers_to_json, EnhancedWorker
     from .scoring import recalc_worker_schedule
     from .closing_schedule_calculator import ClosingScheduleCalculator
+    from .constants import get_x_task_definitions, get_x_task_maps
 except ImportError:
     from worker import load_workers_from_json, save_workers_to_json, EnhancedWorker
     from scoring import recalc_worker_schedule
     from closing_schedule_calculator import ClosingScheduleCalculator
+    from constants import get_x_task_definitions, get_x_task_maps
 
-STANDARD_X_TASKS = ["Guarding Duties", "RASAR", "Kitchen"]
+# No hardcoded X-task list; use centralized tasks.json via constants when needed
 
 # Custom X tasks are stored in a JSON file: { soldier: [ { "task": ..., "start": ..., "end": ... } ] }
 CUSTOM_X_TASKS_PATH = 'data/custom_x_tasks.json'
@@ -70,49 +72,59 @@ def trigger_closing_schedule_recalc(affected_worker_ids=None, year=None, half=No
         half: Half (1 or 2) for semester weeks calculation
     """
     try:
-        # Load workers
-        workers = load_workers_from_json(WORKER_DATA)
-        
-        # Filter to affected workers if specified
-        if affected_worker_ids:
-            workers = [w for w in workers if w.id in affected_worker_ids]
-        
-        if not workers:
-            print("No workers to recalculate")
-            return
-        
+        # Load all workers
+        all_workers = load_workers_from_json(WORKER_DATA)
+
         # Determine semester weeks
         if year and half:
             weeks_data = get_weeks_for_period(year, half)
             # Convert to Friday dates for the calculator (it expects Fridays)
             semester_weeks = []
-            for week_num, week_start, week_end in weeks_data:
-                # Find Friday in this week (week_start is Sunday, so Friday is +5 days)
+            for _week_num, week_start, _week_end in weeks_data:
                 friday = week_start + timedelta(days=5)
                 semester_weeks.append(friday)
         else:
-            # Use a default range if no year/half specified
             start_date = date.today()
             semester_weeks = [start_date + timedelta(weeks=i) for i in range(26)]
-        
-        # Recalculate closing schedules
+
+        # Filter to affected subset if provided
+        if affected_worker_ids:
+            subset = [w for w in all_workers if w.id in affected_worker_ids]
+        else:
+            subset = list(all_workers)
+
+        if not subset:
+            print("No workers to recalculate")
+            return []
+
+        # Recalculate closing schedules just for the subset
         from .scoring_config import load_config
         cfg = load_config()
         calc = ClosingScheduleCalculator(
             allow_single_relief_min1=cfg.CLOSING_RELIEF_ENABLED,
             relief_max_per_semester=cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
         )
-        calc.debug = False  # Reduce console output
-        calc.update_all_worker_schedules(workers, semester_weeks)
-        
-        # Save updated workers back to JSON
-        save_workers_to_json(workers, WORKER_DATA)
-        
-        print(f"✅ Recalculated closing schedules for {len(workers)} workers")
-        
-        # Return any alerts for the caller
+        calc.debug = False
+        calc.update_all_worker_schedules(subset, semester_weeks)
+
+        # Merge updated subset back into the full list
+        by_id = {w.id: w for w in subset}
+        updated_count = 0
+        merged: list[EnhancedWorker] = []
+        for w in all_workers:
+            if w.id in by_id:
+                merged.append(by_id[w.id])
+                updated_count += 1
+            else:
+                merged.append(w)
+
+        # Save all workers
+        save_workers_to_json(merged, WORKER_DATA)
+
+        print(f"✅ Recalculated closing schedules for {updated_count} workers (merged into full set of {len(merged)})")
+
         return calc.get_user_alerts()
-        
+
     except Exception as e:
         print(f"❌ Error recalculating closing schedules: {e}")
         return []

@@ -5,32 +5,38 @@
         "definitions": [
           {
             "id": 1,
-            "name": "Supervisor",
+            "name": "מגש״ק תורן",
             "requiresQualification": true,
             "autoAssign": true
           },
           {
             "id": 2,
-            "name": "C&N Driver",
+            "name": "נהג כבל רשת",
             "requiresQualification": true,
             "autoAssign": true
           },
           {
             "id": 3,
-            "name": "C&N Escort",
+            "name": "מלווה כבל רשת",
+            "requiresQualification": true,
+            "autoAssign": true
+          },
+          {
+            "id": 4,
+            "name": "גורר דרומי",
             "requiresQualification": true,
             "autoAssign": true
           },
           {
             "id": 5,
-            "name": "Southern Driver",
+            "name": "מלווה דרומי",
             "requiresQualification": true,
             "autoAssign": true
           },
           {
             "id": 6,
-            "name": "Southern Escort",
-            "requiresQualification": true,
+            "name": "מראה יחידה",
+            "requiresQualification": false,
             "autoAssign": true
           }
         ]
@@ -41,31 +47,27 @@
     "definitions": [
       {
         "id": 1,
-        "name": "Guard",
-        "isDefault": true,
-        "start_day": 6,
-        "end_day": 5
+        "name": "שמירות",
+        "isDefault": false,
+        "start_day": 3,
+        "end_day": 3,
+        "duration_days": 8
       },
       {
         "id": 2,
-        "name": "Kitchen",
-        "isDefault": true,
-        "start_day": 6,
-        "end_day": 5
+        "name": "רסר",
+        "isDefault": false,
+        "start_day": 1,
+        "end_day": 1,
+        "duration_days": 8
       },
       {
         "id": 3,
-        "name": "HQ",
-        "isDefault": true,
-        "start_day": 6,
-        "end_day": 5
-      },
-      {
-        "id": 4,
-        "name": "Rituk",
+        "name": "מטבח",
         "isDefault": false,
-        "start_day": 4,
-        "end_day": 6
+        "start_day": 1,
+        "end_day": 1,
+        "duration_days": 8
       }
     ]
   }

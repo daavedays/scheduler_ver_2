@@ -12,16 +12,6 @@ except ImportError:
     from engine import SchedulingEngineV2
     from scoring import recalc_worker_schedule
 import re
-
-# --- Y Task Definitions ---
-Y_TASKS = ["Southern Driver", "Southern Escort", "C&N Driver", "C&N Escort", "Supervisor"]
-QUALIFICATION_MAP = {
-    "Southern Driver": ["Southern Driver"],
-    "Southern Escort": ["Southern Escort"],
-    "C&N Driver": ["C&N Driver"],
-    "C&N Escort": ["C&N Escort"],
-    "Supervisor": ["Supervisor"]
-}
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
 INDEX_PATH = os.path.join(DATA_DIR, 'y_tasks.json')
 
@@ -301,7 +291,7 @@ def generate_y_schedule(
             worker_name = next((w.name for w in workers if w.id == worker_id), "Unknown")
             schedule_output[date_str][task_type] = worker_name
 
-    save_workers_to_json(workers, worker_json_path)
+    # Do not persist worker_data.json as part of generation; only return schedule
     
     # Logging and reporting
     logs = result.get('logs', [])

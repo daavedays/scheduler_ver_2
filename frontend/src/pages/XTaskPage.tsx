@@ -74,7 +74,8 @@ import {
   CARD_COLORS 
 } from '../components/colorSystem';
 
-const STANDARD_X_TASKS = ["Guarding Duties", "RASAR", "Kitchen"];
+// Will be loaded dynamically from backend definitions
+const DEFAULT_STANDARD_X_TASKS = ["Guarding Duties", "RASAR", "Kitchen"];
 const MAX_CUSTOM_TASK_LEN = 14;
 
 function XTaskPage() {
@@ -105,6 +106,9 @@ function XTaskPage() {
   const [showResolveBtn, setShowResolveBtn] = useState(false);
   const [soldiers, setSoldiers] = useState<{id: string, name: string}[]>([]);
   const [tableDarkMode, setTableDarkMode] = useState(true); // local state
+
+  // Dynamic X task names used in modal selection
+  const [standardXTasks, setStandardXTasks] = useState<string[]>(DEFAULT_STANDARD_X_TASKS);
 
   function renderCell(cell: string, colIdx: number, rowIdx: number) {
     // Use modern colors for empty cells
@@ -524,6 +528,21 @@ function XTaskPage() {
       setSaving(false);
     }
   };
+
+  // Load X task definitions for dynamic names
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/x-tasks/definitions', { credentials: 'include' });
+        const data = await res.json();
+        if (res.ok) {
+          const defs = (data.definitions || []) as Array<{ name: string }>
+          const names = defs.map(d => d.name).filter(Boolean);
+          if (names && names.length > 0) setStandardXTasks(names);
+        }
+      } catch {}
+    })();
+  }, []);
 
   return (
     <Box sx={{ 
@@ -995,7 +1014,7 @@ function XTaskPage() {
           pt: 3
         }}>
           <List sx={{ p: 0 }}>
-            {STANDARD_X_TASKS.map((task, idx) => (
+            {standardXTasks.map((task, idx) => (
               <ListItem key={idx} disablePadding sx={{ mb: 1 }}>
                 <ListItemButton 
                   selected={modalTask === task} 

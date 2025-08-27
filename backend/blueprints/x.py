@@ -20,6 +20,11 @@ try:
 except Exception:
 	from worker import load_workers_from_json, save_workers_to_json  # type: ignore
 
+try:
+	from ..constants import get_x_task_definitions
+except Exception:
+	from constants import get_x_task_definitions  # type: ignore
+
 
 x_bp = Blueprint('x_tasks', __name__, url_prefix='/api')
 
@@ -65,6 +70,8 @@ def save_x_tasks():
 		return jsonify({'error': 'Missing data'}), 400
 	filename = f"x_tasks_{year}_{period}.csv"
 	x_task_path = os.path.join(DATA_DIR, filename)
+	# Determine if schedule exists before overwriting (new vs modify)
+	was_existing = os.path.exists(x_task_path) and os.stat(x_task_path).st_size > 0
 	with open(x_task_path, 'w', encoding='utf-8') as f:
 		f.write(csv_data)
 	x_tasks_module.save_custom_x_tasks(custom_tasks)
@@ -120,6 +127,12 @@ def save_x_tasks():
 					weeks.append((week_num, date_range))
 				except ValueError:
 					continue
+			# Load X task definitions by name
+			try:
+				_defs = get_x_task_definitions() or []
+				X_DEF_BY_NAME = {str(d.get('name')): d for d in _defs if d.get('name')}
+			except Exception:
+				X_DEF_BY_NAME = {}
 			for row in data_rows:
 				if len(row) < 2:
 					continue
@@ -136,11 +149,38 @@ def save_x_tasks():
 									start_str, end_str = date_range.split('-')
 									start_date = datetime.strptime(f"{start_str.strip()}/{year}", "%d/%m/%Y").date()
 									end_date = datetime.strptime(f"{end_str.strip()}/{year}", "%d/%m/%Y").date()
-									current = start_date
-									while current <= end_date:
+									# Default to entire week window
+									assign_start = start_date
+									assign_end = end_date
+									# Adjust based on task definition (start_day, end_day, duration_days)
+									definition = X_DEF_BY_NAME.get(task)
+									if definition:
+										start_day = definition.get('start_day')
+										end_day = definition.get('end_day')
+										duration_days = definition.get('duration_days')
+										if isinstance(start_day, int):
+											wd0 = start_date.weekday()  # Mon=0..Sun=6
+											# Convert stored start_day (assuming Sun=0..Sat=6) to Python weekday domain
+											py_start = (int(start_day) + 6) % 7  # Sun(0)->6, Mon(1)->0, ... Sat(6)->5
+											delta = (py_start - wd0) % 7
+											assign_start = start_date + timedelta(days=delta)
+										if isinstance(duration_days, int) and duration_days > 0:
+											assign_end = assign_start + timedelta(days=int(duration_days) - 1)
+										elif isinstance(end_day, int):
+											py_end = (int(end_day) + 6) % 7
+											py_start = (int(start_day) + 6) % 7
+											span = (py_end - py_start) % 7
+											if span == 0:
+												span = 7  # treat same day as 8-day inclusive window
+											assign_end = assign_start + timedelta(days=span)
+									# Assign days in computed range (cap to avoid runaway)
+									current = assign_start
+									limit = 90
+									while current <= assign_end and limit > 0:
 										date_str = current.strftime('%d/%m/%Y')
 										worker.x_tasks[date_str] = task
 										current += timedelta(days=1)
+										limit -= 1
 								except Exception as e:
 									print(f"Warning: Could not parse date range {date_range}: {e}")
 		for soldier_id, custom_task_list in custom_tasks.items():
@@ -183,23 +223,16 @@ def save_x_tasks():
 		except Exception as e:
 			print(f"⚠️  Warning: Failed to update worker statistics: {e}")
 		
-		calculator = ClosingScheduleCalculator()
-		semester_weeks = []
-		if period == 1:
-			start_date = date(year, 1, 1)
-			end_date = date(year, 6, 30)
-		else:
-			start_date = date(year, 7, 1)
-			end_date = date(year, 12, 31)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		calculator.update_all_worker_schedules(workers, semester_weeks)
-		save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
-		alerts = calculator.get_user_alerts()
-		print(f"✅ Closing schedule recalculation completed for {len(affected_workers)} workers")
+		# Scoped recalculation per user rules: new schedule → all; modifications → only affected
+		try:
+			from ..x_tasks import trigger_closing_schedule_recalc
+			target_ids = None if not was_existing else list(affected_workers)
+			alerts = trigger_closing_schedule_recalc(target_ids, year, period) or []
+			print(
+				f"✅ Closing schedule recalculation completed for {'all workers' if target_ids is None else f'{len(target_ids)} workers'}"
+			)
+		except Exception as _e:
+			print(f"⚠️  Warning: Failed to run scoped recalc: {_e}")
 	except Exception as e:
 		print(f"⚠️  Warning: Failed to update closing schedules: {e}")
 		alerts = [f"Failed to update closing schedules: {e}"]

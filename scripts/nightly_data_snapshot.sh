@@ -1,37 +1,37 @@
 #!/bin/bash
 set -euo pipefail
+
+notify() {
+  /usr/bin/osascript -e "display notification \"$2\" with title \"$1\"" >/dev/null 2>&1 || true
+}
+
 REPO_DIR="/Users/davidmirzoyan/Desktop/scheduler_ver_2_backup_1756148817"
 BACKUP_DIR="$REPO_DIR/backups"
 SNAP_DIR="$REPO_DIR/.snapshot-staging"
 DATE_STR=$(date +%Y%m%d)
 TS=$(date +%Y%m%d-%H%M%S)
-ARCHIVE_BASE="$BACKUP_DIR/data-$DATE_STR.zip"
+ARCHIVE_BASE="$BACKUP_DIR/data-$DATE_STR.tar.gz"
 ARCHIVE="$ARCHIVE_BASE"
 SHAFILE="$ARCHIVE.sha256"
 if [ -e "$ARCHIVE" ]; then
-  ARCHIVE="$BACKUP_DIR/data-$DATE_STR-$TS.zip"
+  ARCHIVE="$BACKUP_DIR/data-$DATE_STR-$TS.tar.gz"
   SHAFILE="$ARCHIVE.sha256"
 fi
 ARCHIVE_TMP="$ARCHIVE.tmp"
 
 mkdir -p "$BACKUP_DIR"
-rm -rf "$SNAP_DIR"
-mkdir -p "$SNAP_DIR"
-rsync -a --delete "$REPO_DIR/data/" "$SNAP_DIR/data/"
-cd "$SNAP_DIR"
-ditto -c -k --sequesterRsrc --keepParent data "$ARCHIVE_TMP"
-mv -f "$ARCHIVE_TMP" "$ARCHIVE"
-cd "$REPO_DIR"
-/usr/bin/shasum -a 256 "$ARCHIVE" > "$SHAFILE"
-chflags uchg "$ARCHIVE" "$SHAFILE" || true
-cd "$REPO_DIR"
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  git add -A
-  msg="AUTO: nightly data snapshot $TS"
-  git commit -m "$msg" || true
-  tag="snapshot-$TS"
-  git tag -a "$tag" -m "$msg" || true
-  git push --follow-tags || true
-fi
-rm -rf "$SNAP_DIR"
-echo "Created $ARCHIVE and $SHAFILE (immutable)"
+
+trap 'notify "Backup FAILED" "See /tmp/nightly_data_snapshot.err"' ERR
+
+{
+  rm -rf "$SNAP_DIR"
+  mkdir -p "$SNAP_DIR"
+  rsync -a --delete "$REPO_DIR/data/" "$SNAP_DIR/data/"
+  tar -C "$SNAP_DIR" -czf "$ARCHIVE_TMP" data
+  mv -f "$ARCHIVE_TMP" "$ARCHIVE"
+  shasum -a 256 "$ARCHIVE" > "$SHAFILE"
+  chflags uchg "$ARCHIVE" "$SHAFILE" || true
+  rm -rf "$SNAP_DIR"
+} 1>>/tmp/nightly_data_snapshot.out 2>>/tmp/nightly_data_snapshot.err
+
+notify "Backup OK" "$(basename \"$ARCHIVE\") created"

@@ -43,10 +43,6 @@ import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
 import Header from '../components/Header';
 
-const QUALIFICATIONS = [
-  'Supervisor', 'C&N Driver', 'C&N Escort', 'Southern Driver', 'Southern Escort', 'Guarding Duties', 'RASAR', 'Kitchen'
-];
-
 // Helper function to convert closing interval numbers to Hebrew text
 const getClosingIntervalText = (value: number): string => {
   switch (value) {
@@ -56,6 +52,8 @@ const getClosingIntervalText = (value: number): string => {
     case 4: return 'רבעים';
     case 5: return 'אחד לחמש';
     case 6: return 'אחד לשש';
+    case 7: return 'שבעה';
+    case 8: return 'שמינה';
     default: return `${value} weeks`;
   }
 };
@@ -69,7 +67,9 @@ const getClosingIntervalValue = (text: string): number => {
     case 'רבעים': return 4;
     case 'אחד לחמש': return 5;
     case 'אחד לשש': return 6;
-    default: return 4; // Default to quarters
+    case 'שבעה': return 7;
+    case 'שמינה': return 8;
+    default: return 0; // Default to quarters
   }
 };
 
@@ -80,7 +80,9 @@ const CLOSING_INTERVAL_OPTIONS = [
   { value: 3, label: 'שלישים' },
   { value: 4, label: 'רבעים' },
   { value: 5, label: 'אחד לחמש' },
-  { value: 6, label: 'אחד לשש' }
+  { value: 6, label: 'אחד לשש' },
+  { value: 7, label: 'שבעה' },
+  { value: 8, label: 'שמינה' }
 ];
 
 function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; onToggleDarkMode: () => void }) {
@@ -89,6 +91,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
   const [editId, setEditId] = useState<string | null>(null);
   const [editWorker, setEditWorker] = useState<any | null>(null);
   const [editQuals, setEditQuals] = useState<string[]>([]);
+  const [qualificationOptions, setQualificationOptions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -105,7 +108,25 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   useEffect(() => {
     fetchWorkers();
+    loadQualificationOptions();
   }, []);
+
+  const loadQualificationOptions = async () => {
+    try {
+      const yRes = await fetch('http://localhost:5001/api/y-tasks/definitions', { credentials: 'include' });
+      const yData = await yRes.json().catch(() => ({}));
+      const yDefs = Array.isArray(yData?.definitions) ? yData.definitions : [];
+      // Only include Y tasks that require a qualification
+      const yNames = yDefs
+        .filter((d: any) => d?.requiresQualification !== false)
+        .map((d: any) => String(d.name))
+        .filter(Boolean);
+      setQualificationOptions(Array.from(new Set(yNames)));
+    } catch (error) {
+      console.error('Failed to load qualification options:', error);
+      setQualificationOptions([]);
+    }
+  };
 
   const fetchWorkers = () => {
     setLoading(true);
@@ -309,6 +330,27 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
               Add New Worker
             </Button>
 
+            {/* Refresh Qualifications Button */}
+            <Button 
+              variant="outlined" 
+              onClick={loadQualificationOptions}
+              sx={{ 
+                color: 'rgba(255,255,255,0.8)',
+                borderColor: 'rgba(255,255,255,0.3)',
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                fontWeight: 'bold',
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  bgcolor: 'rgba(255,255,255,0.05)'
+                }
+              }}
+            >
+              Refresh Qualifications
+            </Button>
+
             {/* Search Field */}
             <Box sx={{ flex: 1, minWidth: 300 }}>
         <Autocomplete
@@ -458,7 +500,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
                               },
                             }}
                           >
-                            {QUALIFICATIONS.map((qualification) => (
+                            {qualificationOptions.map((qualification) => (
                               <MenuItem key={qualification} value={qualification}>
                                 <Checkbox 
                                   checked={editQuals.indexOf(qualification) > -1}
@@ -818,7 +860,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
                     },
                   }}
                 >
-                  {QUALIFICATIONS.map((qualification) => (
+                  {qualificationOptions.map((qualification) => (
                     <MenuItem key={qualification} value={qualification}>
                       <Checkbox 
                         checked={newWorker.qualifications.indexOf(qualification) > -1}

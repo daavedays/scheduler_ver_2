@@ -480,32 +480,7 @@ def save_combined_csv():
 	path = os.path.join(DATA_DIR, filename)
 	with open(path, 'w', encoding='utf-8') as f:
 		f.write(csv_data)
-	try:
-		from ..worker import load_workers_from_json, save_workers_to_json
-		from ..utils import recalc_all_workers_between
-		workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
-		start_date_obj = None
-		end_date_obj = None
-		if 'inferred_dates' in locals() and inferred_dates:
-			try:
-				start_date_obj = datetime.strptime(inferred_dates[0], '%d/%m/%Y').date()
-				end_date_obj = datetime.strptime(inferred_dates[-1], '%d/%m/%Y').date()
-			except Exception:
-				pass
-		if not start_date_obj or not end_date_obj:
-			try:
-				start_str = filename.split('_to_')[0].replace('combined_', '').replace('-', '/')
-				end_str = filename.split('_to_')[1].replace('.csv', '').replace('-', '/')
-				start_date_obj = datetime.strptime(start_str, '%d/%m/%Y').date()
-				end_date_obj = datetime.strptime(end_str, '%d/%m/%Y').date()
-			except Exception:
-				pass
-		if start_date_obj and end_date_obj:
-			recalc_all_workers_between(workers, start_date_obj, end_date_obj)
-			save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
-			print(f"✅ Closing schedule recalculation completed after combined CSV save")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after combined CSV save: {e}")
+	# Do not recalc or persist worker data on combined save; only CSV is updated
 	return jsonify({'success': True, 'filename': filename})
 
 

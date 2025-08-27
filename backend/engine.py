@@ -27,12 +27,21 @@ except ImportError:
 
 
 try:
-	from .constants import get_y_task_types, get_y_task_definitions
+	from .constants import (
+		get_y_task_types,
+		get_y_task_definitions,
+		get_y_task_maps,
+	)
 except ImportError:
-	from constants import get_y_task_types, get_y_task_definitions
+	from constants import (
+		get_y_task_types,
+		get_y_task_definitions,
+		get_y_task_maps,
+	)
 
 Y_TASK_TYPES = get_y_task_types()
 Y_TASK_DEFS = {d['name']: bool(d.get('requiresQualification', True)) for d in (get_y_task_definitions() or [])}
+Y_ID_TO_NAME, Y_NAME_TO_ID = get_y_task_maps()
 
 
 def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[str, int], Dict[str, float]]:
@@ -44,7 +53,10 @@ def compute_qualification_scarcity(workers: List[EnhancedWorker]) -> Tuple[Dict[
     for w in workers:
         for t in Y_TASK_TYPES:
             requires = Y_TASK_DEFS.get(t, True)
-            if (not requires) or (t in w.qualifications):
+            # Prefer ID-based check; fallback to name list
+            tid = Y_NAME_TO_ID.get(t)
+            qualified = (tid in getattr(w, 'qualification_ids', set())) if isinstance(tid, int) else False
+            if (not requires) or qualified or (t in w.qualifications):
                 availability[t] += 1
     scarcity: Dict[str, float] = {}
     for t, n in availability.items():
@@ -60,7 +72,9 @@ def compute_worker_scarcity_index(worker: EnhancedWorker, task_scarcity: Dict[st
     values: List[float] = []
     for t in Y_TASK_TYPES:
         requires = Y_TASK_DEFS.get(t, True)
-        if (not requires) or (t in worker.qualifications):
+        tid = Y_NAME_TO_ID.get(t)
+        qualified = (tid in getattr(worker, 'qualification_ids', set())) if isinstance(tid, int) else False
+        if (not requires) or qualified or (t in worker.qualifications):
             values.append(task_scarcity.get(t, 0.0))
     if not values:
         return 0.0
@@ -242,6 +256,11 @@ class SchedulingEngineV2:
         def has_non_rituk_x_on_friday(w: EnhancedWorker) -> bool:
             return w.has_x_task_on_date(friday) and not w.has_specific_x_task(friday, "Rituk")
 
+        # Helper function to check if worker has X task conflict (for deprioritization)
+        def has_x_task_conflict(w: EnhancedWorker) -> bool:
+            # Check for X task conflicts on any of the weekend days
+            return any(w.has_x_task_on_date(day) for day in [thursday, friday, thursday + timedelta(days=2)])
+
         # 1. Assign required closers (ONLY those with X task 'Rituk') and give them a Y task by scarcity
         rituk_required = [
             w for w in workers
@@ -251,12 +270,19 @@ class SchedulingEngineV2:
         # Create a mutable copy of tasks to assign
         unassigned_tasks = all_weekend_tasks[:]
 
+        # Helper: check if worker qualifies for a given Y task name
+        def worker_qualifies_for(task_name: str, worker: EnhancedWorker) -> bool:
+            tid_local = Y_NAME_TO_ID.get(task_name)
+            qualified_by_id = (isinstance(tid_local, int) and (tid_local in getattr(worker, 'qualification_ids', set())))
+            qualified_by_name = (task_name in (worker.qualifications or []))
+            return qualified_by_id or qualified_by_name
+
         for worker in rituk_required:
             if len(assigned_closers) >= num_slots or not unassigned_tasks:
                 break
             # Find the scarcest task they can do
             qualified_scarce_tasks = self._prioritize_tasks_by_scarcity(
-                [t for t in unassigned_tasks if t in worker.qualifications]
+                [t for t in unassigned_tasks if worker_qualifies_for(t, worker)]
             )
             if qualified_scarce_tasks:
                 task_to_assign = qualified_scarce_tasks[0]
@@ -275,15 +301,13 @@ class SchedulingEngineV2:
                     f"WARNING: RITUK closer {worker.name} has no qualifying Y task for this weekend; leaving for manual assignment if needed."
                 )
 
-        # Build base pool of eligible candidates for Y-task closings (exclude non-Rituk X on Friday)
+        # Build base pool of eligible candidates for Y-task closings (include all but deprioritize X task conflicts)
         def eligible_base(w: EnhancedWorker) -> bool:
             if not w.can_participate_in_closing():
                 return False
             if w.id in [c.id for c in assigned_closers]:
                 return False
-            # Hard block: has any non-Rituk X task on Friday
-            if has_non_rituk_x_on_friday(w):
-                return False
+            # Note: Workers with X tasks are still eligible but will be deprioritized
             # Avoid back-to-back and upcoming required
             if friday - timedelta(days=7) in w.closing_history:
                 return False
@@ -297,6 +321,7 @@ class SchedulingEngineV2:
             # Compute overdue ratio (weeks_overdue / interval) and weeks_overdue
             overdue_candidates.sort(
                 key=lambda w: (
+                    has_x_task_conflict(w),  # X task conflicts last (False sorts before True)
                     -w.get_overdue_ratio(friday),  # highest ratio first
                     -w.get_weeks_overdue(friday),  # then absolute overdue
                     w.score,
@@ -310,7 +335,7 @@ class SchedulingEngineV2:
                 # Only pick those actually overdue
                 if worker.get_weeks_overdue(friday) <= 0:
                     break
-                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
                 if not qualified:
                     continue
                 task_to_assign = qualified[0]
@@ -332,12 +357,12 @@ class SchedulingEngineV2:
         # 2b. Prefer candidates whose Friday is an optimal closing date
         if unassigned_tasks and len(assigned_closers) < num_slots:
             optimal_candidates = [w for w in workers if eligible_base(w) and (friday in w.optimal_closing_dates)]
-            # Sort by score asc, then total Y asc, then id
-            optimal_candidates.sort(key=lambda w: (w.score, sum(w.y_task_counts.values()), w.id))
+            # Sort by X task conflicts first (False before True), then score asc, then total Y asc, then id
+            optimal_candidates.sort(key=lambda w: (has_x_task_conflict(w), w.score, sum(w.y_task_counts.values()), w.id))
             for worker in optimal_candidates:
                 if len(assigned_closers) >= num_slots or not unassigned_tasks:
                     break
-                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
                 if not qualified:
                     continue
                 task_to_assign = qualified[0]
@@ -359,14 +384,14 @@ class SchedulingEngineV2:
         # 3. If still missing, pick candidates closest to their optimal (min weeks_until_due), tie-break score
         if unassigned_tasks and len(assigned_closers) < num_slots:
             remaining_candidates = [w for w in workers if eligible_base(w)]
-            # Sort by proximity to due date, then score, then total Y, then id
+            # Sort by X task conflicts first (False before True), then proximity to due date, then score, then total Y, then id
             remaining_candidates.sort(
-                key=lambda w: (w.get_weeks_until_due_to_close(friday), w.score, sum(w.y_task_counts.values()), w.id)
+                key=lambda w: (has_x_task_conflict(w), w.get_weeks_until_due_to_close(friday), w.score, sum(w.y_task_counts.values()), w.id)
             )
             for worker in remaining_candidates:
                 if len(assigned_closers) >= num_slots or not unassigned_tasks:
                     break
-                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if t in worker.qualifications])
+                qualified = self._prioritize_tasks_by_scarcity([t for t in unassigned_tasks if worker_qualifies_for(t, worker)])
                 if not qualified:
                     continue
                 task_to_assign = qualified[0]
@@ -430,13 +455,14 @@ class SchedulingEngineV2:
             if w.id not in assigned_worker_ids_today and task_date not in w.closing_history
         ]
 
-        # Hard constraint: never assign Y if worker has any X task that day (including Guarding Duties)
-        strictly_available = [
+        # Soft constraint: prefer workers without X tasks, but allow manual assignment
+        preferred_available = [
             w for w in base_available
             if not w.has_x_task_on_date(task_date)
         ]
-
-        available_workers = strictly_available
+        
+        # If no preferred workers, fall back to all available (for manual assignment visibility)
+        available_workers = preferred_available if preferred_available else base_available
         
         for task in self._prioritize_tasks_by_scarcity(tasks_needed):
             # Check if task already assigned today
@@ -444,7 +470,14 @@ class SchedulingEngineV2:
                 continue
             
             requires = Y_TASK_DEFS.get(task, True)
-            candidates_all = [w for w in available_workers if (not requires) or (task in w.qualifications)]
+            tid = Y_NAME_TO_ID.get(task)
+            def is_worker_qualified(worker: EnhancedWorker) -> bool:
+                if not requires:
+                    return True
+                qualified_by_id = (isinstance(tid, int) and (tid in getattr(worker, 'qualification_ids', set())))
+                qualified_by_name = (task in (worker.qualifications or []))
+                return qualified_by_id or qualified_by_name
+            candidates_all = [w for w in available_workers if is_worker_qualified(w)]
             # Prefer workers without another Y-task this same week
             week_start = task_date - timedelta(days=task_date.weekday())
             candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]
@@ -456,8 +489,9 @@ class SchedulingEngineV2:
                 logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
                 continue
             
-            # Stronger score priority: score first, then per-task count, then total Y, then ID
+            # Sort by X task conflicts first (False before True), then score, then per-task count, then total Y, then ID
             candidates.sort(key=lambda w: (
+                w.has_x_task_on_date(task_date),  # X task conflicts last
                 w.score,
                 w.y_task_counts.get(task, 0),
                 sum(w.y_task_counts.values()),

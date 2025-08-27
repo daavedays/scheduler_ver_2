@@ -17,6 +17,21 @@ class EnhancedWorker:
         self.id = id
         self.name = name
         self.qualifications = qualifications.copy() if qualifications else []
+        # Derived: set of qualification IDs based on centralized tasks.json
+        self.qualification_ids: set[int] = set()
+        try:
+            try:
+                from .constants import get_y_task_maps  # type: ignore
+            except Exception:
+                from constants import get_y_task_maps  # type: ignore
+            _, name_to_id = get_y_task_maps()
+            for q in (self.qualifications or []):
+                qid = name_to_id.get(q)
+                if isinstance(qid, int):
+                    self.qualification_ids.add(qid)
+        except Exception:
+            # Fallback: leave empty; downstream will also check names
+            self.qualification_ids = set()
         self.closing_interval = closing_interval
         self.score = float(score)  # Higher = more overworked = lower priority
         
@@ -320,6 +335,7 @@ class EnhancedWorker:
             'name': self.name,
             'start_date': self.start_date.isoformat() if self.start_date else None,
             'qualifications': self.qualifications,
+            'qualification_ids': sorted(list(self.qualification_ids)) if hasattr(self, 'qualification_ids') else [],
             'closing_interval': self.closing_interval,
             'officer': self.officer,
             'seniority': self.seniority,  # TODO: GET RID OF THIS
@@ -411,6 +427,13 @@ class EnhancedWorker:
         worker.y_task_count = data.get('y_task_count', 0)
         worker.closing_delta = data.get('closing_delta', 0)
         
+        # Override qualification_ids from persisted data if present
+        try:
+            persisted_qids = data.get('qualification_ids')
+            if isinstance(persisted_qids, (list, set, tuple)):
+                worker.qualification_ids = set(int(x) for x in persisted_qids)
+        except Exception:
+            pass
         return worker
 
 
@@ -419,33 +442,18 @@ class EnhancedWorker:
 # ============================================================================
 
 def load_workers_from_json(filepath: str, name_conv_path: str | None = None) -> List[EnhancedWorker]:
-    """Load workers from JSON file with proper name conversion from IDs to Hebrew names."""
+    """Load workers from JSON file. Backend logic uses worker IDs exclusively.
+
+    Note: Any external name conversion file is ignored to prevent stale name rewrites.
+    Names are loaded as-is from `worker_data.json` and are only for display on the frontend.
+    """
     workers = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             workers_data = json.load(f)
         
-        # Load name conversion mapping (ID -> Hebrew name)
-        id_to_hebrew = {}
-        if name_conv_path and os.path.exists(name_conv_path):
-            try:
-                with open(name_conv_path, 'r', encoding='utf-8') as f:
-                    name_conv_list = json.load(f)
-                for entry in name_conv_list:
-                    for worker_id, hebrew_name in entry.items():
-                        id_to_hebrew[worker_id] = hebrew_name
-                print(f"✅ Loaded name conversion for {len(id_to_hebrew)} workers")
-            except Exception as e:
-                print(f"⚠️  Warning: Could not load name conversion: {e}")
-        
+        # Ignore name conversion to avoid overwriting names from source of truth
         for worker_data in workers_data:
-            # Convert ID to Hebrew name if possible
-            worker_id = worker_data.get('id', '')
-            hebrew_name = id_to_hebrew.get(worker_id, worker_data.get('name', worker_id))
-            
-            # Update the worker data with Hebrew name
-            worker_data['name'] = hebrew_name
-            
             worker = EnhancedWorker.from_dict(worker_data)
             workers.append(worker)
             

@@ -71,33 +71,8 @@ def update_worker_qualifications(id):
 			break
 	if not updated:
 		return jsonify({'error': 'Worker not found'}), 404
-	try:
-		from ..closing_schedule_calculator import ClosingScheduleCalculator
-		save_workers_to_json(WORKERS, WORKER_JSON_PATH)
-		current_year = datetime.now().year
-		semester_weeks = []
-		start_date = date(current_year, 1, 1)
-		end_date = date(current_year, 6, 30)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		start_date = date(current_year, 7, 1)
-		end_date = date(current_year, 12, 31)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		calculator = ClosingScheduleCalculator()
-		calculator.update_all_worker_schedules(WORKERS, semester_weeks)
-		save_workers_to_json(WORKERS, WORKER_JSON_PATH)
-		print(f"✅ Closing schedule recalculation completed after updating worker qualifications")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after updating worker qualifications: {e}")
-		with open(WORKER_JSON_PATH, 'w', encoding='utf-8') as f:
-			json.dump([w.__dict__ for w in WORKERS], f, ensure_ascii=False, indent=2)
+	# Persist only; no recalculation or extra writes outside explicit save flows
+	save_workers_to_json(WORKERS, WORKER_JSON_PATH)
 	return jsonify({'success': True, 'id': id, 'qualifications': qualifications})
 
 
@@ -138,31 +113,9 @@ def add_worker():
 		workers_data.append(worker_dict)
 	with open(WORKER_JSON_PATH, 'w', encoding='utf-8') as f:
 		json.dump(workers_data, f, ensure_ascii=False, indent=2)
-	try:
-		from ..closing_schedule_calculator import ClosingScheduleCalculator
-		current_year = datetime.now().year
-		semester_weeks = []
-		start_date = date(current_year, 1, 1)
-		end_date = date(current_year, 6, 30)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		start_date = date(current_year, 7, 1)
-		end_date = date(current_year, 12, 31)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		calculator = ClosingScheduleCalculator()
-		calculator.update_all_worker_schedules(WORKERS, semester_weeks)
-		save_workers_to_json(WORKERS, WORKER_JSON_PATH)
-		print(f"✅ Closing schedule recalculation completed after adding new worker")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after adding new worker: {e}")
-	return jsonify({'success': True, 'worker': workers_data[0] if workers_data else {}})
+	# Return the newly added worker specifically
+	new_worker_payload = next((d for d in workers_data if d.get('id') == w.id), (workers_data[-1] if workers_data else {}))
+	return jsonify({'success': True, 'worker': new_worker_payload})
 
 
 @workers_bp.route('/workers/<id>', methods=['PUT'])
@@ -176,6 +129,21 @@ def update_worker(id):
 			w.name = data.get('name', w.name)
 			w.start_date = data.get('start_date', w.start_date)
 			w.qualifications = data.get('qualifications', w.qualifications)
+			# Update derived qualification_ids from centralized maps if provided
+			try:
+				from ..constants import get_y_task_maps
+			except ImportError:
+				from constants import get_y_task_maps
+			try:
+				_, name_to_id = get_y_task_maps()
+				qids = set()
+				for q in (w.qualifications or []):
+					qid = name_to_id.get(q)
+					if isinstance(qid, int):
+						qids.add(qid)
+				setattr(w, 'qualification_ids', qids)
+			except Exception:
+				pass
 			w.closing_interval = data.get('closing_interval', w.closing_interval)
 			w.officer = data.get('officer', w.officer)
 			seniority = data.get('seniority', w.seniority)
@@ -202,31 +170,9 @@ def update_worker(id):
 		workers_data.append(worker_dict)
 	with open(WORKER_JSON_PATH, 'w', encoding='utf-8') as f:
 		json.dump(workers_data, f, ensure_ascii=False, indent=2)
-	try:
-		from ..closing_schedule_calculator import ClosingScheduleCalculator
-		current_year = datetime.now().year
-		semester_weeks = []
-		start_date = date(current_year, 1, 1)
-		end_date = date(current_year, 6, 30)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		start_date = date(current_year, 7, 1)
-		end_date = date(current_year, 12, 31)
-		current = start_date
-		while current <= end_date:
-			if current.weekday() == 4:
-				semester_weeks.append(current)
-			current += timedelta(days=1)
-		calculator = ClosingScheduleCalculator()
-		calculator.update_all_worker_schedules(WORKERS, semester_weeks)
-		save_workers_to_json(WORKERS, WORKER_JSON_PATH)
-		print(f"✅ Closing schedule recalculation completed after updating worker")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after updating worker: {e}")
-	return jsonify({'success': True, 'worker': workers_data[0] if workers_data else {}})
+	# Return the updated worker specifically
+	updated_worker_payload = next((d for d in workers_data if str(d.get('id')) == str(id)), (workers_data[0] if workers_data else {}))
+	return jsonify({'success': True, 'worker': updated_worker_payload})
 
 
 @workers_bp.route('/workers/<id>', methods=['DELETE'])

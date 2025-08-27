@@ -58,43 +58,7 @@ class YTaskManager:
         # Update index file
         self._update_y_task_index(start_date, end_date, filename)
         
-        # NEW: Trigger closing schedule recalculation after Y tasks are saved
-        try:
-            from .closing_schedule_calculator import ClosingScheduleCalculator
-            from .worker import load_workers_from_json, save_workers_to_json
-            
-            # Load workers
-            worker_file_path = os.path.join(self.data_dir, 'worker_data.json')
-            workers = load_workers_from_json(worker_file_path)
-            
-            # Parse start and end dates
-            start_date_obj = datetime.strptime(start_date, '%d/%m/%Y').date()
-            end_date_obj = datetime.strptime(end_date, '%d/%m/%Y').date()
-            
-            # Generate semester weeks (Fridays) for the date range
-            semester_weeks = []
-            current = start_date_obj
-            while current <= end_date_obj:
-                if current.weekday() == 4:  # Friday
-                    semester_weeks.append(current)
-                current += timedelta(days=1)
-            
-            # Trigger closing schedule recalculation
-            from .scoring_config import load_config
-            cfg = load_config()
-            calculator = ClosingScheduleCalculator(
-                allow_single_relief_min1=cfg.CLOSING_RELIEF_ENABLED,
-                relief_max_per_semester=cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
-            )
-            calculator.update_all_worker_schedules(workers, semester_weeks)
-            
-            # Save updated worker data with new optimal closing dates
-            save_workers_to_json(workers, worker_file_path)
-            
-            print(f"✅ Closing schedule recalculation completed after Y tasks save via manager")
-            
-        except Exception as e:
-            print(f"⚠️  Warning: Failed to update closing schedules after Y tasks save via manager: {e}")
+        # Do not recalc or persist workers here; front-end save endpoints handle persistence
         
         print(f"✅ Y tasks saved to {filename}")
         return filename
@@ -346,19 +310,7 @@ class YTaskManager:
                             semester_weeks.append(current)
                         current += timedelta(days=1)
                     
-                    # Trigger closing schedule recalculation
-                    from .scoring_config import load_config
-                    cfg = load_config()
-                    calculator = ClosingScheduleCalculator(
-                        allow_single_relief_min1=cfg.CLOSING_RELIEF_ENABLED,
-                        relief_max_per_semester=cfg.CLOSING_RELIEF_MAX_PER_SEMESTER,
-                    )
-                    calculator.update_all_worker_schedules(workers, semester_weeks)
-                    
-                    # Save updated worker data with new optimal closing dates
-                    save_workers_to_json(workers, worker_file_path)
-                    
-                    print(f"✅ Closing schedule recalculation completed after deleting Y task period via manager")
+                    # Do not recalc or persist workers on delete via manager
                     
                 except Exception as e:
                     print(f"⚠️  Warning: Failed to update closing schedules after deleting Y task period: {e}")
@@ -373,30 +325,8 @@ class YTaskManager:
             return False
     
     def clear_worker_y_tasks_from_json(self, worker_id: str):
-        """Clear Y tasks from worker's JSON data to prevent bloat"""
-        worker_data_path = os.path.join(self.data_dir, 'worker_data.json')
-        
-        if not os.path.exists(worker_data_path):
-            return
-        
-        try:
-            with open(worker_data_path, 'r', encoding='utf-8') as f:
-                workers = json.load(f)
-            
-            # Find and clear Y tasks for the worker
-            for worker in workers:
-                if worker.get('id') == worker_id:
-                    worker['y_tasks'] = {}
-                    break
-            
-            # Save updated worker data
-            with open(worker_data_path, 'w', encoding='utf-8') as f:
-                json.dump(workers, f, indent=2, ensure_ascii=False)
-            
-            print(f"✅ Cleared Y tasks from worker {worker_id} in JSON")
-            
-        except Exception as e:
-            print(f"Error clearing worker Y tasks: {e}")
+        """Deprecated: Do not mutate worker_data.json outside explicit save flows."""
+        print("clear_worker_y_tasks_from_json is deprecated; skipping file mutation.")
 
 
 # Global Y task manager instance

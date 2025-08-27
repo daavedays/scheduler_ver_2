@@ -3,7 +3,7 @@ from datetime import timedelta
 
 
 # Session and security
-SESSION_TIMEOUT_MINUTES = 30
+SESSION_TIMEOUT_MINUTES = 120
 SECRET_KEY = 'super_secret_key_for_local_dev'  # Change for production
 
 # Data directories

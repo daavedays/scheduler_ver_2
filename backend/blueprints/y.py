@@ -203,6 +203,7 @@ def save_y_tasks():
 			if date_obj.weekday() in {3, 4, 5} and worker.can_participate_in_closing():
 				friday = date_obj if date_obj.weekday() == 4 else date_obj - timedelta(days=(date_obj.weekday() - 4))
 				worker.assign_closing(friday)
+	# Persist only once at the end of save
 	save_workers_to_json(workers, worker_file_path)
 	
 	# Update statistics service with new Y tasks data
@@ -245,22 +246,7 @@ def save_y_tasks():
 		append_worker_history_snapshot(workers)
 	except Exception:
 		pass
-	# Recalculate closing schedules (DRY helper)
-	try:
-		if start and end:
-			start_date = datetime.strptime(start, '%d/%m/%Y').date()
-			end_date = datetime.strptime(end, '%d/%m/%Y').date()
-		else:
-			start_str = filename.split('_to_')[0].replace('y_tasks_', '').replace('-', '/')  # type: ignore[union-attr]
-			end_str = filename.split('_to_')[1].replace('.csv', '').replace('-', '/')
-			start_date = datetime.strptime(start_str, '%d/%m/%Y').date()
-			end_date = datetime.strptime(end_str, '%d/%m/%Y').date()
-		from ..utils import recalc_all_workers_between
-		recalc_all_workers_between(workers, start_date, end_date)
-		save_workers_to_json(workers, worker_file_path)
-		print("✅ Closing schedule recalculation completed after Y tasks save")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after Y tasks save: {e}")
+	# Remove mid-flow recalculation/persist; rely on saved state only
 	return jsonify({'success': True, 'message': f'Y tasks saved to {filename}', 'filename': filename})
 
 
@@ -332,19 +318,13 @@ def generate_y_tasks_schedule():
 	for date_obj, assignments in result.get('y_tasks', {}).items():
 		schedule[date_obj] = {}
 		for task_type, worker_id in assignments:
-			worker_name = next((w.name for w in workers if w.id == worker_id), "Unknown")
-			schedule[date_obj][task_type] = worker_name
+			# Return worker IDs only; the frontend will map to names
+			schedule[date_obj][task_type] = worker_id
 	all_fridays_in_range = [d for d in (d0 + timedelta(i) for i in range((d1 - d0).days + 1)) if d.weekday() == 4]
 	from ..scoring import recalc_worker_schedule
 	for worker in workers:
 		recalc_worker_schedule(worker, all_fridays_in_range)
-	try:
-		from ..utils import recalc_all_workers_between
-		recalc_all_workers_between(workers, d0, d1)
-		print(f"✅ Closing schedule recalculation completed after Y task generation")
-	except Exception as e:
-		print(f"⚠️  Warning: Failed to update closing schedules after Y task generation: {e}")
-	save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
+	# Do not persist worker_data.json during generation; keep changes in-memory only
 	try:
 		append_worker_history_snapshot(workers)
 	except Exception:
@@ -383,6 +363,9 @@ def available_soldiers_for_y_task():
 		date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
 		workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
 		hydrate_workers_from_history(workers)
+		# Build quick lookup maps
+		id_to_worker = {w.id: w for w in workers}
+		name_to_worker = {w.name: w for w in workers}
 		year = date_obj.year
 		period = 1 if date_obj.month <= 6 else 2
 		x_csv = os.path.join(DATA_DIR, f"x_tasks_{year}_{period}.csv")
@@ -396,34 +379,76 @@ def available_soldiers_for_y_task():
 							worker.assign_x_task(x_date_obj, task_name)
 						except Exception:
 							pass
-		for worker in workers:
-			for wid, days in current_assignments.items():
-				if wid == worker.id:
-					for day_str, task_name in days.items():
-						if task_name and task_name != '-':
-							try:
-								y_date_obj = datetime.strptime(day_str, '%d/%m/%Y').date()
-								worker.y_tasks[y_date_obj] = task_name
-							except Exception:
-								pass
+		# Merge current on-screen assignments (accept IDs or Names)
+		for key, days in current_assignments.items():
+			worker = id_to_worker.get(key) or name_to_worker.get(key)
+			if not worker:
+				continue
+			for day_str, task_name in days.items():
+				if task_name and task_name != '-':
+					try:
+						y_date_obj = datetime.strptime(day_str, '%d/%m/%Y').date()
+						worker.y_tasks[y_date_obj] = task_name
+					except Exception:
+						pass
 		available = []
+		# Prefer ID-based qualification check (centralized tasks.json)
+		try:
+			from ..constants import get_y_task_maps, get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_maps, get_y_task_definitions
+		id_to_name, name_to_id = get_y_task_maps()
+		task_id = name_to_id.get(task)
+		# Determine whether this task requires a qualification (if not, everyone is eligible)
+		requires_qualification = True
+		try:
+			for d in (get_y_task_definitions() or []):
+				if str(d.get('name')) == str(task):
+					requires_qualification = bool(d.get('requiresQualification', True))
+					break
+		except Exception:
+			pass
 		for worker in workers:
-			if task not in worker.qualifications:
+			# Qualification check (skip if not required)
+			if requires_qualification:
+				qualified = False
+				if isinstance(task_id, int):
+					qualified = (task_id in getattr(worker, 'qualification_ids', set()))
+				else:
+					qualified = (task in worker.qualifications)
+			else:
+				qualified = True
+			if not qualified:
 				continue
-			if worker.has_x_task_on_date(date_obj):
-				continue
+			
+			# Check for X task conflict on the specific date
+			has_x_task_conflict = worker.has_x_task_on_date(date_obj)
+			
+			# Check if already assigned Y task on this date
 			if date_obj in worker.y_tasks:
 				continue
+			
+			# Check if recently finished X task (within 2 days)
 			recently_finished = False
 			for i in range(1, 3):
 				check_date = date_obj - timedelta(days=i)
 				if check_date in worker.x_tasks:
 					recently_finished = True
 					break
-			if recently_finished:
-				continue
-			available.append(worker)
-		return jsonify({'available': [{'id': w.id, 'name': w.name} for w in available]})
+			
+			# Include all qualified workers, but mark conflicts
+			available.append({
+				'id': worker.id, 
+				'name': worker.name,
+				'has_x_task_conflict': has_x_task_conflict,
+				'recently_finished_x': recently_finished,
+				'x_task_name': worker.get_x_task_on_date(date_obj) if has_x_task_conflict else None
+			})
+		
+		# Sort by conflicts first (no conflicts preferred), then by name
+		available.sort(key=lambda w: (w['has_x_task_conflict'], w['recently_finished_x'], w['name']))
+		
+		return jsonify({'available': available})
 	except Exception as e:
 		return jsonify({'error': f'Failed to get available soldiers: {str(e)}'}), 500
 
@@ -474,16 +499,7 @@ def clear_y_task_schedule():
 		end_date = period_key.split('_to_')[1].replace('-', '/')
 		success = y_task_manager.delete_y_task_period(start_date, end_date)
 		if success:
-			try:
-				from ..utils import recalc_all_workers_between
-				workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
-				start_date_obj = datetime.strptime(start_date, '%d/%m/%Y').date()
-				end_date_obj = datetime.strptime(end_date, '%d/%m/%Y').date()
-				recalc_all_workers_between(workers, start_date_obj, end_date_obj)
-				save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
-				print(f"✅ Closing schedule recalculation completed after deleting Y tasks")
-			except Exception as e:
-				print(f"⚠️  Warning: Failed to update closing schedules after deleting Y tasks: {e}")
+			# Do not modify worker_data.json on delete; defer to next explicit save
 			return jsonify({'success': True})
 		else:
 			return jsonify({'error': 'Failed to delete schedule'}), 500
@@ -539,17 +555,7 @@ def delete_y_task_schedule():
 		end_date = period_key.split('_to_')[1].replace('-', '/')
 		success = y_task_manager.delete_y_task_period(start_date, end_date)
 		if success:
-			# Recalc closings
-			try:
-				from ..utils import recalc_all_workers_between
-				workers = load_workers_from_json(os.path.join(DATA_DIR, 'worker_data.json'))
-				start_date_obj = datetime.strptime(start_date, '%d/%m/%Y').date()
-				end_date_obj = datetime.strptime(end_date, '%d/%m/%Y').date()
-				recalc_all_workers_between(workers, start_date_obj, end_date_obj)
-				save_workers_to_json(workers, os.path.join(DATA_DIR, 'worker_data.json'))
-				print(f"✅ Closing schedule recalculation completed after deleting Y tasks")
-			except Exception as e:
-				print(f"⚠️  Warning: Failed to update closing schedules after deleting Y tasks: {e}")
+			# Do not recalc or persist worker data on delete; defer to explicit save operations
 			# Sync statistics (remove file entry and recompute totals)
 			try:
 				from ..services.statistics_service import StatisticsService
@@ -612,14 +618,27 @@ def get_insufficient_workers_report():
 		except Exception as e:
 			print(f"Warning: Could not load X task data: {e}")
 		try:
-			from ..constants import get_y_task_types
+			from ..constants import get_y_task_types, get_y_task_maps
 		except ImportError:
-			from constants import get_y_task_types
+			from constants import get_y_task_types, get_y_task_maps
 		Y_TASKS_ORDER = get_y_task_types()
+		# Build maps for ID-based checks if needed later
+		Y_ID_TO_NAME, Y_NAME_TO_ID = get_y_task_maps()
+		try:
+			from ..constants import get_y_task_types, get_y_task_maps, get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_types, get_y_task_maps, get_y_task_definitions
+		Y_TASKS_ORDER = get_y_task_types()
+		id_to_name, name_to_id = get_y_task_maps()
+		# Build availability using qualification_ids with fallback to names
 		task_availability = {}
 		for task in Y_TASKS_ORDER:
-			qualified_workers = [w for w in workers if task in w.qualifications]
-			task_availability[task] = {'total_qualified': len(qualified_workers), 'qualified_workers': [w.name for w in qualified_workers]}
+			tid = name_to_id.get(task)
+			if isinstance(tid, int):
+				qualified_workers = [w for w in workers if tid in getattr(w, 'qualification_ids', set())]
+			else:
+				qualified_workers = [w for w in workers if task in w.qualifications]
+			task_availability[task] = {'total_qualified': len(qualified_workers), 'qualified_workers': [w.id for w in qualified_workers]}
 		y_task_issues = []
 		for task, info in task_availability.items():
 			if info['total_qualified'] < 2:
