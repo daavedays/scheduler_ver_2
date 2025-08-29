@@ -27,6 +27,7 @@ import {
   ComposedChart
 } from 'recharts';
 import PageContainer from '../components/PageContainer';
+import { API_BASE_URL } from '../utils/api';
 
 interface StatisticsData {
   x_tasks_pie: Array<{
@@ -207,7 +208,7 @@ function StatisticsPage() {
       setError(null);
       
       console.log('Fetching statistics...');
-      const response = await fetch('http://localhost:5001/api/statistics', {
+      const response = await fetch(`${API_BASE_URL}/api/statistics`, {
         credentials: 'include'
       });
       

@@ -62,7 +62,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Tooltip from '@mui/material/Tooltip';
 
-import { shortWeekRange } from '../components/utils';
+import { shortWeekRange, formatDateDMY } from '../components/utils';
+import { API_BASE_URL } from '../utils/api';
 import { getWorkerColor, getXTaskColor } from '../components/colors';
 import Header from '../components/Header';
 import { 
@@ -231,7 +232,7 @@ function XTaskPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5001/api/x-tasks?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/x-tasks?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
       .then(res => res.json())
       .then(({ csv, custom_tasks }) => {
         const parsed = Papa.parse<string[]>(csv, { skipEmptyLines: false });
@@ -247,7 +248,7 @@ function XTaskPage() {
   }, [yearParam, periodParam]);
 
   const fetchConflicts = useCallback(() => {
-    return fetch(`http://localhost:5001/api/x-tasks/conflicts?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
+    return fetch(`${API_BASE_URL}/api/x-tasks/conflicts?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         const map: {[key: string]: {x_task: string, y_task: string}} = {};
@@ -303,9 +304,9 @@ function XTaskPage() {
       // If dm matches the week start, use weeks[weekIdx].start.getFullYear()
       // If dm matches the week end, use weeks[weekIdx].end.getFullYear()
       // We'll check both
-      if (dm === weeks[weekIdx].start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })) {
+      if (dm === formatDateDMY(weeks[weekIdx].start.toLocaleDateString()).slice(0, 5)) {
         y = weeks[weekIdx].start.getFullYear();
-      } else if (dm === weeks[weekIdx].end.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })) {
+      } else if (dm === formatDateDMY(weeks[weekIdx].end.toLocaleDateString()).slice(0, 5)) {
         y = weeks[weekIdx].end.getFullYear();
       }
     }
@@ -400,13 +401,13 @@ function XTaskPage() {
       return yTasksCache;
     }
     
-    const yIndexRes = await fetch('http://localhost:5001/data/y_tasks.json', { credentials: 'include' });
+    const yIndexRes = await fetch(`${API_BASE_URL}/data/y_tasks.json`, { credentials: 'include' });
     const yIndex = await yIndexRes.json();
     
     // Load all Y schedule CSVs
     const ySchedules: any = {};
     for (const key in yIndex) {
-      const yCsvRes = await fetch(`http://localhost:5001/data/${yIndex[key]}`, { credentials: 'include' });
+      const yCsvRes = await fetch(`${API_BASE_URL}/data/${yIndex[key]}`, { credentials: 'include' });
       const yCsv = await yCsvRes.text();
       const rows = yCsv.split('\n').filter(Boolean).map(line => line.split(','));
       ySchedules[key] = {
@@ -468,7 +469,7 @@ function XTaskPage() {
     setPendingConflict(null);
     try {
       const csv = Papa.unparse([headers, subheaders, ...editData]);
-      const res = await fetch('http://localhost:5001/api/x-tasks', {
+      const res = await fetch(`${API_BASE_URL}/api/x-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -506,7 +507,7 @@ function XTaskPage() {
         setPendingConflict(null);
       }
       // Fetch conflicts for highlighting
-      fetch(`http://localhost:5001/api/x-tasks/conflicts?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
+      fetch(`${API_BASE_URL}/api/x-tasks/conflicts?year=${yearParam}&period=${periodParam}`, { credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           const map: {[key: string]: {x_task: string, y_task: string}} = {};
@@ -533,7 +534,7 @@ function XTaskPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/x-tasks/definitions', { credentials: 'include' });
+        const res = await fetch(`${API_BASE_URL}/api/x-tasks/definitions', { credentials: 'include' });
         const data = await res.json();
         if (res.ok) {
           const defs = (data.definitions || []) as Array<{ name: string }>

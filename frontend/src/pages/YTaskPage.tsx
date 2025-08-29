@@ -49,6 +49,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { formatDateDMY } from '../components/utils';
 import { Y_TASK_COLORS } from '../components/colors';
+import { API_BASE_URL } from '../utils/api';
 import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
 import PageContainer from '../components/PageContainer';
@@ -120,7 +121,7 @@ function YTaskPage() {
 
   const loadWorkers = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/workers', { credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/workers`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setWorkers(data.workers || []);
@@ -141,7 +142,7 @@ function YTaskPage() {
 
   const refreshScheduleList = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/y-tasks/list', { credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/list`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setAvailableSchedules(data.schedules || []);
@@ -160,7 +161,7 @@ function YTaskPage() {
     // Load Y task definitions for dynamic names
     (async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/y-tasks/definitions', { credentials: 'include' });
+        const res = await fetch(`${API_BASE_URL}/api/y-tasks/definitions`, { credentials: 'include' });
         const data = await res.json();
         if (res.ok) {
           const defs = (data.definitions || []) as Array<{ name: string }>;
@@ -178,7 +179,7 @@ function YTaskPage() {
     if (!selectedSchedule) return;
     setLoading(true);
     setWarnings([]);
-    fetch(`http://localhost:5001/api/y-tasks?start=${selectedSchedule.start}&end=${selectedSchedule.end}`, { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/y-tasks?start=${selectedSchedule.start}&end=${selectedSchedule.end}`, { credentials: 'include' })
       .then(res => res.text())
       .then(csv => {
         // Parse CSV properly handling quoted fields
@@ -233,9 +234,9 @@ function YTaskPage() {
     setLoading(true);
     setWarnings([]);
     // Reset option removed by requirement; do not call backend reset
-    const start = startDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
-    const end = endDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
-    const res = await fetch('http://localhost:5001/api/y-tasks/generate', {
+    const start = formatDateDMY(startDate.toLocaleDateString());
+    const end = formatDateDMY(endDate.toLocaleDateString());
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -272,7 +273,7 @@ function YTaskPage() {
       const getDMY = (d: Date | string | undefined | null) => {
         if (!d) return '';
         if (typeof d === 'string' && d.includes('/')) return d;
-        if (d instanceof Date && !isNaN(d as any)) return d.toLocaleDateString('en-GB');
+        if (d instanceof Date && !isNaN(d as any)) return formatDateDMY(d.toLocaleDateString());
         return '';
       };
       const startDMY = getDMY(selectedSchedule?.start) || getDMY(startDate);
@@ -335,7 +336,7 @@ function YTaskPage() {
         }
       }
       
-      const res = await fetch('http://localhost:5001/api/y-tasks', {
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -365,13 +366,13 @@ function YTaskPage() {
 
   const handleClear = async () => {
     if (!selectedSchedule) return;
-    await fetch('http://localhost:5001/api/y-tasks/clear', {
+    await fetch(`${API_BASE_URL}/api/y-tasks/clear', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ start: selectedSchedule.start, end: selectedSchedule.end })
     });
-    fetch(`http://localhost:5001/api/y-tasks?start=${selectedSchedule.start}&end=${selectedSchedule.end}`, { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/y-tasks?start=${selectedSchedule.start}&end=${selectedSchedule.end}`, { credentials: 'include' })
       .then(res => res.text())
       .then(csv => {
         // Parse CSV properly handling quoted fields
@@ -434,7 +435,7 @@ function YTaskPage() {
         }
       }
     }
-    const res = await fetch('http://localhost:5001/api/y-tasks/available-soldiers', {
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/available-soldiers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -453,7 +454,7 @@ function YTaskPage() {
     // visual effect removed
     setLoading(true);
     setWarnings([]);
-    const res = await fetch('http://localhost:5001/api/y-tasks/generate', {
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -491,7 +492,7 @@ function YTaskPage() {
     setDeleteDialogOpen(false);
     setDeleteError(null);
     try {
-      const res = await fetch('http://localhost:5001/api/y-tasks/delete', {
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -520,11 +521,11 @@ function YTaskPage() {
   const handleGetInsufficientWorkersReport = async () => {
     if (!startDate || !endDate) return;
     
-    const start = startDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
-    const end = endDate.toLocaleDateString('en-GB').split('/').map((x: string) => x.padStart(2, '0')).join('/');
+    const start = formatDateDMY(startDate.toLocaleDateString());
+    const end = formatDateDMY(endDate.toLocaleDateString());
     
     try {
-      const res = await fetch('http://localhost:5001/api/y-tasks/insufficient-workers-report', {
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/insufficient-workers-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -682,7 +683,7 @@ function YTaskPage() {
                     const days: string[] = [];
                     const pad = (s: string) => s.padStart(2, '0');
                     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                      const dd = d.toLocaleDateString('en-GB').split('/').map(pad).join('/');
+                      const dd = formatDateDMY(d.toLocaleDateString());
                       days.push(dd);
                     }
                     setDates(days);

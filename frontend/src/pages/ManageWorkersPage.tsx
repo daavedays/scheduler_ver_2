@@ -42,6 +42,7 @@ import Footer from '../components/Footer';
 import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
 import Header from '../components/Header';
+import { API_BASE_URL } from '../utils/api';
 
 // Helper function to convert closing interval numbers to Hebrew text
 const getClosingIntervalText = (value: number): string => {
@@ -113,7 +114,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   const loadQualificationOptions = async () => {
     try {
-      const yRes = await fetch('http://localhost:5001/api/y-tasks/definitions', { credentials: 'include' });
+      const yRes = await fetch(`${API_BASE_URL}/api/y-tasks/definitions`, { credentials: 'include' });
       const yData = await yRes.json().catch(() => ({}));
       const yDefs = Array.isArray(yData?.definitions) ? yData.definitions : [];
       // Only include Y tasks that require a qualification
@@ -130,7 +131,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   const fetchWorkers = () => {
     setLoading(true);
-    fetch('http://localhost:5001/api/workers', { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/workers`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => { 
         setWorkers(data.workers || []); 
@@ -154,7 +155,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
     if (!editWorker) return;
     
     setLoading(true);
-    fetch(`http://localhost:5001/api/workers/${editWorker.id}`, {
+    fetch(`${API_BASE_URL}/api/workers/${editWorker.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -183,7 +184,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   const handleDelete = (id: string) => {
     setLoading(true);
-    fetch(`http://localhost:5001/api/workers/${id}`, { 
+    fetch(`${API_BASE_URL}/api/workers/${id}`, { 
       method: 'DELETE', 
       credentials: 'include' 
     })
@@ -207,7 +208,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
     }
     
     setLoading(true);
-    fetch('http://localhost:5001/api/workers', {
+    fetch(`${API_BASE_URL}/api/workers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

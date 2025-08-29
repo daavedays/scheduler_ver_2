@@ -52,6 +52,7 @@ import { formatDateDMY } from './components/utils';
 import { getWorkerColor } from './components/colors';
 import DarkModeToggle from './components/DarkModeToggle';
 import Header from './components/Header';
+import ErrorBoundary from './components/ErrorBoundary';
 import MainMenuPage from './pages/MainMenuPage'; // Import from dedicated file
 import ManageWorkersPage from './pages/ManageWorkersPage';
 // Remove commented-out imports for unused pages
@@ -60,7 +61,7 @@ import SettingsPage from './pages/SettingsPage';
 
 
 // Import shared fetch wrapper to handle 401 Unauthorized and redirect to login
-import { fetchWithAuth } from './utils/api';
+import { fetchWithAuth, API_BASE_URL } from './utils/api';
 
 // --- Theme Setup ---
 import { 
@@ -373,7 +374,7 @@ function CombinedPage() {
 
   // Load available Y schedule periods
   React.useEffect(() => {
-    fetchWithAuth('http://localhost:5001/api/y-tasks/list', { credentials: 'include' })
+    fetchWithAuth(`${API_BASE_URL}/api/y-tasks/list`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setAvailableSchedules(data.schedules || []);
@@ -386,7 +387,7 @@ function CombinedPage() {
   React.useEffect(() => {
     if (!selectedSchedule) return;
     setLoading(true);
-    fetchWithAuth(`http://localhost:5001/api/combined/by-range?start=${encodeURIComponent(selectedSchedule.start)}&end=${encodeURIComponent(selectedSchedule.end)}`, { credentials: 'include' })
+    fetchWithAuth(`${API_BASE_URL}/api/combined/by-range?start=${encodeURIComponent(selectedSchedule.start)}&end=${encodeURIComponent(selectedSchedule.end)}`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setRowLabels(data.row_labels || []);
@@ -413,7 +414,7 @@ function CombinedPage() {
         csv += row.join(',') + '\n';
       }
       const filename = `combined_${selectedSchedule.start.replace(/\//g, '-')}_${selectedSchedule.end.replace(/\//g, '-')}.csv`;
-      const res = await fetchWithAuth('http://localhost:5001/api/combined/save', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/combined/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -723,7 +724,7 @@ function WarningsPage() {
 
   React.useEffect(() => {
     setLoading(true);
-    fetchWithAuth('http://localhost:5001/api/warnings', { credentials: 'include' })
+    fetchWithAuth(`${API_BASE_URL}/api/warnings`, { credentials: 'include' })
       .then((res: Response) => res.json())
       .then((data: any) => {
         setWarnings(data.warnings || []);
@@ -897,7 +898,7 @@ function ResetHistoryPage() {
 
   const fetchHistory = React.useCallback(() => {
     setLoading(true);
-    fetchWithAuth('http://localhost:5001/api/history', { credentials: 'include' })
+    fetchWithAuth(`${API_BASE_URL}/api/history`, { credentials: 'include' })
       .then((res: Response) => res.json())
       .then((data: any) => {
         setHistory(data.history || []);
@@ -914,7 +915,7 @@ function ResetHistoryPage() {
     setResetting(true);
     setResetError(null);
     try {
-      const res = await fetchWithAuth('http://localhost:5001/api/reset', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/reset`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -1221,7 +1222,7 @@ function AppRoutes() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:5001/api/login', {
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1248,7 +1249,7 @@ function AppRoutes() {
   const logout = async () => {
     setLoading(true);
     try {
-      await fetch('http://localhost:5001/api/logout', {
+      await fetch(`${API_BASE_URL}/api/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -1271,7 +1272,7 @@ function AppRoutes() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth('http://localhost:5001/api/session', {
+        const res = await fetchWithAuth(`${API_BASE_URL}/api/session', {
           credentials: 'include',
         });
         const data = await res.json();
@@ -1331,7 +1332,9 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <AppRoutes />
+        <ErrorBoundary>
+          <AppRoutes />
+        </ErrorBoundary>
       </Router>
     </ThemeProvider>
   );

@@ -33,7 +33,7 @@ import Footer from '../components/Footer';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Header from '../components/Header';
-import { fetchWithAuth } from '../utils/api';
+import { fetchWithAuth, API_BASE_URL } from '../utils/api';
 import FadingBackground from '../components/FadingBackground';
 
 function XTasksDashboardPage() {
@@ -56,8 +56,8 @@ function XTasksDashboardPage() {
     setLoading(true);
     try {
       const [res1, res2] = await Promise.all([
-        fetchWithAuth(`http://localhost:5001/api/x-tasks/exists?year=${year}&period=1`, { credentials: 'include' }),
-        fetchWithAuth(`http://localhost:5001/api/x-tasks/exists?year=${year}&period=2`, { credentials: 'include' })
+        fetchWithAuth(``${API_BASE_URL}/api/x-tasks/exists?year=${year}&period=1`, { credentials: 'include' }),
+        fetchWithAuth(``${API_BASE_URL}/api/x-tasks/exists?year=${year}&period=2`, { credentials: 'include' })
       ]);
       
       const data1 = await res1.json();

@@ -5,6 +5,7 @@ import Checkbox from '@mui/material/Checkbox';
 import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
 import DarkModeToggle from '../components/DarkModeToggle';
+import { API_BASE_URL } from '../utils/api';
 
 const QUALIFICATIONS = [
   'Supervisor', 'C&N Driver', 'C&N Escort', 'Southern Driver', 'Southern Escort', 'Guarding Duties', 'RASAR', 'Kitchen'
@@ -23,19 +24,19 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   const fetchWorkers = () => {
     setLoading(true);
-    fetch('http://localhost:5001/api/workers', { credentials: 'include' })
+    fetch('`${API_BASE_URL}/api/workers', { credentials: 'include' })
       .then(res => res.json())
       .then(data => { setWorkers(data.workers || []); setLoading(false); });
   };
 
   const handleEdit = (worker: any) => setEditDialog({ open: true, worker: { ...worker } });
   const handleDelete = (id: string) => {
-    fetch(`http://localhost:5001/api/workers/${id}`, { method: 'DELETE', credentials: 'include' })
+    fetch(``${API_BASE_URL}/api/workers/${id}`, { method: 'DELETE', credentials: 'include' })
       .then(res => res.json())
       .then(() => fetchWorkers());
   };
   const handleSaveEdit = () => {
-    fetch(`http://localhost:5001/api/workers/${editDialog.worker.id}`, {
+    fetch(``${API_BASE_URL}/api/workers/${editDialog.worker.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -45,7 +46,7 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
       .then(() => { setEditDialog({ open: false, worker: null }); fetchWorkers(); });
   };
   const handleAdd = () => {
-    fetch('http://localhost:5001/api/workers', {
+    fetch('`${API_BASE_URL}/api/workers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -1,3 +1,6 @@
+// API Base URL configuration
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
 // Global fetch wrapper to handle 401 Unauthorized and redirect to login
 export const fetchWithAuth: typeof fetch = async (...args) => {
   const res = await fetch(...args);

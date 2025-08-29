@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, Switch, FormControlLabel, Button, Alert, Divider, TextField, Select, MenuItem } from '@mui/material';
 import PageContainer from '../components/PageContainer';
 import Header from '../components/Header';
-import { fetchWithAuth } from '../utils/api';
+import { fetchWithAuth, API_BASE_URL } from '../utils/api';
+import { YTaskDefinition, XTaskDefinition } from '../types';
 
 const SettingsPage: React.FC = () => {
   const [clearY, setClearY] = useState(true);
@@ -22,7 +23,7 @@ const SettingsPage: React.FC = () => {
   const [workerError, setWorkerError] = useState<string | null>(null);
 
   // --- Y task definitions state ---
-  const [yDefs, setYDefs] = useState<any[]>([]);
+  const [yDefs, setYDefs] = useState<YTaskDefinition[]>([]);
   const [yLoading, setYLoading] = useState(false);
   const [yError, setYError] = useState<string | null>(null);
   const [ySuccess, setYSuccess] = useState<string | null>(null);
@@ -31,7 +32,7 @@ const SettingsPage: React.FC = () => {
   const [newYAuto, setNewYAuto] = useState(true);
 
   // --- X task definitions state ---
-  const [xDefs, setXDefs] = useState<any[]>([]);
+  const [xDefs, setXDefs] = useState<XTaskDefinition[]>([]);
   const [xLoading, setXLoading] = useState(false);
   const [xError, setXError] = useState<string | null>(null);
   const [xSuccess, setXSuccess] = useState<string | null>(null);
@@ -57,8 +58,8 @@ const SettingsPage: React.FC = () => {
         setYLoading(true);
         setXLoading(true);
         const [yRes, xRes] = await Promise.all([
-          fetchWithAuth('http://localhost:5001/api/y-tasks/definitions', { credentials: 'include' }),
-          fetchWithAuth('http://localhost:5001/api/x-tasks/definitions', { credentials: 'include' }),
+          fetchWithAuth(`${API_BASE_URL}/api/y-tasks/definitions`, { credentials: 'include' }),
+          fetchWithAuth(`${API_BASE_URL}/api/x-tasks/definitions`, { credentials: 'include' }),
         ]);
         const yData = await yRes.json();
         const xData = await xRes.json();
@@ -83,7 +84,7 @@ const SettingsPage: React.FC = () => {
     setYError(null); setYSuccess(null);
     try {
       if (!newYName.trim()) throw new Error('Name required');
-      const res = await fetchWithAuth('http://localhost:5001/api/y-tasks/definitions', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/y-tasks/definitions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -99,10 +100,10 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleUpdateY = async (id: number, updates: any) => {
+  const handleUpdateY = async (id: number, updates: Partial<YTaskDefinition>) => {
     setYError(null); setYSuccess(null);
     try {
-      const res = await fetchWithAuth(`http://localhost:5001/api/y-tasks/definitions/${id}` , {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/y-tasks/definitions/${id}` , {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -120,7 +121,7 @@ const SettingsPage: React.FC = () => {
   const handleDeleteY = async (id: number) => {
     setYError(null); setYSuccess(null);
     try {
-      const res = await fetchWithAuth(`http://localhost:5001/api/y-tasks/definitions/${id}` , {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/y-tasks/definitions/${id}` , {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -143,7 +144,7 @@ const SettingsPage: React.FC = () => {
       if (!newXName.trim()) throw new Error('Name required');
       const payload: any = { name: newXName.trim(), start_day: newXStartDay, end_day: newXEndDay };
       if (newXDuration.trim()) payload.duration_days = parseInt(newXDuration.trim(), 10);
-      const res = await fetchWithAuth('http://localhost:5001/api/x-tasks/definitions', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/x-tasks/definitions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -159,10 +160,10 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleUpdateX = async (id: number, updates: any) => {
+  const handleUpdateX = async (id: number, updates: Partial<XTaskDefinition>) => {
     setXError(null); setXSuccess(null);
     try {
-      const res = await fetchWithAuth(`http://localhost:5001/api/x-tasks/definitions/${id}` , {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/x-tasks/definitions/${id}` , {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -180,7 +181,7 @@ const SettingsPage: React.FC = () => {
   const handleDeleteX = async (id: number) => {
     setXError(null); setXSuccess(null);
     try {
-      const res = await fetchWithAuth(`http://localhost:5001/api/x-tasks/definitions/${id}` , {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/x-tasks/definitions/${id}` , {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -201,7 +202,7 @@ const SettingsPage: React.FC = () => {
     setResult(null);
     setError(null);
     try {
-      const res = await fetchWithAuth('http://localhost:5001/api/reset', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -223,7 +224,7 @@ const SettingsPage: React.FC = () => {
     setStatsResult(null);
     setStatsError(null);
     try {
-      const res = await fetchWithAuth('http://localhost:5001/api/statistics/reset', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/statistics/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -248,7 +249,7 @@ const SettingsPage: React.FC = () => {
         setWorkerLoading(false);
         return;
       }
-      const res = await fetchWithAuth('http://localhost:5001/api/workers/reset', {
+      const res = await fetchWithAuth(`${API_BASE_URL}/api/workers/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

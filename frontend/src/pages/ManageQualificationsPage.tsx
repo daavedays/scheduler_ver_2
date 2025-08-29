@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, Button, Select, MenuItem, Chip, CircularProgress, TextField, Autocomplete } from '@mui/material';
 import FadingBackground from '../components/FadingBackground';
+import { API_BASE_URL } from '../utils/api';
 
 const QUALIFICATIONS = [
   'Supervisor', 'C&N Driver', 'C&N Escort', 'Southern Driver', 'Southern Escort', 'Guarding Duties', 'RASAR', 'Kitchen'
@@ -21,7 +22,7 @@ function ManageQualificationsPage() {
 
   const fetchWorkers = () => {
     setLoading(true);
-    fetch('http://localhost:5001/api/workers', { credentials: 'include' })
+    fetch('`${API_BASE_URL}/api/workers', { credentials: 'include' })
       .then(res => res.json())
       .then(data => { setWorkers(data.workers || []); setLoading(false); })
       .catch(() => { setError('Failed to load workers'); setLoading(false); });
@@ -33,7 +34,7 @@ function ManageQualificationsPage() {
   };
 
   const handleSave = (id: string) => {
-    fetch(`http://localhost:5001/api/workers/${id}/qualifications`, {
+    fetch(``${API_BASE_URL}/api/workers/${id}/qualifications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
