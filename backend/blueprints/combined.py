@@ -389,11 +389,19 @@ def get_combined_by_range():
 					x_assignments = y_tasks_module.read_x_tasks(x_csv)
 				except Exception:
 					x_assignments = {}
+		# NEW: Load dynamic Y task definitions for filtering 30/08/2025 13:30
+		try:
+			from ..constants import get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_definitions  # type: ignore
+		y_task_defs = get_y_task_definitions()
+		y_task_names = [d['name'] for d in y_task_defs]
+		
 		x_tasks_set = set()
 		for name, day_map in x_assignments.items():
 			for d in dates:
 				task = day_map.get(d, '-')
-				if task and task != '-' and task not in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
+				if task and task != '-' and task not in y_task_names:
 					x_tasks_set.add(task)
 		x_tasks_list = sorted(x_tasks_set)
 		x_grid = []
@@ -410,7 +418,13 @@ def get_combined_by_range():
 						found.append(worker_name)
 				row.append(', '.join(found))
 			x_grid.append(row)
-		y_tasks_list = ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+		# NEW: Load dynamic Y task definitions 30/08/2025 13:30
+		try:
+			from ..constants import get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_definitions  # type: ignore
+		y_task_defs = get_y_task_definitions()
+		y_tasks_list = [d['name'] for d in y_task_defs]
 		grid = []
 		for y_task in y_tasks_list:
 			row = []
