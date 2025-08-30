@@ -72,6 +72,11 @@ def get_y_task_types(department: str = 'default') -> List[str]:
 	return [str(d.get('name')) for d in get_y_task_definitions(department) if d.get('name')]
 
 
+def get_y_task_types_with_auto_assign(department: str = 'default') -> List[Tuple[str, bool]]:
+	"""Return ordered list of Y-task names with their autoAssign status from tasks.json."""
+	return [(str(d.get('name')), bool(d.get('autoAssign', True))) for d in get_y_task_definitions(department) if d.get('name')]
+
+
 def get_y_task_ids(department: str = 'default') -> List[int]:
 	"""Return ordered list of Y-task IDs from tasks.json."""
 	ids: List[int] = []

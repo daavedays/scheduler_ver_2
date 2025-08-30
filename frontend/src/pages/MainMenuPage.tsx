@@ -1,32 +1,3 @@
-/**
- * XTasksDashboardPage.tsx
- * ----------------------
- * Dashboard page for managing X task schedules (main/primary tasks).
- *
- * Renders:
- *   - Parallax/fading background
- *   - Main title
- *   - Action cards for creating or editing X task schedules
- *   - Year/period selectors
- *   - GO buttons for navigation
- *
- * State:
- *   - year, period: Selected year and half (1st/2nd)
- *   - createDisabled: Whether a schedule already exists for the selection
- *   - bgIndex, fade: For background animation
- *
- * Effects:
- *   - Animates/fades background images
- *   - Checks if schedule exists for selected year/period
- *
- * User Interactions:
- *   - Select year/period
- *   - Navigate to create/edit X task schedule
- *
- * Notes:
- *   - Inline comments explain non-obvious logic and UI structure
- */
-import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -36,22 +7,21 @@ import HistoryIcon from '@mui/icons-material/History';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SettingsIcon from '@mui/icons-material/Settings';
-
 import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
 
 function MainMenuPage() {
   const navigate = useNavigate();
-  const navCards = [
-    { label: 'תורניות', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/x-tasks', desc: 'תורניות: תורניות עיקריות' },
-    { label: 'שיבוץ עבודות', icon: <ListAltIcon sx={{ fontSize: 48 }} />, to: '/y-tasks', desc: 'שיבוץ עבודות: שיבוץ עבודות משנה' },
-    { label: 'צפייה בכל השיבוצים', icon: <DashboardIcon sx={{ fontSize: 48 }} />, to: '/combined', desc: 'צפייה בכל השיבוצים' },
 
-    { label: 'צפייה בהיסטוריה', icon: <HistoryIcon sx={{ fontSize: 48 }} />, to: '/reset-history', desc: 'צפייה בהיסטוריה' },
-    { label: 'סטטיסטיקה', icon: <BarChartIcon sx={{ fontSize: 48 }} />, to: '/statistics', desc: 'סטטיסטיקה' },
-    { label: 'הגדרות', icon: <SettingsIcon sx={{ fontSize: 48 }} />, to: '/settings', desc: 'הגדרות' },
-    { label: 'עזרה', icon: <HelpOutlineIcon sx={{ fontSize: 48 }} />, to: '/help', desc: 'עזרה' },
-    { label: 'ניהול עובדים', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/manage-workers', desc: 'הוסף, עדכן, הסר או ערך עובדים' },
+  const navCards = [
+    { label: 'שיבוץ משמרות', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/x-tasks', desc: 'ניהול שיבוץ משמרות עיקריות' },
+    { label: 'הקצאת עבודות', icon: <ListAltIcon sx={{ fontSize: 48 }} />, to: '/y-tasks', desc: 'ניהול הקצאת עבודות תמיכה' },
+    { label: 'תוכנית שבועית', icon: <DashboardIcon sx={{ fontSize: 48 }} />, to: '/combined', desc: 'צפייה וניהול כל השיבוצים יחד' },
+    { label: 'היסטוריית שיבוצים', icon: <HistoryIcon sx={{ fontSize: 48 }} />, to: '/reset-history', desc: 'צפייה בהיסטוריית שיבוצים קודמים' },
+    { label: 'סטטיסטיקות', icon: <BarChartIcon sx={{ fontSize: 48 }} />, to: '/statistics', desc: 'צפייה בסטטיסטיקות וניתוח נתונים' },
+    { label: 'הגדרות', icon: <SettingsIcon sx={{ fontSize: 48 }} />, to: '/settings', desc: 'הגדרות מערכת וניהול משימות' },
+    { label: 'עזרה', icon: <HelpOutlineIcon sx={{ fontSize: 48 }} />, to: '/help', desc: 'מדריך שימוש ועזרה' },
+    { label: 'ניהול עובדים', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, to: '/manage-workers', desc: 'הוספה, עריכה ומחיקה של עובדים' },
   ];
 
   return (

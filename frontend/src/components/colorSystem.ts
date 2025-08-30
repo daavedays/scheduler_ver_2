@@ -259,19 +259,35 @@ export function getThemeColor(darkColor: string, lightColor: string, isDarkMode:
 
 /**
  * Get task color with theme adaptation
- * @param taskName - Name of the task
- * @param isDarkMode - Whether the app is in dark mode
+ * @param taskName - Name of the task (e.g., "Guarding Duties", "RASAR", "Custom")
+ * @param isDarkMode - Whether the app is in dark mode (not used for X tasks, but kept for consistency)
  * @returns The appropriate color for the task
  */
 export function getTaskColor(taskName: string, isDarkMode: boolean): string {
-  const taskColorMap: Record<string, string> = {
-    'Guarding Duties': TASK_COLORS.x_task_guarding,
-    'RASAR': TASK_COLORS.x_task_rasar,
-    'Kitchen': TASK_COLORS.x_task_kitchen,
-    'Custom': TASK_COLORS.x_task_custom,
-  };
+  // Generate a consistent color based on task name hash
+  let hash = 0;
+  for (let i = 0; i < taskName.length; i++) {
+    hash = taskName.charCodeAt(i) + ((hash << 5) - hash);
+  }
   
-  return taskColorMap[taskName] || TASK_COLORS.x_task_custom;
+  // Use different color palettes for variety
+  const colorPalettes = [
+    // Modern blues and purples
+    ['#3b82f6', '#8b5cf6', '#6366f1', '#7c3aed', '#9333ea'],
+    // Modern greens and teals
+    ['#10b981', '#059669', '#0891b2', '#06b6d4', '#14b8a6'],
+    // Modern oranges and ambers
+    ['#f59e0b', '#ea580c', '#f97316', '#fb923c', '#fbbf24'],
+    // Modern reds and pinks
+    ['#ef4444', '#dc2626', '#ec4899', '#f43f5e', '#f97316'],
+    // Modern grays and slates
+    ['#64748b', '#475569', '#334155', '#1e293b', '#0f172a']
+  ];
+  
+  const paletteIndex = Math.abs(hash) % colorPalettes.length;
+  const colorIndex = Math.abs(hash) % colorPalettes[paletteIndex].length;
+  
+  return colorPalettes[paletteIndex][colorIndex];
 }
 
 /**

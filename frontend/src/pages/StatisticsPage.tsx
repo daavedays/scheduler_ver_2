@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Header from '../components/Header';
 import { 
   Box, 
   Typography, 
@@ -270,7 +271,12 @@ function StatisticsPage() {
   if (loading) {
     return (
       <PageContainer>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Header 
+          showBackButton={true}
+          showHomeButton={true}
+          title="סטטיסטיקות עובדים"
+        />
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px" mt={12}>
           <CircularProgress />
         </Box>
       </PageContainer>
@@ -280,7 +286,12 @@ function StatisticsPage() {
   if (error) {
     return (
       <PageContainer>
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Header 
+          showBackButton={true}
+          showHomeButton={true}
+          title="סטטיסטיקות עובדים"
+        />
+        <Alert severity="error" sx={{ mb: 2, mt: 12 }}>
           {error}
         </Alert>
       </PageContainer>
@@ -290,7 +301,12 @@ function StatisticsPage() {
   if (!data) {
     return (
       <PageContainer>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Header 
+          showBackButton={true}
+          showHomeButton={true}
+          title="סטטיסטיקות עובדים"
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 12 }}>
           <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
             Worker Task Statistics
           </Typography>
@@ -312,7 +328,12 @@ function StatisticsPage() {
 
   return (
     <PageContainer>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Header 
+        showBackButton={true}
+        showHomeButton={true}
+        title="סטטיסטיקות עובדים"
+      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 12 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
           Worker Task Statistics
         </Typography>

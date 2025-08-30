@@ -29,18 +29,22 @@ except ImportError:
 try:
 	from .constants import (
 		get_y_task_types,
+		get_y_task_types_with_auto_assign,
 		get_y_task_definitions,
 		get_y_task_maps,
 	)
 except ImportError:
 	from constants import (
 		get_y_task_types,
+		get_y_task_types_with_auto_assign,
 		get_y_task_definitions,
 		get_y_task_maps,
 	)
 
 Y_TASK_TYPES = get_y_task_types()
+Y_TASK_TYPES_WITH_AUTO = get_y_task_types_with_auto_assign()
 Y_TASK_DEFS = {d['name']: bool(d.get('requiresQualification', True)) for d in (get_y_task_definitions() or [])}
+Y_TASK_AUTO_ASSIGN = {d['name']: bool(d.get('autoAssign', True)) for d in (get_y_task_definitions() or [])}
 Y_ID_TO_NAME, Y_NAME_TO_ID = get_y_task_maps()
 
 
@@ -267,8 +271,13 @@ class SchedulingEngineV2:
             if w.can_participate_in_closing() and w.has_specific_x_task(friday, "Rituk")
         ]
 
-        # Create a mutable copy of tasks to assign
-        unassigned_tasks = all_weekend_tasks[:]
+        # Create a mutable copy of tasks to assign, respecting autoAssign setting
+        unassigned_tasks = []
+        for t in all_weekend_tasks:
+            if Y_TASK_AUTO_ASSIGN.get(t, True):
+                unassigned_tasks.append(t)
+            else:
+                logs.append(f"Weekend task {t} is set to manual assignment only for weekend of {thursday.strftime('%d/%m/%Y')}")
 
         # Helper: check if worker qualifies for a given Y task name
         def worker_qualifies_for(task_name: str, worker: EnhancedWorker) -> bool:
@@ -464,56 +473,159 @@ class SchedulingEngineV2:
         # If no preferred workers, fall back to all available (for manual assignment visibility)
         available_workers = preferred_available if preferred_available else base_available
         
-        for task in self._prioritize_tasks_by_scarcity(tasks_needed):
-            # Check if task already assigned today
-            if any(t == task for t, _ in assignments.get(task_date, [])):
-                continue
+        # Create list of unassigned tasks, respecting autoAssign setting
+        unassigned_tasks = []
+        for t in tasks_needed:
+            if not any(assigned_t == t for assigned_t, _ in assignments.get(task_date, [])):
+                # Check if this task should be auto-assigned
+                if Y_TASK_AUTO_ASSIGN.get(t, True):
+                    unassigned_tasks.append(t)
+                else:
+                    logs.append(f"Task {t} is set to manual assignment only on {task_date.strftime('%d/%m/%Y')}")
+        
+        # Progressive weekly Y-task limit fallback: 0 → 1 → 2 → 3
+        week_start = task_date - timedelta(days=task_date.weekday())
+        
+        # Filter out workers who are assigned as weekend closers this week to give them priority rest
+        week_friday = week_start + timedelta(days=4)  # Friday of this week
+        weekend_closers_this_week = set()
+        for check_worker in workers:
+            if week_friday in check_worker.closing_history:
+                weekend_closers_this_week.add(check_worker.id)
+        
+        for max_weekly_tasks in range(0, 4):  # 0, 1, 2, 3
+            # Get workers with at most max_weekly_tasks this week
+            eligible_workers = [
+                w for w in available_workers 
+                if w.check_multiple_y_tasks_per_week(week_start) <= max_weekly_tasks
+            ]
             
+            if not eligible_workers:
+                continue  # Try next weekly limit
+                
+            # Prefer non-weekend-closers first for better work-life balance
+            non_closers = [w for w in eligible_workers if w.id not in weekend_closers_this_week]
+            closers = [w for w in eligible_workers if w.id in weekend_closers_this_week]
+            
+            # Sort both groups by FAIRNESS FIRST (lowest workload), then scarcity
+            def sort_key(w):
+                return (
+                    sum(w.y_task_counts.values()),  # Total Y-task count (ascending - fewer tasks first)
+                    w.score,  # Worker score (ascending - lower score = less overworked)
+                    -self.worker_scarcity_index.get(w.id, 0.0),  # Scarcity last (descending - protect scarce workers)
+                    w.id  # Consistent tie-breaking
+                )
+            
+            non_closers.sort(key=sort_key)
+            closers.sort(key=sort_key)
+            
+            # Combine: non-closers first, then closers as fallback
+            sorted_workers = non_closers + closers
+            
+            # Track workers assigned today to prevent multiple assignments per day
+            assigned_today = set()
+            
+            for worker in sorted_workers:
+                if not unassigned_tasks:
+                    break
+                
+                # Skip workers already assigned today
+                if worker.id in assigned_today:
+                    continue
+                
+                # Apply consecutive day prevention ONLY for weekdays (Mon-Wed)
+                # Weekend assignments (Thu-Sat) should allow the same worker for all 3 days
+                if task_date.weekday() < 3:  # Monday=0, Tuesday=1, Wednesday=2
+                    recently_assigned = self._was_recently_assigned(worker, task_date, assignments)
+                    
+                    # Skip workers assigned yesterday (only if we have other options available)
+                    available_alternatives = [w for w in sorted_workers 
+                                            if w.id not in assigned_today 
+                                            and not self._was_recently_assigned(w, task_date, assignments)]
+                    
+                    # STRICT: Only allow consecutive assignments if absolutely no other options
+                    if recently_assigned and len(available_alternatives) > 0:
+                        continue
+                    
+                # Find optimal task for this worker based on qualification scarcity
+                optimal_task = self._find_optimal_task_for_worker(worker, unassigned_tasks)
+                
+                if optimal_task:
+                    # Assign the task
+                    assignments[task_date].append((optimal_task, worker.id))
+                    unassigned_tasks.remove(optimal_task)
+                    assigned_today.add(worker.id)  # Track this worker as assigned today
+                    
+                    current_weekly_count = worker.check_multiple_y_tasks_per_week(week_start)
+                    y_tasks_this_week = 1 + current_weekly_count
+                    
+                    # Score updates will be handled during save operation, not during generation
+                    # This ensures scores are only updated when user actually saves the schedule
+                    worker.y_task_counts[optimal_task] = worker.y_task_counts.get(optimal_task, 0) + 1
+                    
+                    # Update worker's Y-task tracking
+                    current_weekly_count = worker.check_multiple_y_tasks_per_week(week_start)
+                    total_y_tasks = sum(worker.y_task_counts.values())
+                    
+                    # Detailed logging for debugging
+                    worker_scarcity = self.worker_scarcity_index.get(worker.id, 0.0)
+                    scarcity_note = " (scarce worker → scarce task)" if worker_scarcity > 0.5 else " (common worker → common task)"
+                    weekly_note = f" [weekly: {current_weekly_count+1}, total: {total_y_tasks+1}, score: {worker.score:.1f}]"
+                    logs.append(f"Assigned weekday task {optimal_task} to {worker.name} on {task_date.strftime('%d/%m/%Y')}{scarcity_note}{weekly_note}")
+            
+            # If all tasks assigned, break out of weekly limit loop
+            if not unassigned_tasks:
+                break
+        
+        # Handle any remaining unassigned tasks
+        for task in unassigned_tasks:
+            reason = f"No qualified workers available for {task} (X-task conflicts, qualification requirements, or weekly limits)"
+            self.assignment_errors.append(AssignmentError(task, task_date, reason, 'error'))
+            logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
+
+    def _was_recently_assigned(self, worker: EnhancedWorker, current_date: date, assignments: Dict[date, List[Tuple[str, str]]]) -> bool:
+        """Check if worker was assigned in the last 1 day to avoid consecutive assignments"""
+        yesterday = current_date - timedelta(days=1)
+        if yesterday in assignments:
+            for task_name, worker_id in assignments[yesterday]:
+                if worker_id == worker.id:
+                    return True
+        return False
+    
+    def _find_optimal_task_for_worker(self, worker: EnhancedWorker, available_tasks: List[str]) -> Optional[str]:
+        """Find the optimal task for a worker based on qualification scarcity.
+        
+        Assigns workers with rare qualifications to tasks that require those rare qualifications,
+        avoiding waste of scarce workers on common tasks.
+        """
+        if not available_tasks:
+            return None
+            
+        # Find tasks the worker is qualified for
+        qualified_tasks = []
+        for task in available_tasks:
             requires = Y_TASK_DEFS.get(task, True)
             tid = Y_NAME_TO_ID.get(task)
-            def is_worker_qualified(worker: EnhancedWorker) -> bool:
-                if not requires:
-                    return True
+            if not requires:
+                qualified_tasks.append(task)
+            else:
                 qualified_by_id = (isinstance(tid, int) and (tid in getattr(worker, 'qualification_ids', set())))
                 qualified_by_name = (task in (worker.qualifications or []))
-                return qualified_by_id or qualified_by_name
-            candidates_all = [w for w in available_workers if is_worker_qualified(w)]
-            # Prefer workers without another Y-task this same week
-            week_start = task_date - timedelta(days=task_date.weekday())
-            candidates_pref = [w for w in candidates_all if w.check_multiple_y_tasks_per_week(week_start) == 0]
-            candidates = candidates_pref if candidates_pref else candidates_all
+                if qualified_by_id or qualified_by_name:
+                    qualified_tasks.append(task)
+        
+        if not qualified_tasks:
+            return None
             
-            if not candidates:
-                reason = f"No qualified workers for {task}"
-                self.assignment_errors.append(AssignmentError(task, task_date, reason, 'error'))
-                logs.append(f"ERROR: {reason} on {task_date.strftime('%d/%m/%Y')}")
-                continue
-            
-            # Sort by X task conflicts first (False before True), then score, then per-task count, then total Y, then ID
-            candidates.sort(key=lambda w: (
-                w.has_x_task_on_date(task_date),  # X task conflicts last
-                w.score,
-                w.y_task_counts.get(task, 0),
-                sum(w.y_task_counts.values()),
-                w.id
-            ))
-            chosen_worker = candidates[0]
-            
-            assignments[task_date].append((task, chosen_worker.id))
-            available_workers.remove(chosen_worker)
-            
-            y_tasks_this_week = 1 + chosen_worker.check_multiple_y_tasks_per_week(week_start)
-            
-            if y_tasks_this_week > 1:
-                chosen_worker.add_score_bonus(1.0, f"Multiple Y-tasks in week of {week_start.strftime('%d/%m/%Y')}")
-                logs.append(f"Applied score penalty to {chosen_worker.name} for multiple Y-tasks this week.")
-            
-            # Nudge score after each Y assignment
-            try:
-                chosen_worker.update_score_after_assignment("y_task", task_date)
-            except Exception:
-                pass
-            chosen_worker.y_task_counts[task] = chosen_worker.y_task_counts.get(task, 0) + 1
-            logs.append(f"Assigned weekday task {task} to {chosen_worker.name} on {task_date.strftime('%d/%m/%Y')}")
+        # Get worker's scarcity index (higher = more scarce/valuable)
+        worker_scarcity = self.worker_scarcity_index.get(worker.id, 0.0)
+        
+        # Sort tasks by scarcity (scarce tasks first) but only if worker is scarce enough
+        if worker_scarcity > 0.5:  # Only for workers with rare qualifications
+            # Assign scarce workers to scarce tasks first
+            return self._prioritize_tasks_by_scarcity(qualified_tasks)[0]
+        else:
+            # Regular workers get tasks by reverse scarcity (common tasks first)
+            return sorted(qualified_tasks, key=lambda t: self.task_scarcity.get(t, 0))[0]
 
 

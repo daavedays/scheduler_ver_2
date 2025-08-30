@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import { PRIMARY_COLORS, TEXT_COLORS } from './colorSystem';
+import { PRIMARY_COLORS, TEXT_COLORS, BACKGROUND_COLORS } from './colorSystem';
 
 interface Props {
   children: ReactNode;
@@ -42,7 +42,7 @@ class ErrorBoundary extends Component<Props, State> {
             p: 4, 
             m: 2, 
             textAlign: 'center',
-            backgroundColor: PRIMARY_COLORS.primary_darker,
+            backgroundColor: BACKGROUND_COLORS.bg_secondary,
             borderRadius: 2,
             border: `1px solid ${PRIMARY_COLORS.primary_main}`
           }}

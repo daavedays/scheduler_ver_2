@@ -42,6 +42,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, Typography, Fab, Snackbar, Alert as MuiAlert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemButton, ListItemText, CircularProgress, IconButton, FormControlLabel, Switch } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { he } from 'date-fns/locale';
 import SaveIcon from '@mui/icons-material/Save';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -54,7 +55,7 @@ import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
 import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
-// DarkModeToggle is not used on this page
+
 import Header from '../components/Header';
 
 function YTaskPage() {
@@ -85,12 +86,12 @@ function YTaskPage() {
   const [highlightCell, setHighlightCell] = useState<{row: number, col: number} | null>(null);
   const [resolveConflictInfo, setResolveConflictInfo] = useState<any | null>(null);
   const [showResolveWarning, setShowResolveWarning] = useState(false);
-  const [tableDarkMode, setTableDarkMode] = useState(true); // local state
+  const [tableDarkMode] = useState(true); // local state
   const [insufficientWorkersReport, setInsufficientWorkersReport] = useState<any | null>(null);
   const [showInsufficientReport, setShowInsufficientReport] = useState(false);
   const [generatedCsvData, setGeneratedCsvData] = useState<string | null>(null);
   // Removed: backend reset option is no longer available/allowed
-  const [autoResetBeforeGenerate, setAutoResetBeforeGenerate] = useState(false);
+
   const [workers, setWorkers] = useState<{id: string, name: string}[]>([]);
 
   // On mount, check for resolveConflict in localStorage
@@ -236,7 +237,7 @@ function YTaskPage() {
     // Reset option removed by requirement; do not call backend reset
     const start = formatDateDMY(startDate.toLocaleDateString());
     const end = formatDateDMY(endDate.toLocaleDateString());
-    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate', {
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -336,7 +337,7 @@ function YTaskPage() {
         }
       }
       
-      const res = await fetch(`${API_BASE_URL}/api/y-tasks', {
+      const res = await fetch(API_BASE_URL + `/api/y-tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -366,7 +367,7 @@ function YTaskPage() {
 
   const handleClear = async () => {
     if (!selectedSchedule) return;
-    await fetch(`${API_BASE_URL}/api/y-tasks/clear', {
+    await fetch(`${API_BASE_URL}/api/y-tasks/clear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -435,7 +436,7 @@ function YTaskPage() {
         }
       }
     }
-    const res = await fetch(`${API_BASE_URL}/api/y-tasks/available-soldiers', {
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/available-soldiers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -454,7 +455,7 @@ function YTaskPage() {
     // visual effect removed
     setLoading(true);
     setWarnings([]);
-    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate', {
+    const res = await fetch(`${API_BASE_URL}/api/y-tasks/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -492,7 +493,7 @@ function YTaskPage() {
     setDeleteDialogOpen(false);
     setDeleteError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/y-tasks/delete', {
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -525,7 +526,7 @@ function YTaskPage() {
     const end = formatDateDMY(endDate.toLocaleDateString());
     
     try {
-      const res = await fetch(`${API_BASE_URL}/api/y-tasks/insufficient-workers-report', {
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/insufficient-workers-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -551,8 +552,6 @@ function YTaskPage() {
     <PageContainer>
       <FadingBackground />
       <Header 
-        darkMode={true} // always dark for header
-        onToggleDarkMode={() => setTableDarkMode(d => !d)}
         showBackButton={true}
         showHomeButton={true}
         title="שיבוץ עבודות"
@@ -652,17 +651,19 @@ function YTaskPage() {
             }}
           >
             <Typography variant="h5" sx={{ mb: 2, color: tableDarkMode ? '#fff' : '#1976d2' }}>שיבוץ עבודות</Typography>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={he}>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                                  <DatePicker
+                    label="תאריך התחלה"
+                    value={startDate}
+                    onChange={(date: Date | null) => setStartDate(date)}
+                    format="dd/MM/yyyy"
+                    slotProps={{ 
+                      textField: { sx: { minWidth: 180, bgcolor: tableDarkMode ? '#232a36' : '#fff', color: tableDarkMode ? '#fff' : '#222', '& .MuiInputBase-input': { color: tableDarkMode ? '#fff' : '#222' }, '& .MuiInputLabel-root': { color: tableDarkMode ? '#fff' : '#1976d2' } } }
+                    }}
+                  />
                 <DatePicker
-                  label="Start Date"
-                  value={startDate}
-                  onChange={(date: Date | null) => setStartDate(date)}
-                  format="dd/MM/yyyy"
-                  slotProps={{ textField: { sx: { minWidth: 180, bgcolor: tableDarkMode ? '#232a36' : '#fff', color: tableDarkMode ? '#fff' : '#222', '& .MuiInputBase-input': { color: tableDarkMode ? '#fff' : '#222' }, '& .MuiInputLabel-root': { color: tableDarkMode ? '#fff' : '#1976d2' } } } }}
-                />
-                <DatePicker
-                  label="End Date"
+                  label="תאריך סיום"
                   value={endDate}
                   onChange={(date: Date | null) => setEndDate(date)}
                   format="dd/MM/yyyy"

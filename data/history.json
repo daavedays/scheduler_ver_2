@@ -203,5 +203,70 @@
       "updated_workers": 23
     },
     "timestamp": "2025-08-26T20:21:13.128994+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 0,
+      "updated_workers": 0
+    },
+    "timestamp": "2025-08-29T22:55:37.710001+00:00"
+  },
+  {
+    "event": {
+      "event": "worker_data_reset",
+      "updated_workers": 23
+    },
+    "timestamp": "2025-08-29T22:55:43.908579+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "clear_history": true,
+      "clear_x": false,
+      "removed_y_files": 0,
+      "updated_workers": 0
+    },
+    "timestamp": "2025-08-30T08:14:08.941680+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 0,
+      "updated_workers": 0
+    },
+    "timestamp": "2025-08-30T08:14:11.755505+00:00"
+  },
+  {
+    "event": {
+      "event": "worker_data_reset",
+      "updated_workers": 23
+    },
+    "timestamp": "2025-08-30T08:14:20.227518+00:00"
+  },
+  {
+    "event": {
+      "event": "settings_reset",
+      "clear_y": true,
+      "clear_history": true,
+      "clear_x": true,
+      "removed_y_files": 0,
+      "updated_workers": 0
+    },
+    "timestamp": "2025-08-30T08:23:47.819137+00:00"
+  },
+  {
+    "event": {
+      "event": "worker_data_reset",
+      "updated_workers": 23
+    },
+    "timestamp": "2025-08-30T08:23:51.714225+00:00"
   }
 ]

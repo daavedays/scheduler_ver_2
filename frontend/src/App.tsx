@@ -37,8 +37,8 @@
  *   - Inline comments explain each major section and non-obvious logic
  */
 import React, { useMemo, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, AppBar, Toolbar, Typography, IconButton, Button, Switch, Box, Menu, MenuItem, TextField } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { ThemeProvider, createTheme, CssBaseline, AppBar, Toolbar, Typography, Button, Box, TextField } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -50,7 +50,6 @@ import XTasksDashboardPage from './pages/XTasksDashboardPage';
 import { useNavigate } from 'react-router-dom';
 import { formatDateDMY } from './components/utils';
 import { getWorkerColor } from './components/colors';
-import DarkModeToggle from './components/DarkModeToggle';
 import Header from './components/Header';
 import ErrorBoundary from './components/ErrorBoundary';
 import MainMenuPage from './pages/MainMenuPage'; // Import from dedicated file
@@ -253,25 +252,7 @@ function LoginPage() {
     willChange: 'opacity',
   });
 
-  // Helper for blurred box
-  const blurredBox = (children: React.ReactNode, sx: any = {}) => (
-    <Box
-      sx={{
-        width: { xs: '95%', sm: '80%', md: '60%' },
-        bgcolor: 'rgba(30, 42, 60, 0.55)',
-        borderRadius: 3,
-        boxShadow: 4,
-        p: 4,
-        mb: 3,
-        textAlign: 'center',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        ...sx,
-      }}
-    >
-      {children}
-    </Box>
-  );
+
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100vw', overflowX: 'hidden', bgcolor: 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', position: 'relative' }}>
@@ -370,7 +351,6 @@ function CombinedPage() {
   const [saving, setSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [tableDarkMode, setTableDarkMode] = React.useState(true);
 
   // Load available Y schedule periods
   React.useEffect(() => {
@@ -451,8 +431,6 @@ function CombinedPage() {
       
       <Box sx={{ position: 'relative', zIndex: 1, p: 4, pt: 12 }}>
         <Header 
-          darkMode={true}
-          onToggleDarkMode={() => setTableDarkMode(d => !d)}
           showBackButton={true}
           showHomeButton={true}
           title="Combined Schedule"
@@ -599,7 +577,7 @@ function CombinedPage() {
                 width: '100%', 
                 borderCollapse: 'separate', 
                 borderSpacing: 0, 
-                background: tableDarkMode ? '#1a2233' : '#eaf1fa', 
+                background: '#1a2233', 
                 borderRadius: 3, 
                 overflow: 'hidden'
               }}>
@@ -607,8 +585,8 @@ function CombinedPage() {
                   <tr>
                     <th style={{ 
                       minWidth: 180, 
-                      background: tableDarkMode ? '#22304a' : '#f0f8ff', 
-                      color: tableDarkMode ? '#fff' : '#1976d2', 
+                      background: '#22304a', 
+                      color: '#fff', 
                       fontWeight: 700, 
                       fontSize: 18, 
                       position: 'sticky', 
@@ -616,7 +594,7 @@ function CombinedPage() {
                       zIndex: 2, 
                       boxShadow: '0 2px 8px rgba(30,58,92,0.08)', 
                       borderBottom: '3px solid #ff9800', 
-                      borderRight: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888', 
+                      borderRight: '2px solid #b0bec5', 
                       height: 60, 
                       letterSpacing: 1,
                       padding: '16px'
@@ -626,14 +604,14 @@ function CombinedPage() {
                     {dates.map((date, i) => (
                       <th key={i} style={{ 
                         minWidth: 120, 
-                        background: tableDarkMode ? '#1e3a5c' : '#1e3a5c', 
+                        background: '#1e3a5c', 
                         color: '#fff', 
                         fontWeight: 700, 
                         fontSize: 16, 
                         borderBottom: '3px solid #ff9800', 
                         height: 60, 
                         boxShadow: '0 2px 8px rgba(30,58,92,0.06)', 
-                        borderRight: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888',
+                        borderRight: '2px solid #b0bec5',
                         padding: '16px'
                       }}>
                         {date}
@@ -644,34 +622,34 @@ function CombinedPage() {
                 <tbody>
                   {rowLabels.map((task, rIdx) => (
                     <tr key={rIdx} style={{ 
-                      background: rIdx % 2 === 0 ? (tableDarkMode ? '#232a36' : '#f9fafb') : (tableDarkMode ? '#181c23' : '#fff') 
+                      background: rIdx % 2 === 0 ? '#232a36' : '#f9fafb' 
                     }}>
                       <td style={{ 
-                        background: tableDarkMode ? '#22304a' : '#f0f8ff', 
-                        color: tableDarkMode ? '#fff' : '#1976d2', 
+                        background: '#22304a', 
+                        color: '#fff', 
                         fontWeight: 600, 
                         position: 'sticky', 
                         left: 0, 
                         zIndex: 1, 
                         fontSize: 18, 
-                        borderRight: tableDarkMode ? '3.5px solid #b0bec5' : '3.5px solid #666', 
-                        borderBottom: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888', 
+                        borderRight: '3.5px solid #b0bec5', 
+                        borderBottom: '2px solid #b0bec5', 
                         height: 56, 
                         paddingLeft: 32, 
                         paddingRight: 16, 
                         minWidth: 180, 
-                        boxShadow: tableDarkMode ? undefined : '2px 0 8px -4px #8882' 
+                        boxShadow: undefined 
                       }}>
                         {task}
                       </td>
                       {grid[rIdx]?.map((soldier: string, cIdx: number) => (
                         <td key={cIdx} style={{ 
-                          background: soldier ? getWorkerColor(soldier, tableDarkMode) : (tableDarkMode ? '#1a2233' : '#fafbfc'), 
-                          color: tableDarkMode ? '#fff' : '#1e3a5c', 
+                          background: soldier ? getWorkerColor(soldier, true) : '#fafbfc', 
+                          color: '#1e3a5c', 
                           textAlign: 'center', 
                           fontWeight: 600, 
                           minWidth: 120, 
-                          border: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888', 
+                          border: '2px solid #b0bec5', 
                           borderRadius: 8, 
                           fontSize: 18, 
                           height: 56, 
@@ -781,9 +759,7 @@ function WarningsPage() {
       }} />
       
       <Box sx={{ position: 'relative', zIndex: 1, p: 4, pt: 12 }}>
-        <Header 
-          darkMode={true}
-          onToggleDarkMode={() => {}}
+        <Header
           showBackButton={true}
           showHomeButton={true}
           title="Warnings"
@@ -977,9 +953,7 @@ function ResetHistoryPage() {
       }} />
       
       <Box sx={{ position: 'relative', zIndex: 1, p: 4, pt: 12 }}>
-        <Header 
-          darkMode={true}
-          onToggleDarkMode={() => {}}
+        <Header
           showBackButton={true}
           showHomeButton={true}
           title="Reset & History"
@@ -1200,17 +1174,8 @@ function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Dark mode state with localStorage persistence
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : true; // Default to dark mode
-  });
-
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', JSON.stringify(newMode));
-  };
+  // Dark mode is always enabled
+  const darkMode = true;
 
   // Scroll to top on route change
   React.useEffect(() => {
@@ -1272,7 +1237,7 @@ function AppRoutes() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`${API_BASE_URL}/api/session', {
+        const res = await fetchWithAuth(`${API_BASE_URL}/api/session`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -1314,7 +1279,7 @@ function AppRoutes() {
         <Route path="/warnings" element={<ProtectedRoute><WarningsPage /></ProtectedRoute>} />
         <Route path="/reset-history" element={<ProtectedRoute><ResetHistoryPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="/manage-workers" element={<ProtectedRoute><ManageWorkersPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} /></ProtectedRoute>} />
+        <Route path="/manage-workers" element={<ProtectedRoute><ManageWorkersPage /></ProtectedRoute>} />
         <Route path="/statistics" element={<ProtectedRoute><StatisticsPage /></ProtectedRoute>} />
 
         {/* Remove commented-out routes for unused pages */}

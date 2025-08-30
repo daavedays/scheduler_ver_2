@@ -4,15 +4,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 import PageContainer from '../components/PageContainer';
 import TableContainer from '../components/TableContainer';
-import DarkModeToggle from '../components/DarkModeToggle';
 import { API_BASE_URL } from '../utils/api';
-
-const QUALIFICATIONS = [
-  'Supervisor', 'C&N Driver', 'C&N Escort', 'Southern Driver', 'Southern Escort', 'Guarding Duties', 'RASAR', 'Kitchen'
-];
+import { YTaskDefinition } from '../types';
 
 function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; onToggleDarkMode: () => void }) {
   const [workers, setWorkers] = useState<any[]>([]);
+  const [qualifications, setQualifications] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialog, setEditDialog] = useState<{open: boolean, worker: any | null}>({open: false, worker: null});
   const [addDialog, setAddDialog] = useState(false);
@@ -20,23 +17,34 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   useEffect(() => {
     fetchWorkers();
+    fetchQualifications();
   }, []);
 
   const fetchWorkers = () => {
     setLoading(true);
-    fetch('`${API_BASE_URL}/api/workers', { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/workers`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => { setWorkers(data.workers || []); setLoading(false); });
   };
 
+  const fetchQualifications = () => {
+    fetch(`${API_BASE_URL}/api/y-tasks/definitions`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        const quals = (data.definitions || []).map((def: YTaskDefinition) => def.name);
+        setQualifications(quals);
+      })
+      .catch(() => {});
+  };
+
   const handleEdit = (worker: any) => setEditDialog({ open: true, worker: { ...worker } });
   const handleDelete = (id: string) => {
-    fetch(``${API_BASE_URL}/api/workers/${id}`, { method: 'DELETE', credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/workers/${id}`, { method: 'DELETE', credentials: 'include' })
       .then(res => res.json())
       .then(() => fetchWorkers());
   };
   const handleSaveEdit = () => {
-    fetch(``${API_BASE_URL}/api/workers/${editDialog.worker.id}`, {
+    fetch(`${API_BASE_URL}/api/workers/${editDialog.worker.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -46,7 +54,7 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
       .then(() => { setEditDialog({ open: false, worker: null }); fetchWorkers(); });
   };
   const handleAdd = () => {
-    fetch('`${API_BASE_URL}/api/workers', {
+    fetch(`${API_BASE_URL}/api/workers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -58,7 +66,6 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
 
   return (
     <PageContainer>
-      <DarkModeToggle darkMode={darkMode} onToggle={onToggleDarkMode} />
       <Typography variant="h5" sx={{ mb: 2 }}>Update Workers</Typography>
       <Button variant="contained" sx={{ mb: 2 }} onClick={() => setAddDialog(true)}>Add Worker</Button>
       <TableContainer>
@@ -100,7 +107,7 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
             renderValue={selected => (<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>{selected.map((val: string) => (<Chip key={val} label={val} />))}</Box>)}
             sx={{ mb: 2 }}
           >
-            {QUALIFICATIONS.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
+            {qualifications.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
           </Select>
           <TextField label="Closing Interval" type="number" value={editDialog.worker?.closing_interval || 4} onChange={e => setEditDialog(d => ({ ...d, worker: { ...d.worker, closing_interval: Number(e.target.value) } }))} fullWidth sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -129,7 +136,7 @@ function UpdateWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
             renderValue={selected => (<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>{selected.map((val: string) => (<Chip key={val} label={val} />))}</Box>)}
             sx={{ mb: 2 }}
           >
-            {QUALIFICATIONS.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
+            {qualifications.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
           </Select>
           <TextField label="Closing Interval" type="number" value={newWorker.closing_interval} onChange={e => setNewWorker((w: any) => ({ ...w, closing_interval: Number(e.target.value) }))} fullWidth sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

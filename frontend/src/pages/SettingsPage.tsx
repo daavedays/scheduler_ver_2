@@ -267,7 +267,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Header darkMode={true} onToggleDarkMode={() => {}} showBackButton={true} showHomeButton={true} title="Settings" />
+      <Header showBackButton={true} showHomeButton={true} title="Settings" />
       <Paper sx={{ p: 3, mt: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>Reset Data</Typography>
         <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
@@ -365,8 +365,11 @@ const SettingsPage: React.FC = () => {
               <Select size="small" value={d.end_day} onChange={(e) => handleUpdateX(d.id, { end_day: e.target.value })}>
                 {DAY_OPTIONS.map(opt => (<MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>))}
               </Select>
-              <TextField size="small" label="Duration (days)" value={d.duration_days ?? ''} onChange={(e) => setXDefs(prev => prev.map(p => p.id === d.id ? { ...p, duration_days: e.target.value } : p))} sx={{ width: 180 }} />
-              <Button size="small" variant="outlined" onClick={() => handleUpdateX(d.id, { name: d.name, duration_days: d.duration_days === '' ? null : d.duration_days })} disabled={xLoading}>Save</Button>
+              <TextField size="small" label="Duration (days)" value={d.duration_days ?? ''} onChange={(e) => {
+                const val = e.target.value;
+                setXDefs(prev => prev.map(p => p.id === d.id ? { ...p, duration_days: (val === '' ? null : Number(val)) } : p));
+              }} sx={{ width: 180 }} />
+              <Button size="small" variant="outlined" onClick={() => handleUpdateX(d.id, { name: d.name, duration_days: d.duration_days ?? null })} disabled={xLoading}>Save</Button>
               <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteX(d.id)} disabled={xLoading}>Delete</Button>
             </Box>
           ))}

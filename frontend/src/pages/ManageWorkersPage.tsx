@@ -53,8 +53,8 @@ const getClosingIntervalText = (value: number): string => {
     case 4: return 'רבעים';
     case 5: return 'אחד לחמש';
     case 6: return 'אחד לשש';
-    case 7: return 'שבעה';
-    case 8: return 'שמינה';
+    case 7: return 'אחד לשבע';
+    case 8: return 'אחד לשמינה';
     default: return `${value} weeks`;
   }
 };
@@ -68,8 +68,8 @@ const getClosingIntervalValue = (text: string): number => {
     case 'רבעים': return 4;
     case 'אחד לחמש': return 5;
     case 'אחד לשש': return 6;
-    case 'שבעה': return 7;
-    case 'שמינה': return 8;
+    case 'אחד לשבע': return 7;
+    case 'אחד לשמינה': return 8;
     default: return 0; // Default to quarters
   }
 };
@@ -82,11 +82,11 @@ const CLOSING_INTERVAL_OPTIONS = [
   { value: 4, label: 'רבעים' },
   { value: 5, label: 'אחד לחמש' },
   { value: 6, label: 'אחד לשש' },
-  { value: 7, label: 'שבעה' },
-  { value: 8, label: 'שמינה' }
+  { value: 7, label: 'אחד לשבע' },
+  { value: 8, label: 'אחד לשמינה' }
 ];
 
-function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; onToggleDarkMode: () => void }) {
+function ManageWorkersPage() {
   const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
@@ -208,7 +208,7 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
     }
     
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/workers', {
+    fetch(`${API_BASE_URL}/api/workers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -237,11 +237,8 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
       <PageContainer>
         <FadingBackground />
         <Header 
-          darkMode={darkMode}
-          onToggleDarkMode={onToggleDarkMode}
           showBackButton={true}
           showHomeButton={true}
-          showDarkModeToggle={false}
           title="Manage Workers"
         />
         <Box sx={{ 
@@ -263,11 +260,8 @@ function ManageWorkersPage({ darkMode, onToggleDarkMode }: { darkMode: boolean; 
     <PageContainer>
       <FadingBackground />
       <Header 
-        darkMode={darkMode}
-        onToggleDarkMode={onToggleDarkMode}
         showBackButton={true}
         showHomeButton={true}
-        showDarkModeToggle={false}
         title="Manage Workers"
       />
       

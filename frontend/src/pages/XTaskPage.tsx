@@ -56,16 +56,18 @@ import {
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { he } from 'date-fns/locale';
 import SaveIcon from '@mui/icons-material/Save';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 import Tooltip from '@mui/material/Tooltip';
 
-import { shortWeekRange, formatDateDMY } from '../components/utils';
+import { shortWeekRange } from '../components/utils';
 import { API_BASE_URL } from '../utils/api';
-import { getWorkerColor, getXTaskColor } from '../components/colors';
+import { getXTaskColor } from '../components/colors';
 import Header from '../components/Header';
+import FadingBackground from '../components/FadingBackground';
 import { 
   PRIMARY_COLORS, 
   BACKGROUND_COLORS, 
@@ -76,7 +78,7 @@ import {
 } from '../components/colorSystem';
 
 // Will be loaded dynamically from backend definitions
-const DEFAULT_STANDARD_X_TASKS = ["Guarding Duties", "RASAR", "Kitchen"];
+const DEFAULT_STANDARD_X_TASKS: string[] = [];
 const MAX_CUSTOM_TASK_LEN = 14;
 
 function XTaskPage() {
@@ -105,11 +107,29 @@ function XTaskPage() {
   const [blinkCells, setBlinkCells] = useState<{[key: string]: boolean}>({}); // Track blinking cells
   const [pendingConflict, setPendingConflict] = useState<any | null>(null); // Track unresolved conflict
   const [showResolveBtn, setShowResolveBtn] = useState(false);
-  const [soldiers, setSoldiers] = useState<{id: string, name: string}[]>([]);
-  const [tableDarkMode, setTableDarkMode] = useState(true); // local state
+
+  const [tableDarkMode] = useState(true); // local state
 
   // Dynamic X task names used in modal selection
   const [standardXTasks, setStandardXTasks] = useState<string[]>(DEFAULT_STANDARD_X_TASKS);
+
+  // Load X task definitions dynamically
+  useEffect(() => {
+    const fetchXTaskDefinitions = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/x-tasks/definitions`, { credentials: 'include' });
+        const data = await res.json();
+        if (res.ok && data.definitions) {
+          const xTaskNames = data.definitions.map((def: any) => def.name);
+          setStandardXTasks(xTaskNames);
+        }
+      } catch (error) {
+        console.error('Failed to load X task definitions:', error);
+      }
+    };
+    
+    fetchXTaskDefinitions();
+  }, []);
 
   function renderCell(cell: string, colIdx: number, rowIdx: number) {
     // Use modern colors for empty cells
@@ -160,7 +180,7 @@ function XTaskPage() {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
-        border: isConflict ? (shouldBlink ? '2px solid #ef4444' : '1px solid #ef4444') : `1px solid ${tableDarkMode ? '#475569' : '#cbd5e1'}`,
+        border: isConflict ? (shouldBlink ? '2px solidrgb(233, 64, 64)' : '1px solidrgb(246, 50, 50)') : `1px solid ${tableDarkMode ? '#475569' : '#cbd5e1'}`,
         boxShadow: cell && cell.trim() !== '' && cell !== '-' ? '0 1px 3px rgba(0,0,0,0.1)' : undefined,
         textShadow: cell && cell.trim() !== '' && cell !== '-' ? '0 1px 2px rgba(0,0,0,0.3)' : undefined,
         transition: shouldBlink ? 'box-shadow 0.2s, border 0.2s, background 0.2s' : 'box-shadow 0.2s, border 0.2s',
@@ -304,9 +324,9 @@ function XTaskPage() {
       // If dm matches the week start, use weeks[weekIdx].start.getFullYear()
       // If dm matches the week end, use weeks[weekIdx].end.getFullYear()
       // We'll check both
-      if (dm === formatDateDMY(weeks[weekIdx].start.toLocaleDateString()).slice(0, 5)) {
+      if (dm === formatDateDMY(weeks[weekIdx].start).slice(0, 5)) {
         y = weeks[weekIdx].start.getFullYear();
-      } else if (dm === formatDateDMY(weeks[weekIdx].end.toLocaleDateString()).slice(0, 5)) {
+      } else if (dm === formatDateDMY(weeks[weekIdx].end).slice(0, 5)) {
         y = weeks[weekIdx].end.getFullYear();
       }
     }
@@ -469,7 +489,7 @@ function XTaskPage() {
     setPendingConflict(null);
     try {
       const csv = Papa.unparse([headers, subheaders, ...editData]);
-      const res = await fetch(`${API_BASE_URL}/api/x-tasks', {
+      const res = await fetch(`${API_BASE_URL}/api/x-tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -530,21 +550,6 @@ function XTaskPage() {
     }
   };
 
-  // Load X task definitions for dynamic names
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/x-tasks/definitions', { credentials: 'include' });
-        const data = await res.json();
-        if (res.ok) {
-          const defs = (data.definitions || []) as Array<{ name: string }>
-          const names = defs.map(d => d.name).filter(Boolean);
-          if (names && names.length > 0) setStandardXTasks(names);
-        }
-      } catch {}
-    })();
-  }, []);
-
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -562,6 +567,9 @@ function XTaskPage() {
         }
       }
     }}>
+      {/* Fading Background */}
+      <FadingBackground blur={true} />
+      
       {/* Background Pattern */}
       <Box sx={{
         position: 'absolute',
@@ -576,8 +584,6 @@ function XTaskPage() {
       
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Header 
-          darkMode={true}
-          onToggleDarkMode={() => setTableDarkMode(d => !d)}
           showBackButton={true}
           showHomeButton={true}
           title="עדכון תורנות"
@@ -1101,7 +1107,7 @@ function XTaskPage() {
                   sx: { color: customTaskWarning ? '#f44336' : 'rgba(255,255,255,0.6)' }
                 }}
               />
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={he}>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <DatePicker
                     label="תאריך התחלה"

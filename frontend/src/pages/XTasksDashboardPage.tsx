@@ -56,8 +56,8 @@ function XTasksDashboardPage() {
     setLoading(true);
     try {
       const [res1, res2] = await Promise.all([
-        fetchWithAuth(``${API_BASE_URL}/api/x-tasks/exists?year=${year}&period=1`, { credentials: 'include' }),
-        fetchWithAuth(``${API_BASE_URL}/api/x-tasks/exists?year=${year}&period=2`, { credentials: 'include' })
+        fetchWithAuth(API_BASE_URL + `/api/x-tasks/exists?year=${year}&period=1`, { credentials: 'include' }),
+        fetchWithAuth(API_BASE_URL + `/api/x-tasks/exists?year=${year}&period=2`, { credentials: 'include' })
       ]);
       
       const data1 = await res1.json();
@@ -129,8 +129,6 @@ function XTasksDashboardPage() {
       
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Header 
-          darkMode={true}
-          onToggleDarkMode={() => {}}
           showBackButton={true}
           showHomeButton={true}
           title="עדכון תורנות"

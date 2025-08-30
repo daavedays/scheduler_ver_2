@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Table, TableHead, TableRow, TableCell, TableBody, Button, Select, MenuItem, Chip, CircularProgress, TextField, Autocomplete } from '@mui/material';
 import FadingBackground from '../components/FadingBackground';
 import { API_BASE_URL } from '../utils/api';
-
-const QUALIFICATIONS = [
-  'Supervisor', 'C&N Driver', 'C&N Escort', 'Southern Driver', 'Southern Escort', 'Guarding Duties', 'RASAR', 'Kitchen'
-];
+import { YTaskDefinition } from '../types';
 
 function ManageQualificationsPage() {
   const [workers, setWorkers] = useState<any[]>([]);
+  const [qualifications, setQualifications] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editQuals, setEditQuals] = useState<string[]>([]);
@@ -18,14 +16,25 @@ function ManageQualificationsPage() {
 
   useEffect(() => {
     fetchWorkers();
+    fetchQualifications();
   }, []);
 
   const fetchWorkers = () => {
-    setLoading(true);
-    fetch('`${API_BASE_URL}/api/workers', { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/workers`, { credentials: 'include' })
       .then(res => res.json())
-      .then(data => { setWorkers(data.workers || []); setLoading(false); })
-      .catch(() => { setError('Failed to load workers'); setLoading(false); });
+      .then(data => { setWorkers(data.workers || []); })
+      .catch(() => { setError('Failed to load workers'); })
+      .finally(() => setLoading(false));
+  };
+
+  const fetchQualifications = () => {
+    fetch(`${API_BASE_URL}/api/y-tasks/definitions`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        const quals = (data.definitions || []).map((def: YTaskDefinition) => def.name);
+        setQualifications(quals);
+      })
+      .catch(() => { setError('Failed to load qualifications'); });
   };
 
   const handleEdit = (id: string, currentQuals: string[]) => {
@@ -34,7 +43,7 @@ function ManageQualificationsPage() {
   };
 
   const handleSave = (id: string) => {
-    fetch(``${API_BASE_URL}/api/workers/${id}/qualifications`, {
+    fetch(`${API_BASE_URL}/api/workers/${id}/qualifications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -101,7 +110,7 @@ function ManageQualificationsPage() {
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>{selected.map((val: string) => (<Chip key={val} label={val} />))}</Box>
                       )}
                     >
-                      {QUALIFICATIONS.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
+                      {qualifications.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
                     </Select>
                   ) : (
                     selectedWorker.qualifications.join(', ')

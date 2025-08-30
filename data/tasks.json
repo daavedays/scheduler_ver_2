@@ -37,7 +37,7 @@
             "id": 6,
             "name": "מראה יחידה",
             "requiresQualification": false,
-            "autoAssign": true
+            "autoAssign": false
           }
         ]
       }
@@ -68,6 +68,13 @@
         "start_day": 1,
         "end_day": 1,
         "duration_days": 8
+      },
+      {
+        "id": 4,
+        "name": "t2",
+        "isDefault": false,
+        "start_day": 0,
+        "end_day": 6
       }
     ]
   }

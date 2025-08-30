@@ -3,7 +3,8 @@ import { Box, TextField, FormControl, InputLabel, Select, Button, MenuItem, Text
 import { TEXT_COLORS, INTERACTIVE_COLORS, TABLE_COLORS } from './colorSystem';
 
 interface HebrewTextFieldProps extends Omit<TextFieldProps, 'onChange'> {
-  onChange?: ((value: string) => void) | ((event: React.ChangeEvent<HTMLInputElement>) => void);
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onValueChange?: (value: string) => void;
 }
 
 interface HebrewSelectProps extends Omit<SelectProps, 'children'> {
@@ -12,18 +13,10 @@ interface HebrewSelectProps extends Omit<SelectProps, 'children'> {
 }
 
 // Hebrew-only TextField with RTL support
-export const HebrewTextField: React.FC<HebrewTextFieldProps> = ({ onChange, ...props }) => {
+export const HebrewTextField: React.FC<HebrewTextFieldProps> = ({ onChange, onValueChange, ...props }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (onChange) {
-      // Try calling onChange with value first (for setState functions)
-      // If that fails, call with event (standard Material-UI behavior)
-      try {
-        onChange(event.target.value);
-      } catch (error) {
-        // If direct value call fails, use the event
-        onChange(event);
-      }
-    }
+    if (onChange) onChange(event);
+    if (onValueChange) onValueChange(event.target.value);
   };
 
   return (
