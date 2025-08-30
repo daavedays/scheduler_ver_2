@@ -58,13 +58,9 @@ class EnhancedWorker:
             else:
                 raise Exception("no types")
         except Exception:
-            self.y_task_counts = {
-                "Supervisor": 0,
-                "C&N Driver": 0,
-                "C&N Escort": 0,
-                "Southern Driver": 0,
-                "Southern Escort": 0
-            }
+            # Fallback to empty dict if we can't get task types
+            # This will be populated when tasks are assigned
+            self.y_task_counts = {}
         
         # Task tracking (required by multiple methods and persistence)
         self.x_tasks = {}  # date_string -> task_name
@@ -273,7 +269,7 @@ class EnhancedWorker:
             self.y_task_counts[task_name] += 1
         else:
             self.y_task_counts[task_name] = 1
-        self.y_task_count += 1   
+        self.y_task_count += 1
  
     
     def assign_closing(self, closing_date: date):
@@ -286,9 +282,9 @@ class EnhancedWorker:
             self.closing_history.append(closing_date)
             self.closing_history.sort()
 
-    # Convenience used by available-soldiers API
-    def assign_x_task(self, x_date: date, task_name: str):
-        self.x_tasks[x_date.strftime('%d/%m/%Y')] = task_name
+    # UNUSED METHODS COMMENTED OUT - not used anywhere in the codebase
+    # def assign_x_task(self, x_date: date, task_name: str):
+    #     self.x_tasks[x_date.strftime('%d/%m/%Y')] = task_name
     
     # ============================================================================
     # UPDATED SCORING METHODS
@@ -408,9 +404,8 @@ class EnhancedWorker:
                 for t in types:
                     counts.setdefault(t, 0)
         except Exception:
-            # ensure legacy defaults
-            for t in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
-                counts.setdefault(t, 0)
+            # No legacy defaults needed - counts will be populated when tasks are assigned
+            pass
         worker.y_task_counts = counts
         worker.home_weeks_owed = data.get('home_weeks_owed', data.get('weekends_home_owed', 0))
         worker.weekends_home_owed = data.get('weekends_home_owed', worker.home_weeks_owed)
@@ -574,13 +569,8 @@ def load_y_tasks_for_worker(worker: EnhancedWorker, y_tasks_data: Dict[str, Dict
             else:
                 raise Exception("no types")
         except Exception:
-            worker.y_task_counts = {
-                "Supervisor": 0,
-                "C&N Driver": 0,
-                "C&N Escort": 0,
-                "Southern Driver": 0,
-                "Southern Escort": 0
-            }
+            # No legacy defaults needed - counts will be populated when tasks are assigned
+            worker.y_task_counts = {}
         
         for date_str, task_name in y_tasks_data[worker.name].items():
             try:

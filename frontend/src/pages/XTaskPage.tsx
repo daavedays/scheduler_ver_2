@@ -73,7 +73,6 @@ import {
   BACKGROUND_COLORS, 
   TEXT_COLORS, 
   TABLE_COLORS, 
-  TASK_COLORS,
   CARD_COLORS 
 } from '../components/colorSystem';
 
@@ -865,7 +864,7 @@ function XTaskPage() {
                         height: 40,
                       }}>
                         <div>{h}</div>
-                        <div style={{ fontSize: 10, color: TASK_COLORS.x_task_kitchen, marginTop: 1 }}>{shortWeekRange(subheaders[i+2])}</div>
+                        <div style={{ fontSize: 10, color: getXTaskColor('מטבח', tableDarkMode), marginTop: 1 }}>{shortWeekRange(subheaders[i+2])}</div>
                       </th>
                     ))}
                   </tr>

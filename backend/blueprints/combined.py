@@ -200,7 +200,7 @@ def get_combined_by_date():
 		except ImportError:
 			from constants import get_y_task_definitions  # type: ignore
 		y_task_defs = get_y_task_definitions()
-		y_tasks_list = [d['name'] for d in y_task_defs] if y_task_defs else ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+		y_tasks_list = [d['name'] for d in y_task_defs] if y_task_defs else []
 		for start, end, y_filename in y_schedules:
 			y_path = y_tasks.y_schedule_path(y_filename)
 			if not os.path.exists(y_path):
@@ -300,7 +300,7 @@ def get_combined_grid_full():
 			except ImportError:
 				from constants import get_y_task_definitions  # type: ignore
 			y_task_defs = get_y_task_definitions()
-			y_task_names = [d['name'] for d in y_task_defs] if y_task_defs else ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+			y_task_names = [d['name'] for d in y_task_defs] if y_task_defs else []
 			
 			x_tasks_set = set()
 			for name, day_map in x_assignments.items():
@@ -382,6 +382,15 @@ def get_combined_by_range():
 			except Exception:
 				continue
 			dates = sorted(list(dates_set), key=lambda ds: datetime.strptime(ds, '%d/%m/%Y').date())
+		
+		# NEW: Load dynamic Y task definitions 30/08/2025 13:45
+		try:
+			from ..constants import get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_definitions  # type: ignore
+		y_task_defs = get_y_task_definitions()
+		y_task_names = [d['name'] for d in y_task_defs] if y_task_defs else []
+		
 		x_files = glob.glob(os.path.join(DATA_DIR, 'x_tasks_*.csv'))
 		if not x_files:
 			x_assignments = {}
@@ -407,7 +416,7 @@ def get_combined_by_range():
 		for name, day_map in x_assignments.items():
 			for d in dates:
 				task = day_map.get(d, '-')
-				if task and task != '-' and task not in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
+				if task and task != '-' and task not in y_task_names:
 					x_tasks_set.add(task)
 		x_tasks_list = sorted(x_tasks_set)
 		x_grid = []
@@ -424,12 +433,18 @@ def get_combined_by_range():
 						found.append(worker_name)
 				row.append(', '.join(found))
 			x_grid.append(row)
-		y_tasks_list = ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+		y_tasks_list = y_task_names
 		grid = []
 		for y_task in y_tasks_list:
 			row = []
 			for d in dates:
-				row.append(y_data_by_date.get(d, {}).get(y_task, ''))
+				worker_id = y_data_by_date.get(d, {}).get(y_task, '')
+				if worker_id:
+					# Convert worker ID to name
+					worker_name = worker_id_to_name.get(worker_id, worker_id)
+					row.append(worker_name)
+				else:
+					row.append('')
 			grid.append(row)
 		row_labels = y_tasks_list + x_tasks_list
 		grid = grid + x_grid

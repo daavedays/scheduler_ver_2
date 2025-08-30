@@ -39,7 +39,7 @@
  *   - Inline comments explain non-obvious logic and UI structure
  */
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Fab, Snackbar, Alert as MuiAlert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemButton, ListItemText, CircularProgress, IconButton, FormControlLabel, Switch } from '@mui/material';
+import { Box, Button, Typography, Fab, Snackbar, Alert as MuiAlert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemButton, ListItemText, CircularProgress, IconButton, FormControlLabel, Switch, Tooltip } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { he } from 'date-fns/locale';
@@ -49,7 +49,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { formatDateDMY } from '../components/utils';
-import { Y_TASK_COLORS } from '../components/colors';
+import { getYTaskColors } from '../components/colors';
 import { API_BASE_URL } from '../utils/api';
 import FadingBackground from '../components/FadingBackground';
 import Footer from '../components/Footer';
@@ -73,7 +73,13 @@ function YTaskPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerCell, setPickerCell] = useState<{ y: number, d: number } | null>(null);
-  const [availableSoldiers, setAvailableSoldiers] = useState<{id: string, name: string}[]>([]);
+  const [availableSoldiers, setAvailableSoldiers] = useState<{
+    id: string, 
+    name: string, 
+    has_x_task_conflict: boolean, 
+    recently_finished_x: boolean, 
+    x_task_name?: string
+  }[]>([]);
   const [pickerLoading, setPickerLoading] = useState(false);
   // const [showBomb, setShowBomb] = useState(false);
   const [availableSchedules, setAvailableSchedules] = useState<any[]>([]);
@@ -176,6 +182,13 @@ function YTaskPage() {
     })();
   }, []);
 
+  // Pre-fetch available soldiers when dates or grid changes
+  useEffect(() => {
+    if (dates.length > 0 && yTaskNames.length > 0) {
+      preFetchAvailableSoldiers();
+    }
+  }, [dates, yTaskNames]);
+
   useEffect(() => {
     if (!selectedSchedule) return;
     setLoading(true);
@@ -226,6 +239,8 @@ function YTaskPage() {
           )
         );
         setLoading(false);
+        // Pre-fetch available soldiers after grid is loaded
+        setTimeout(() => preFetchAvailableSoldiers(), 100);
       })
       .catch(() => setLoading(false));
   }, [selectedSchedule]);
@@ -257,6 +272,8 @@ function YTaskPage() {
       if (data.csv_data) {
         setGeneratedCsvData(data.csv_data);
       }
+      // Pre-fetch available soldiers after grid is generated
+      setTimeout(() => preFetchAvailableSoldiers(), 100);
     } else {
       setWarnings([data.error || 'Failed to generate schedule']);
       setGrid([]);
@@ -486,6 +503,53 @@ function YTaskPage() {
       return copy;
     });
     setPickerOpen(false);
+  };
+
+  // Helper function to check if a worker has X task conflicts
+  const checkWorkerXTaskConflict = (workerName: string, dateStr: string): boolean => {
+    // This will be populated when we fetch available soldiers
+    // For now, we'll check if the worker appears in the availableSoldiers with conflicts
+    const worker = availableSoldiers.find(s => s.name === workerName);
+    if (worker && worker.has_x_task_conflict) {
+      return true;
+    }
+    return false;
+  };
+
+  // Pre-fetch available soldiers for all dates to show conflicts in grid
+  const preFetchAvailableSoldiers = async () => {
+    if (!dates.length || !yTaskNames.length) return;
+    
+    try {
+      const current_assignments: Record<string, Record<string, string>> = {};
+      for (let yy = 0; yy < yTaskNames.length; ++yy) {
+        for (let dd = 0; dd < dates.length; ++dd) {
+          const s = grid[yy]?.[dd];
+          if (!s) continue;
+          if (!current_assignments[s]) current_assignments[s] = {};
+          current_assignments[s][dates[dd]] = yTaskNames[yy];
+        }
+      }
+
+      // Fetch for the first date to get initial data
+      const res = await fetch(`${API_BASE_URL}/api/y-tasks/available-soldiers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          date: dates[0],
+          task: yTaskNames[0],
+          current_assignments,
+        }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableSoldiers(data.available || []);
+      }
+    } catch (error) {
+      console.error('Failed to pre-fetch available soldiers:', error);
+    }
   };
 
   const handleDeleteSchedule = async () => {
@@ -862,40 +926,57 @@ function YTaskPage() {
                       >
                         {yTask}
                       </td>
-                      {grid[rIdx]?.map((soldier: string, cIdx: number) => (
-                        <td
-                          key={cIdx}
-                          id={`ycell-${rIdx}-${cIdx}`}
-                          style={{
-                            background: soldier
-                              ? (Y_TASK_COLORS[yTask]?.[tableDarkMode ? 'dark' : 'light'] || (tableDarkMode ? '#333' : '#f7f9fb'))
+                      {grid[rIdx]?.map((soldier: string, cIdx: number) => {
+                        const hasConflict = soldier && checkWorkerXTaskConflict(soldier, dates[cIdx]);
+                        const conflictWorker = availableSoldiers.find(s => s.name === soldier);
+                        const conflictInfo = hasConflict && conflictWorker ? 
+                          `⚠️ X task conflict: ${conflictWorker.x_task_name || 'Unknown'} on this date` : 
+                          undefined;
+                        
+                        return (
+                          <Tooltip 
+                            key={cIdx}
+                            title={conflictInfo || ''}
+                            placement="top"
+                            arrow
+                          >
+                            <td
+                              id={`ycell-${rIdx}-${cIdx}`}
+                              style={{
+                                                            background: soldier
+                              ? (getYTaskColors(yTaskNames, tableDarkMode)[yTask]?.[tableDarkMode ? 'dark' : 'light'] || (tableDarkMode ? '#333' : '#f7f9fb'))
                               : (tableDarkMode ? '#1a2233' : '#fafbfc'),
-                            color: '#fff',
-                            textShadow: '0 1px 4px #000a',
-                            textAlign: 'center',
-                            fontWeight: 600,
-                            minWidth: 120,
-                            border: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888',
-                            borderRadius: 8,
-                            fontSize: 18,
-                            height: 56,
-                            boxSizing: 'border-box',
-                            transition: 'background 0.2s',
-                            cursor: 'pointer',
-                            boxShadow: soldier ? '0 1px 4px rgba(30,58,92,0.06)' : undefined,
-                            opacity: soldier ? 1 : 0.6,
-                            outline: highlightCell && highlightCell.row === rIdx && highlightCell.col === cIdx ? '4px solid #ff1744' : undefined,
-                            animation: highlightCell && highlightCell.row === rIdx && highlightCell.col === cIdx ? 'blink-border 0.7s alternate infinite' : undefined,
-                          }}
-                          onClick={() => handleCellClick(rIdx, cIdx)}
-                          onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = '#ffe082'; }}
-                          onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = soldier
-                            ? (Y_TASK_COLORS[yTask]?.[tableDarkMode ? 'dark' : 'light'] || (tableDarkMode ? '#333' : '#f7f9fb'))
+                                color: '#fff',
+                                textShadow: '0 1px 4px #000a',
+                                textAlign: 'center',
+                                fontWeight: 600,
+                                minWidth: 120,
+                                border: tableDarkMode ? '2px solid #b0bec5' : '2px solid #888',
+                                borderRadius: 8,
+                                fontSize: 18,
+                                height: 56,
+                                boxSizing: 'border-box',
+                                transition: 'background 0.2s',
+                                cursor: 'pointer',
+                                boxShadow: soldier ? '0 1px 4px rgba(30,58,92,0.06)' : undefined,
+                                opacity: soldier ? 1 : 0.6,
+                                outline: highlightCell && highlightCell.row === rIdx && highlightCell.col === cIdx ? '4px solid #ff1744' : undefined,
+                                animation: highlightCell && highlightCell.row === rIdx && highlightCell.col === cIdx ? 'blink-border 0.7s alternate infinite' : undefined,
+                                // Add warning border for X task conflicts
+                                borderColor: hasConflict ? '#ff9800' : undefined,
+                                borderWidth: hasConflict ? '3px' : undefined,
+                              }}
+                              onClick={() => handleCellClick(rIdx, cIdx)}
+                              onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = '#ffe082'; }}
+                                                        onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = soldier
+                            ? (getYTaskColors(yTaskNames, tableDarkMode)[yTask]?.[tableDarkMode ? 'dark' : 'light'] || (tableDarkMode ? '#333' : '#f7f9fb'))
                             : (tableDarkMode ? '#1a2233' : '#fafbfc'); }}
-                        >
-                          {soldier}
-                        </td>
-                      ))}
+                            >
+                              {soldier}
+                            </td>
+                          </Tooltip>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
@@ -905,19 +986,55 @@ function YTaskPage() {
                 <DialogContent>
                   {pickerLoading ? <CircularProgress /> : (
                     <List>
-                      {availableSoldiers?.map(s => (
-                        <ListItemButton key={s.id} onClick={() => {
-                          setGrid(prev => {
-                            const copy = prev.map(r => [...r]);
-                            if (pickerCell) copy[pickerCell.y][pickerCell.d] = s.name;
-                            return copy;
-                          });
-                          setPickerOpen(false);
-                        }}>
-                          <ListItemText primary={s.name} />
-                        </ListItemButton>
-                      ))}
+                      {/* Show available workers without X task conflicts */}
+                      {availableSoldiers
+                        .filter(s => !s.has_x_task_conflict)
+                        .map(s => (
+                          <ListItemButton key={s.id} onClick={() => {
+                            setGrid(prev => {
+                              const copy = prev.map(r => [...r]);
+                              if (pickerCell) copy[pickerCell.y][pickerCell.d] = s.name;
+                              return copy;
+                            });
+                            setPickerOpen(false);
+                          }}>
+                            <ListItemText 
+                              primary={s.name} 
+                              secondary={s.recently_finished_x ? "Recently finished X task" : undefined}
+                            />
+                          </ListItemButton>
+                        ))}
+                      
+                      {/* Show workers with X task conflicts as disabled with warnings */}
+                      {availableSoldiers
+                        .filter(s => s.has_x_task_conflict)
+                        .map(s => (
+                          <ListItemButton 
+                            key={s.id} 
+                            disabled 
+                            sx={{ 
+                              opacity: 0.6,
+                              '& .MuiListItemText-primary': { color: 'text.disabled' }
+                            }}
+                          >
+                            <ListItemText 
+                              primary={`${s.name} (X task conflict)`}
+                              secondary={`Has X task: ${s.x_task_name || 'Unknown'} on this date`}
+                            />
+                          </ListItemButton>
+                        ))}
+                      
                       {availableSoldiers.length === 0 && <Typography>No available soldiers</Typography>}
+                      
+                      {/* Show warning if all workers have conflicts */}
+                      {availableSoldiers.length > 0 && availableSoldiers.every(s => s.has_x_task_conflict) && (
+                        <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                          <Typography variant="body2" color="warning.dark">
+                            ⚠️ All qualified workers have X task conflicts on this date. 
+                            Consider assigning this Y task to a different date or worker.
+                          </Typography>
+                        </Box>
+                      )}
                       {pickerCell && grid[pickerCell.y][pickerCell.d] && (
                         <ListItemButton onClick={handleRemoveYAssignment} sx={{ color: 'error.main', mt: 1 }}>
                           <DeleteIcon sx={{ mr: 1 }} />

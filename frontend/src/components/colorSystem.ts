@@ -1,11 +1,12 @@
 /**
- * COLOR SYSTEM - Centralized Color Management
- * ==========================================
+ * DYNAMIC COLOR SYSTEM - Centralized Color Management
+ * ==================================================
  * 
  * This file contains ALL colors used throughout the application.
  * Change colors here to instantly update the entire UI.
  * 
- * Each color has a detailed description of where it's used.
+ * IMPORTANT: This system is now completely dynamic - no hardcoded task names!
+ * Colors are generated automatically based on task names from the backend.
  * 
  * COLOR NAMING CONVENTION:
  * - Primary colors: primary_*
@@ -15,16 +16,15 @@
  * - Interactive colors: interactive_*
  * - Status colors: status_*
  * - Table colors: table_*
- * - Task-specific colors: task_*
+ * - Dynamic task colors: generated automatically
  * 
  * 🎨 QUICK REFERENCE - MOST COMMONLY CHANGED COLORS:
  * ==================================================
  * 1. PRIMARY_COLORS.primary_main (#3a86ff) - Main blue for buttons, links
  * 2. PRIMARY_COLORS.secondary_main (#ff006e) - Secondary pink for highlights  
- * 3. TASK_COLORS.task_button_bg (#4f46e5) - Task button background (currently indigo)
- * 4. TABLE_COLORS.table_header_bg (#1e3a5c) - Table header background
- * 5. BACKGROUND_COLORS.bg_main (#0a1929) - Main app background
- * 6. TEXT_COLORS.text_primary (#f8f9fa) - Main text color
+ * 3. TABLE_COLORS.table_header_bg (#1e3a5c) - Table header background
+ * 4. BACKGROUND_COLORS.bg_main (#0a1929) - Main app background
+ * 5. TEXT_COLORS.text_primary (#f8f9fa) - Main text color
  * 
  * 💡 MODERN COLOR SUGGESTIONS:
  * ============================
@@ -136,40 +136,21 @@ export const TABLE_COLORS = {
 };
 
 // ============================================================================
-// TASK-SPECIFIC COLORS
+// DYNAMIC TASK COLORS - NO HARDCODED TASK NAMES!
 // ============================================================================
 
-export const TASK_COLORS = {
-  // X Task colors (Main tasks) - Modern, sophisticated palette
-  x_task_guarding: '#3b82f6', // Modern blue - Guarding Duties
-  x_task_rasar: '#8b5cf6', // Modern purple - RASAR
-  x_task_kitchen: '#f59e0b', // Modern amber - Kitchen
-  x_task_custom: '#10b981', // Modern emerald - Custom tasks
-  
-  // Y Task colors (Secondary tasks)
-  y_task_supervisor: '#8b5cf6', // Modern purple - Supervisor
-  y_task_cn_driver: '#06b6d4', // Modern cyan - C&N Driver
-  y_task_cn_escort: '#f59e0b', // Modern amber - C&N Escort
-  y_task_southern_driver: '#3b82f6', // Modern blue - Southern Driver
-  y_task_southern_escort: '#10b981', // Modern emerald - Southern Escort
-  
-  // Task button colors (for clickable cells) - Modern alternatives
-  task_button_bg: '#7c3aed', // Modern violet - task button background
-  task_button_bg_hover: '#6d28d9', // Darker violet - task button on hover
-  task_button_text: '#ffffff', // White - task button text
-  
-  // Light mode task button colors
-  task_button_bg_light: '#8b5cf6', // Lighter violet - light mode task buttons
-  task_button_bg_light_hover: '#7c3aed', // Darker violet - light mode hover
-  task_button_text_light: '#ffffff', // White - task button text (same for both modes)
-  
-  // MODERN COLOR ALTERNATIVES - Uncomment to use these instead:
-  // task_button_bg: '#7c3aed', // Modern violet - more elegant than indigo
-  // task_button_bg: '#059669', // Emerald green - fresh and modern
-  // task_button_bg: '#dc2626', // Modern red - bold and attention-grabbing
-  // task_button_bg: '#ea580c', // Modern orange - warm and energetic
-  // task_button_bg: '#0891b2', // Modern cyan - clean and professional
-  // task_button_bg: '#7c2d12', // Modern brown - sophisticated and earthy
+// Color palettes for automatic task color generation
+const TASK_COLOR_PALETTES = {
+  // Modern blues and purples
+  blue_purple: ['#3b82f6', '#8b5cf6', '#6366f1', '#7c3aed', '#9333ea', '#7c2d12'],
+  // Modern greens and teals
+  green_teal: ['#10b981', '#059669', '#0891b2', '#06b6d4', '#14b8a6', '#16a34a'],
+  // Modern oranges and ambers
+  orange_amber: ['#f59e0b', '#ea580c', '#f97316', '#fb923c', '#fbbf24', '#d97706'],
+  // Modern reds and pinks
+  red_pink: ['#ef4444', '#dc2626', '#ec4899', '#f43f5e', '#f97316', '#be185d'],
+  // Modern grays and slates
+  gray_slate: ['#64748b', '#475569', '#334155', '#1e293b', '#0f172a', '#475569']
 };
 
 // ============================================================================
@@ -243,8 +224,101 @@ export const MODAL_COLORS = {
 };
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// DYNAMIC COLOR GENERATION FUNCTIONS
 // ============================================================================
+
+/**
+ * Generate a consistent hash from a string
+ * @param str - String to hash
+ * @returns Numeric hash value
+ */
+function generateHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Get a color from a palette based on hash
+ * @param hash - Hash value
+ * @param palette - Array of colors to choose from
+ * @returns Color string
+ */
+function getColorFromPalette(hash: number, palette: string[]): string {
+  return palette[hash % palette.length];
+}
+
+/**
+ * Get task color with theme adaptation - COMPLETELY DYNAMIC!
+ * @param taskName - Name of the task (any string, no hardcoded names!)
+ * @param isDarkMode - Whether the app is in dark mode
+ * @returns The appropriate color for the task
+ */
+export function getTaskColor(taskName: string, isDarkMode: boolean): string {
+  const hash = generateHash(taskName);
+  
+  // Select palette based on hash
+  const paletteNames = Object.keys(TASK_COLOR_PALETTES);
+  const paletteName = paletteNames[hash % paletteNames.length];
+  const palette = TASK_COLOR_PALETTES[paletteName as keyof typeof TASK_COLOR_PALETTES];
+  
+  // Get color from palette
+  return getColorFromPalette(hash, palette);
+}
+
+/**
+ * Get worker color with theme adaptation
+ * @param workerId - Worker identifier
+ * @param isDarkMode - Whether the app is in dark mode
+ * @returns A consistent color for the worker
+ */
+export function getWorkerColor(workerId: string, isDarkMode: boolean): string {
+  const hash = generateHash(workerId);
+  const hue = hash % 360;
+  const saturation = 45;
+  const lightness = isDarkMode ? 35 : 70;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+/**
+ * Generate a complete color map for X tasks dynamically
+ * @param taskNames - Array of X task names from backend
+ * @param isDarkMode - Whether the app is in dark mode
+ * @returns Object mapping task names to colors
+ */
+export function generateXTaskColors(taskNames: string[], isDarkMode: boolean): Record<string, string> {
+  const colorMap: Record<string, string> = {};
+  
+  taskNames.forEach(taskName => {
+    colorMap[taskName] = getTaskColor(taskName, isDarkMode);
+  });
+  
+  return colorMap;
+}
+
+/**
+ * Generate a complete color map for Y tasks dynamically
+ * @param taskNames - Array of Y task names from backend
+ * @param isDarkMode - Whether the app is in dark mode
+ * @returns Object mapping task names to colors with light/dark variants
+ */
+export function generateYTaskColors(taskNames: string[], isDarkMode: boolean): Record<string, { light: string, dark: string }> {
+  const colorMap: Record<string, { light: string, dark: string }> = {};
+  
+  taskNames.forEach(taskName => {
+    const baseColor = getTaskColor(taskName, isDarkMode);
+    // For Y tasks, we use the same color for both light and dark modes
+    // but you could adjust lightness/saturation if needed
+    colorMap[taskName] = {
+      light: baseColor,
+      dark: baseColor
+    };
+  });
+  
+  return colorMap;
+}
 
 /**
  * Get the appropriate color based on current theme
@@ -257,56 +331,6 @@ export function getThemeColor(darkColor: string, lightColor: string, isDarkMode:
   return isDarkMode ? darkColor : lightColor;
 }
 
-/**
- * Get task color with theme adaptation
- * @param taskName - Name of the task (e.g., "Guarding Duties", "RASAR", "Custom")
- * @param isDarkMode - Whether the app is in dark mode (not used for X tasks, but kept for consistency)
- * @returns The appropriate color for the task
- */
-export function getTaskColor(taskName: string, isDarkMode: boolean): string {
-  // Generate a consistent color based on task name hash
-  let hash = 0;
-  for (let i = 0; i < taskName.length; i++) {
-    hash = taskName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Use different color palettes for variety
-  const colorPalettes = [
-    // Modern blues and purples
-    ['#3b82f6', '#8b5cf6', '#6366f1', '#7c3aed', '#9333ea'],
-    // Modern greens and teals
-    ['#10b981', '#059669', '#0891b2', '#06b6d4', '#14b8a6'],
-    // Modern oranges and ambers
-    ['#f59e0b', '#ea580c', '#f97316', '#fb923c', '#fbbf24'],
-    // Modern reds and pinks
-    ['#ef4444', '#dc2626', '#ec4899', '#f43f5e', '#f97316'],
-    // Modern grays and slates
-    ['#64748b', '#475569', '#334155', '#1e293b', '#0f172a']
-  ];
-  
-  const paletteIndex = Math.abs(hash) % colorPalettes.length;
-  const colorIndex = Math.abs(hash) % colorPalettes[paletteIndex].length;
-  
-  return colorPalettes[paletteIndex][colorIndex];
-}
-
-/**
- * Get worker color with theme adaptation
- * @param workerId - Worker identifier
- * @param isDarkMode - Whether the app is in dark mode
- * @returns A consistent color for the worker
- */
-export function getWorkerColor(workerId: string, isDarkMode: boolean): string {
-  let hash = 0;
-  for (let i = 0; i < workerId.length; i++) {
-    hash = workerId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  const saturation = 45;
-  const lightness = isDarkMode ? 35 : 70;
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
-
 // ============================================================================
 // EXPORT ALL COLORS FOR EASY ACCESS
 // ============================================================================
@@ -317,7 +341,6 @@ export const ALL_COLORS = {
   ...TEXT_COLORS,
   ...INTERACTIVE_COLORS,
   ...TABLE_COLORS,
-  ...TASK_COLORS,
   ...STATUS_COLORS,
   ...NAVIGATION_COLORS,
   ...CARD_COLORS,
@@ -334,13 +357,14 @@ export const ALL_COLORS = {
  * 1. PRIMARY_COLORS.primary_main - Main blue color (buttons, links)
  * 2. PRIMARY_COLORS.secondary_main - Secondary pink color (highlights)
  * 3. TABLE_COLORS.table_header_bg - Table header background
- * 4. TASK_COLORS.task_button_bg - Task button background (currently indigo)
- * 5. BACKGROUND_COLORS.bg_main - Main app background
- * 6. TEXT_COLORS.text_primary - Main text color
+ * 4. BACKGROUND_COLORS.bg_main - Main app background
+ * 5. TEXT_COLORS.text_primary - Main text color
  * 
  * To change a color:
  * 1. Find the color in this file
  * 2. Change the hex value
  * 3. Save the file
  * 4. The change will apply immediately across the entire app
+ * 
+ * IMPORTANT: Task colors are now generated automatically - no need to hardcode!
  */

@@ -59,21 +59,6 @@ const getClosingIntervalText = (value: number): string => {
   }
 };
 
-// Helper function to convert Hebrew text to closing interval numbers
-const getClosingIntervalValue = (text: string): number => {
-  switch (text) {
-    case 'ללא סגירות': return 0;
-    case 'חצאים': return 2;
-    case 'שלישים': return 3;
-    case 'רבעים': return 4;
-    case 'אחד לחמש': return 5;
-    case 'אחד לשש': return 6;
-    case 'אחד לשבע': return 7;
-    case 'אחד לשמינה': return 8;
-    default: return 0; // Default to quarters
-  }
-};
-
 // Closing interval options
 const CLOSING_INTERVAL_OPTIONS = [
   { value: 0, label: 'ללא סגירות' },
