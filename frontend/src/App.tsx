@@ -44,6 +44,9 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Fab from '@mui/material/Fab';
 import SaveIcon from '@mui/icons-material/Save';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import PhoneIcon from '@mui/icons-material/Phone';
 import XTaskPage from './pages/XTaskPage';
 import YTaskPage from './pages/YTaskPage';
 import XTasksDashboardPage from './pages/XTasksDashboardPage';
@@ -388,7 +391,7 @@ function CombinedPage() {
     setSaving(true);
     try {
       // Create CSV content
-      let csv = 'Task,' + dates.join(',') + '\n';
+      let csv = 'משימה,' + dates.join(',') + '\n';
       for (let i = 0; i < rowLabels.length; i++) {
         const row = [rowLabels[i], ...grid[i].map(cell => cell || '-')];
         csv += row.join(',') + '\n';
@@ -400,14 +403,45 @@ function CombinedPage() {
         credentials: 'include',
         body: JSON.stringify({ csv, filename }),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) throw new Error('שמירה נכשלה');
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (e: any) {
-      setError(e.message || 'Failed to save combined schedule');
+      setError(e.message || 'שמירת לוח זמנים משולב נכשלה');
     } finally {
       setSaving(false);
     }
+  };
+
+  // NEW: Action handlers for WhatsApp, Email, Download 30/08/2025 13:40
+  const handleWhatsAppShare = () => {
+    alert('שיתוף ב-WhatsApp יבוא בקרוב');
+  };
+
+  const handleEmailShare = () => {
+    alert('שליחה במייל תבוא בקרוב');
+  };
+
+  const handleBrowserSave = () => {
+    if (!selectedSchedule) return;
+    
+    // Create CSV content for download
+    let csv = 'משימה,' + dates.join(',') + '\n';
+    for (let i = 0; i < rowLabels.length; i++) {
+      const row = [rowLabels[i], ...grid[i].map(cell => cell || '-')];
+      csv += row.join(',') + '\n';
+    }
+    
+    // Create and trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `לוח_משולב_${selectedSchedule.start.replace(/\//g, '-')}_${selectedSchedule.end.replace(/\//g, '-')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -433,10 +467,10 @@ function CombinedPage() {
         <Header 
           showBackButton={true}
           showHomeButton={true}
-          title="Combined Schedule"
+          title="לוח זמנים משולב"
         />
         
-        {/* Main Content Container */}
+        {/* NEW: Main Content Container with RTL support 30/08/2025 13:40 */}
         <Box sx={{
           maxWidth: 1400,
           mx: 'auto',
@@ -445,36 +479,40 @@ function CombinedPage() {
           p: 4,
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          direction: 'rtl' // NEW: RTL support
         }}>
-          {/* Page Title */}
+          {/* NEW: Page Title in Hebrew 30/08/2025 13:40 */}
           <Typography variant="h3" sx={{ 
             mb: 4, 
             fontWeight: 800, 
             color: '#e0e6ed',
             textAlign: 'center',
             textShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+            direction: 'rtl'
           }}>
-            Combined Schedule View
+            לוח זמנים משולב - משימות X ו-Y
           </Typography>
           
-          {/* Schedule Selection */}
-          <Box sx={{ mb: 4 }}>
+          {/* NEW: Schedule Selection in Hebrew RTL 30/08/2025 13:40 */}
+          <Box sx={{ mb: 4, direction: 'rtl' }}>
             <Typography variant="h5" sx={{ 
               mb: 3, 
               fontWeight: 700, 
               color: '#e0e6ed',
-              textAlign: 'center'
+              textAlign: 'center',
+              direction: 'rtl'
             }}>
-              Select Schedule Period
+              בחירת תקופת לוח זמנים
             </Typography>
             <Box sx={{ 
               display: 'flex', 
               gap: 2, 
               flexWrap: 'wrap', 
               justifyContent: 'center',
-              mb: 3
+              mb: 3,
+              direction: 'rtl'
             }}>
               {availableSchedules.map((sch: any) => (
                 <Button
@@ -491,64 +529,162 @@ function CombinedPage() {
                     px: 3,
                     boxShadow: selectedSchedule && sch.filename === selectedSchedule.filename ? '0 4px 20px rgba(25, 118, 210, 0.4)' : '0 2px 8px rgba(0,0,0,0.2)',
                     transition: 'all 0.3s ease',
+                    direction: 'rtl',
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 25px rgba(0,0,0,0.3)'
                     }
                   }}
                 >
-                  {formatDateDMY(sch.start)} TO {formatDateDMY(sch.end)}
+                  {formatDateDMY(sch.start)} עד {formatDateDMY(sch.end)}
                 </Button>
               ))}
             </Box>
           </Box>
 
-          {/* Save Button */}
+          {/* NEW: Professional Action Buttons Section 30/08/2025 13:40 */}
           {grid.length > 0 && (
             <Box sx={{ 
-              width: '100%', 
-              display: 'flex', 
-              justifyContent: 'center', 
-              mb: 4 
+              bgcolor: 'rgba(255,255,255,0.05)',
+              borderRadius: 3,
+              p: 3,
+              mb: 4,
+              border: '1px solid rgba(255,255,255,0.1)',
+              direction: 'rtl'
             }}>
-              <Fab
-                color="primary"
-                onClick={handleSave}
-                disabled={saving || !selectedSchedule}
+              <Typography 
+                variant="h6" 
                 sx={{ 
-                  width: 70, 
-                  height: 70, 
-                  boxShadow: '0 6px 25px rgba(25, 118, 210, 0.4)',
-                  borderRadius: '50%', 
-                  fontWeight: 700,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    boxShadow: '0 8px 30px rgba(25, 118, 210, 0.6)'
-                  }
+                  mb: 3, 
+                  fontWeight: 600, 
+                  color: '#e0e6ed',
+                  textAlign: 'center',
+                  direction: 'rtl'
                 }}
-                aria-label="save"
               >
-                <SaveIcon sx={{ fontSize: 32, color: '#fff' }} />
-              </Fab>
+                פעולות על הלוח
+              </Typography>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 3, 
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                direction: 'rtl'
+              }}>
+                {/* Save to System */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Fab
+                    color="primary"
+                    onClick={handleSave}
+                    disabled={saving || !selectedSchedule}
+                    sx={{ 
+                      width: 60, 
+                      height: 60,
+                      mb: 1,
+                      boxShadow: '0 6px 25px rgba(25, 118, 210, 0.4)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 8px 30px rgba(25, 118, 210, 0.6)'
+                      }
+                    }}
+                  >
+                    <SaveIcon sx={{ fontSize: 24 }} />
+                  </Fab>
+                  <Typography variant="caption" sx={{ color: '#e0e6ed', display: 'block' }}>
+                    שמירה
+                  </Typography>
+                </Box>
+
+                {/* WhatsApp Share */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Fab
+                    onClick={handleWhatsAppShare}
+                    sx={{ 
+                      width: 60, 
+                      height: 60,
+                      mb: 1,
+                      backgroundColor: '#25D366',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#128C7E',
+                        transform: 'scale(1.05)'
+                      }
+                    }}
+                  >
+                    <PhoneIcon sx={{ fontSize: 24 }} />
+                  </Fab>
+                  <Typography variant="caption" sx={{ color: '#e0e6ed', display: 'block' }}>
+                    WhatsApp
+                  </Typography>
+                </Box>
+
+                {/* Email Share */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Fab
+                    onClick={handleEmailShare}
+                    sx={{ 
+                      width: 60, 
+                      height: 60,
+                      mb: 1,
+                      backgroundColor: '#ea4335',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#d93025',
+                        transform: 'scale(1.05)'
+                      }
+                    }}
+                  >
+                    <MailOutlineIcon sx={{ fontSize: 24 }} />
+                  </Fab>
+                  <Typography variant="caption" sx={{ color: '#e0e6ed', display: 'block' }}>
+                    מייל
+                  </Typography>
+                </Box>
+
+                {/* Browser Download */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Fab
+                    onClick={handleBrowserSave}
+                    sx={{ 
+                      width: 60, 
+                      height: 60,
+                      mb: 1,
+                      backgroundColor: '#1976d2',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#1565c0',
+                        transform: 'scale(1.05)'
+                      }
+                    }}
+                  >
+                    <FileDownloadIcon sx={{ fontSize: 24 }} />
+                  </Fab>
+                  <Typography variant="caption" sx={{ color: '#e0e6ed', display: 'block' }}>
+                    הורדה
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
           )}
 
-          {/* Loading State */}
+          {/* NEW: Loading State in Hebrew 30/08/2025 13:40 */}
           {loading && (
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center', 
-              py: 8 
+              py: 8,
+              direction: 'rtl'
             }}>
-              <Typography variant="h6" sx={{ color: '#e0e6ed' }}>
-                Loading combined schedule...
+              <Typography variant="h6" sx={{ color: '#e0e6ed', direction: 'rtl' }}>
+                טוען לוח זמנים משולב...
               </Typography>
             </Box>
           )}
 
-          {/* Error State */}
+          {/* NEW: Error State in Hebrew 30/08/2025 13:40 */}
           {error && (
             <Box sx={{ 
               bgcolor: 'rgba(244, 67, 54, 0.1)', 
@@ -556,113 +692,153 @@ function CombinedPage() {
               borderRadius: 3,
               p: 3,
               mb: 3,
-              textAlign: 'center'
+              textAlign: 'center',
+              direction: 'rtl'
             }}>
-              <Typography color="error" variant="h6">
+              <Typography color="error" variant="h6" sx={{ direction: 'rtl' }}>
                 {error}
               </Typography>
             </Box>
           )}
 
-          {/* Grid */}
+          {/* NEW: Professional RTL Grid 30/08/2025 13:40 */}
           {!loading && !error && grid.length > 0 && (
             <Box sx={{ 
               overflowX: 'auto',
               borderRadius: 3,
               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.1)'
+              border: '1px solid rgba(255,255,255,0.1)',
+              direction: 'rtl'
             }}>
               <Box component="table" sx={{ 
-                minWidth: dates.length > 0 ? Math.max(900, 180 + dates.length * 120) : 900, 
+                minWidth: dates.length > 0 ? Math.max(900, 200 + dates.length * 140) : 900, 
                 width: '100%', 
                 borderCollapse: 'separate', 
                 borderSpacing: 0, 
                 background: '#1a2233', 
                 borderRadius: 3, 
-                overflow: 'hidden'
+                overflow: 'hidden',
+                direction: 'rtl'
               }}>
                 <thead>
                   <tr>
-                    <th style={{ 
-                      minWidth: 180, 
-                      background: '#22304a', 
-                      color: '#fff', 
-                      fontWeight: 700, 
-                      fontSize: 18, 
-                      position: 'sticky', 
-                      left: 0, 
-                      zIndex: 2, 
-                      boxShadow: '0 2px 8px rgba(30,58,92,0.08)', 
-                      borderBottom: '3px solid #ff9800', 
-                      borderRight: '2px solid #b0bec5', 
-                      height: 60, 
-                      letterSpacing: 1,
-                      padding: '16px'
-                    }}>
-                      Task
-                    </th>
-                    {dates.map((date, i) => (
+                    {/* RTL: Dates first (left to right in RTL becomes right to left) */}
+                    {dates.slice().reverse().map((date, i) => (
                       <th key={i} style={{ 
-                        minWidth: 120, 
+                        minWidth: 140, 
                         background: '#1e3a5c', 
                         color: '#fff', 
                         fontWeight: 700, 
-                        fontSize: 16, 
+                        fontSize: '0.9rem', 
                         borderBottom: '3px solid #ff9800', 
                         height: 60, 
                         boxShadow: '0 2px 8px rgba(30,58,92,0.06)', 
-                        borderRight: '2px solid #b0bec5',
-                        padding: '16px'
+                        borderLeft: '1px solid #b0bec5',
+                        padding: '12px',
+                        textAlign: 'center',
+                        verticalAlign: 'middle'
                       }}>
-                        {date}
+                        {formatDateDMY(date)}
                       </th>
                     ))}
+                    
+                    {/* RTL: Task column on the right (sticky) */}
+                    <th style={{ 
+                      minWidth: 200, 
+                      background: '#22304a', 
+                      color: '#fff', 
+                      fontWeight: 700, 
+                      fontSize: '1.1rem', 
+                      position: 'sticky', 
+                      right: 0, 
+                      zIndex: 2, 
+                      boxShadow: '0 2px 8px rgba(30,58,92,0.08)', 
+                      borderBottom: '3px solid #ff9800', 
+                      borderLeft: '2px solid #b0bec5', 
+                      height: 60, 
+                      letterSpacing: 1,
+                      padding: '16px',
+                      textAlign: 'center',
+                      verticalAlign: 'middle'
+                    }}>
+                      משימה
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {rowLabels.map((task, rIdx) => (
                     <tr key={rIdx} style={{ 
-                      background: rIdx % 2 === 0 ? '#232a36' : '#f9fafb' 
+                      background: rIdx % 2 === 0 ? '#232a36' : '#1a2233' 
                     }}>
-                      <td style={{ 
-                        background: '#22304a', 
-                        color: '#fff', 
-                        fontWeight: 600, 
-                        position: 'sticky', 
-                        left: 0, 
-                        zIndex: 1, 
-                        fontSize: 18, 
-                        borderRight: '3.5px solid #b0bec5', 
-                        borderBottom: '2px solid #b0bec5', 
-                        height: 56, 
-                        paddingLeft: 32, 
-                        paddingRight: 16, 
-                        minWidth: 180, 
-                        boxShadow: undefined 
-                      }}>
-                        {task}
-                      </td>
-                      {grid[rIdx]?.map((soldier: string, cIdx: number) => (
+                      {/* RTL: Data cells first (reversed order) */}
+                      {grid[rIdx]?.slice().reverse().map((soldier: string, cIdx: number) => (
                         <td key={cIdx} style={{ 
-                          background: soldier ? getWorkerColor(soldier, true) : '#fafbfc', 
-                          color: '#1e3a5c', 
+                          background: soldier ? getWorkerColor(soldier, true) : 'transparent', 
+                          color: '#fff', 
                           textAlign: 'center', 
                           fontWeight: 600, 
-                          minWidth: 120, 
-                          border: '2px solid #b0bec5', 
-                          borderRadius: 8, 
-                          fontSize: 18, 
-                          height: 56, 
+                          minWidth: 140, 
+                          borderLeft: '1px solid #b0bec5', 
+                          borderBottom: '1px solid #b0bec5',
+                          fontSize: '0.9rem', 
+                          height: 50, 
                           boxSizing: 'border-box', 
                           transition: 'all 0.2s ease', 
                           opacity: soldier ? 1 : 0.6, 
-                          boxShadow: soldier ? '0 1px 4px rgba(30,58,92,0.06)' : undefined,
-                          padding: '16px',
-                          cursor: 'default'
+                          padding: '8px',
+                          cursor: 'default',
+                          verticalAlign: 'middle'
                         }}>
-                          {soldier ? getWorkerName(soldier) : ''}
+                          {soldier && (
+                            <Box sx={{
+                              backgroundColor: 'rgba(0,0,0,0.2)',
+                              borderRadius: 2,
+                              padding: '4px 8px',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              textAlign: 'center',
+                              color: '#fff'
+                            }}>
+                              {soldier}
+                            </Box>
+                          )}
                         </td>
                       ))}
+                      
+                      {/* RTL: Task name column on the right (sticky) */}
+                      <td style={{ 
+                        background: '#22304a', 
+                        color: '#fff', 
+                        fontWeight: 700, 
+                        position: 'sticky', 
+                        right: 0, 
+                        zIndex: 1, 
+                        fontSize: '1rem', 
+                        borderLeft: '2px solid #b0bec5', 
+                        borderBottom: '1px solid #b0bec5', 
+                        height: 50, 
+                        paddingRight: 20, 
+                        paddingLeft: 16, 
+                        minWidth: 200, 
+                        textAlign: 'right',
+                        verticalAlign: 'middle'
+                      }}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'flex-end',
+                          gap: 1
+                        }}>
+                          <span>{task}</span>
+                          <Box sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: '#ff9800',
+                            opacity: 0.8
+                          }} />
+                        </Box>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -672,7 +848,7 @@ function CombinedPage() {
         </Box>
       </Box>
 
-      {/* Save Success Snackbar */}
+      {/* NEW: Success Snackbar in Hebrew RTL 30/08/2025 13:40 */}
       <Snackbar 
         open={saveSuccess} 
         autoHideDuration={3000} 
@@ -685,10 +861,14 @@ function CombinedPage() {
           sx={{ 
             width: '100%',
             borderRadius: 3,
-            fontWeight: 600
+            fontWeight: 600,
+            direction: 'rtl',
+            '& .MuiAlert-message': {
+              textAlign: 'right'
+            }
           }}
         >
-          Combined schedule saved successfully!
+          לוח זמנים משולב נשמר בהצלחה!
         </MuiAlert>
       </Snackbar>
     </Box>

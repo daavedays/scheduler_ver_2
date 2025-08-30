@@ -194,7 +194,13 @@ def get_combined_by_date():
 			import y_tasks, x_tasks  # type: ignore
 		y_schedules = y_tasks.list_y_task_schedules()
 		y_assignments = {}
-		y_tasks_list = ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+		# NEW: Load dynamic Y task definitions 30/08/2025 13:41
+		try:
+			from ..constants import get_y_task_definitions
+		except ImportError:
+			from constants import get_y_task_definitions  # type: ignore
+		y_task_defs = get_y_task_definitions()
+		y_tasks_list = [d['name'] for d in y_task_defs] if y_task_defs else ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
 		for start, end, y_filename in y_schedules:
 			y_path = y_tasks.y_schedule_path(y_filename)
 			if not os.path.exists(y_path):
@@ -288,14 +294,22 @@ def get_combined_grid_full():
 			x_files.sort(key=extract_year_period, reverse=True)
 			x_csv = x_files[0]
 			x_assignments = y_tasks.read_x_tasks(x_csv)
+			# NEW: Load dynamic Y task definitions 30/08/2025 13:41
+			try:
+				from ..constants import get_y_task_definitions
+			except ImportError:
+				from constants import get_y_task_definitions  # type: ignore
+			y_task_defs = get_y_task_definitions()
+			y_task_names = [d['name'] for d in y_task_defs] if y_task_defs else ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+			
 			x_tasks_set = set()
 			for name, day_map in x_assignments.items():
 				for d, task in day_map.items():
-					if task and task != '-' and task not in ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]:
+					if task and task != '-' and task not in y_task_names:
 						x_tasks_set.add(task)
 		x_tasks_list = sorted(x_tasks_set)
 		grid = []
-		y_tasks_list = ["Supervisor", "C&N Driver", "C&N Escort", "Southern Driver", "Southern Escort"]
+		y_tasks_list = y_task_names
 		for y_task in y_tasks_list:
 			row = []
 			for d in all_dates:
